@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Система карточек с автодополнением</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ejs@3.1.9/ejs.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background: #f5f5f5;
+            overflow-y: scroll;
+        }
+        .cards-system {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .cards-system__header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .cards-system__controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .cards-system__addCard {
+            padding: 8px 15px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .cards-system__deleteAll {
+            padding: 8px 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .card__title {
+            margin: 0;
+            font-size: 1.2em;
+            color: #444;
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .card__delete {
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            margin-left: 10px;
+            flex-shrink: 0;
+        }
+        .card__content {
+            margin: 15px 0;
+        }
+        .card__textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            resize: vertical;
+        }
+        .card__footer {
+            font-size: .9em;
+            color: #666;
+            margin-top: 10px;
+        }
+        .card__parents {
+            margin-bottom: 10px;
+            position: relative;
+        }
+        .card__children {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ddd;
+            position: relative;
+        }
+        .card__parents-title,
+        .card__children-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .parents-list,
+        .children-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .card__parent-item,
+        .card__child-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .children-list {
+            max-height: 150px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .search-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        .search-input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .search-add {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 34px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
+        }
+        .card__mentions {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed #ddd;
+        }
+        .card__mentions-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .card__mention-item {
+            margin: 3px 0;
+            padding: 5px;
+            background: #f8f8f8;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .mention,
+        .child-link {
+            color: #2196F3;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .mention:hover,
+        .child-link:hover {
+            color: #0d8aee;
+        }
+        .remove-parent,
+        .remove-child {
+            color: #f44336;
+            cursor: pointer;
+            margin-left: 5px;
+            font-weight: bold;
+        }
+        .remove-with-card {
+            color: #ff9800;
+            cursor: pointer;
+            margin-left: 3px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="cards-system">
+        <h1 class="cards-system__header">Система карточек с автодополнением</h1>
+        <div class="cards-system__controls">
+            <button class="cards-system__addCard" id="add-card-btn">+ Создать карточку</button>
+            <button class="cards-system__deleteAll" id="delete-all-btn">Удалить все карточки</button>
+        </div>
+        <div class="cards-container" id="cards-container"></div>
+    </div>
+
+    <script type="text/ejs" id="card-template">
+        <div class="card" data-card-id="<%= id %>">
+            <div class="card__header">
+                <input type="text" class="card__title" value="<%= title %>" placeholder="<%= placeholder %>">
+                <button class="card__delete" title="Удалить карточку">×</button>
+            </div>
+            
+            <div class="card__parents">
+                <div class="card__parents-title">Родители:</div>
+                <div class="search-container">
+                    <input type="text" class="search-input parent-search-input" placeholder="Начните вводить название..." data-card-id="<%= id %>">
+                    <button class="search-add parent-search-add" title="Добавить родителя">+</button>
+                </div>
+                <div class="suggestions parent-suggestions"></div>
+                
+                <div class="parents-list">
+                    <% parents.forEach(function(parent) { %>
+                        <div class="card__parent-item">
+                            <span class="mention" data-card-id="<%= parent.id %>"><%= parent.title %></span>
+                            <span class="remove-parent" data-parent-id="<%= parent.id %>" title="Удалить связь">×</span>
+                            <span class="remove-with-card" data-card-id="<%= parent.id %>" title="Удалить карточку">🗑</span>
+                        </div>
+                    <% }); %>
+                    <% if (parents.length === 0) { %>
+                        <div>Нет родителей</div>
+                    <% } %>
+                </div>
+            </div>
+            
+            <div class="card__content">
+                <textarea class="card__textarea" placeholder="Содержание карточки..."><%= content %></textarea>
+                
+                <div class="card__children">
+                    <div class="card__children-title">Дочерние карточки:</div>
+                    <div class="search-container">
+                        <input type="text" class="search-input child-search-input" placeholder="Начните вводить название..." data-card-id="<%= id %>">
+                        <button class="search-add child-search-add" title="Добавить дочернюю карточку">+</button>
+                    </div>
+                    <div class="suggestions child-suggestions"></div>
+                    
+                    <div class="children-list">
+                        <% children.forEach(function(child) { %>
+                            <div class="card__child-item">
+                                <span class="child-link" data-card-id="<%= child.id %>"><%= child.title %></span>
+                                <span class="remove-child" data-child-id="<%= child.id %>" title="Удалить связь">×</span>
+                                <span class="remove-with-card" data-card-id="<%= child.id %>" title="Удалить карточку">🗑</span>
+                            </div>
+                        <% }); %>
+                        <% if (children.length === 0) { %>
+                            <div>Нет дочерних карточек</div>
+                        <% } %>
+                    </div>
+                </div>
+                
+                <% if (mentions.length > 0) { %>
+                    <div class="card__mentions">
+                        <div class="card__mentions-title">Упоминается в:</div>
+                        <% mentions.forEach(function(mention) { %>
+                            <div class="card__mention-item">
+                                <span class="mention" data-card-id="<%= mention.sourceCard.id %>">
+                                    <%= mention.sourceCard.title %>
+                                </span>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } %>
+            </div>
+            
+            <div class="card__footer">
+                Создано: <%= createdAt %>
+            </div>
+        </div>
+    </script>
+
+    <script>
+        const CardsModel = {
+            cards: [],
+            
+            generateId: () => Date.now(),
+            
+            saveState: () => {
+                localStorage.setItem('cardsSystem', JSON.stringify(CardsModel.cards));
+            },
+            
+            addCard: () => {
+                const now = new Date();
+                const placeholder = `Карточка от ${now.toLocaleDateString()} ${now.toLocaleTimeString().slice(0,5)}`;
+                
+                const newCard = {
+                    id: CardsModel.generateId(),
+                    title: "",
+                    placeholder: placeholder,
+                    content: "",
+                    parentIds: [],
+                    mentions: [],
+                    children: [],
+                    createdAt: now.toLocaleString(),
+                    isEmpty: true
+                };
+                CardsModel.cards.push(newCard);
+                CardsModel.saveState();
+                CardsModel.updateAllRelations();
+                return newCard;
+            },
+            
+            updateCard: (cardId, updates) => {
+                const card = CardsModel.getCard(cardId);
+                if (card) {
+                    Object.assign(card, updates);
+                    card.updatedAt = new Date().toLocaleString();
+                    CardsModel.saveState();
+                    CardsModel.updateAllRelations();
+                    return true;
+                }
+                return false;
+            },
+            
+            addParent: (cardId, parentId) => {
+                const card = CardsModel.getCard(cardId);
+                const parentCard = CardsModel.getCard(parentId);
+                
+                if (card && parentCard && cardId != parentId) {
+                    if (!card.parentIds) card.parentIds = [];
+                    
+                    if (!card.parentIds.some(id => id == parentId)) {
+                        card.parentIds.push(parentId);
+                        if (card.isEmpty) {
+                            card.isEmpty = false;
+                            card.title = card.placeholder;
+                        }
+                        CardsModel.saveState();
+                        CardsModel.updateAllRelations();
+                        return true;
+                    }
+                }
+                return false;
+            },
+            
+            addChild: (parentId, childId) => {
+                return CardsModel.addParent(childId, parentId);
+            },
+            
+            removeParent: (cardId, parentId) => {
+                const card = CardsModel.getCard(cardId);
+                if (card && card.parentIds) {
+                    const index = card.parentIds.findIndex(id => id == parentId);
+                    if (index !== -1) {
+                        card.parentIds.splice(index, 1);
+                        CardsModel.saveState();
+                        CardsModel.updateAllRelations();
+                        return true;
+                    }
+                }
+                return false;
+            },
+            
+            removeChild: (parentId, childId) => {
+                return CardsModel.removeParent(childId, parentId);
+            },
+            
+            deleteCard: (cardId) => {
+                const index = CardsModel.cards.findIndex(c => c.id == cardId);
+                if (index !== -1) {
+                    CardsModel.cards.forEach(card => {
+                        if (card.parentIds) {
+                            card.parentIds = card.parentIds.filter(id => id != cardId);
+                        }
+                    });
+                    
+                    CardsModel.cards.splice(index, 1);
+                    CardsModel.saveState();
+                    CardsModel.updateAllRelations();
+                    return true;
+                }
+                return false;
+            },
+            
+            deleteAllCards: () => {
+                CardsModel.cards = [];
+                CardsModel.saveState();
+                return true;
+            },
+            
+            updateAllRelations: () => {
+                CardsModel.updateMentions();
+                CardsModel.updateChildrenRelations();
+            },
+            
+            updateMentions: () => {
+                CardsModel.cards.forEach(card => {
+                    card.mentions = [];
+                });
+                
+                CardsModel.cards.forEach(sourceCard => {
+                    const matches = sourceCard.content.match(/\[\[(\d+)\]\]/g) || [];
+                    matches.forEach(match => {
+                        const cardId = match.match(/\d+/)[0];
+                        const targetCard = CardsModel.getCard(cardId);
+                        if (targetCard) {
+                            targetCard.mentions.push({
+                                sourceCard: { id: sourceCard.id, title: sourceCard.title },
+                                context: sourceCard.content
+                            });
+                        }
+                    });
+                });
+            },
+            
+            updateChildrenRelations: () => {
+                CardsModel.cards.forEach(card => {
+                    card.children = [];
+                });
+                
+                CardsModel.cards.forEach(card => {
+                    if (card.parentIds && card.parentIds.length > 0) {
+                        card.parentIds.forEach(parentId => {
+                            const parentCard = CardsModel.getCard(parentId);
+                            if (parentCard) {
+                                parentCard.children.push({
+                                    id: card.id,
+                                    title: card.title
+                                });
+                            }
+                        });
+                    }
+                });
+            },
+            
+            getAllParentIds: (cardId) => {
+                const allParentIds = new Set();
+                const queue = [cardId];
+                
+                while (queue.length > 0) {
+                    const currentId = queue.shift();
+                    const currentCard = CardsModel.getCard(currentId);
+                    
+                    if (currentCard && currentCard.parentIds) {
+                        currentCard.parentIds.forEach(parentId => {
+                            if (!allParentIds.has(parentId)) {
+                                allParentIds.add(parentId);
+                                queue.push(parentId);
+                            }
+                        });
+                    }
+                }
+                
+                return Array.from(allParentIds);
+            },
+            
+            getAllChildIds: (cardId) => {
+                const allChildIds = new Set();
+                const queue = [cardId];
+                
+                while (queue.length > 0) {
+                    const currentId = queue.shift();
+                    const currentCard = CardsModel.getCard(currentId);
+                    
+                    if (currentCard && currentCard.children) {
+                        currentCard.children.forEach(child => {
+                            if (!allChildIds.has(child.id)) {
+                                allChildIds.add(child.id);
+                                queue.push(child.id);
+                            }
+                        });
+                    }
+                }
+                
+                return Array.from(allChildIds);
+            },
+            
+            getCard: (cardId) => {
+                return CardsModel.cards.find(c => c.id == cardId);
+            },
+            
+            searchCards: (query, excludeCardId, excludeChildren = false) => {
+                if (!query) return [];
+                
+                let excludeIds = excludeCardId ? [excludeCardId] : [];
+                
+                if (excludeCardId) {
+                    excludeIds = excludeIds.concat(CardsModel.getAllParentIds(excludeCardId));
+                    if (excludeChildren) {
+                        excludeIds = excludeIds.concat(CardsModel.getAllChildIds(excludeCardId));
+                    }
+                }
+                
+                return CardsModel.cards.filter(card => {
+                    return card.title.toLowerCase().includes(query.toLowerCase()) && 
+                           !excludeIds.includes(card.id);
+                });
+            },
+            
+            loadState: () => {
+                const savedCards = localStorage.getItem('cardsSystem');
+                if (savedCards) {
+                    try {
+                        CardsModel.cards = JSON.parse(savedCards);
+                        CardsModel.cards.forEach(card => {
+                            if (!card.parentIds) card.parentIds = [];
+                            if (!card.children) card.children = [];
+                            if (!card.mentions) card.mentions = [];
+                            
+                            if (card.isEmpty === undefined) {
+                                card.isEmpty = (card.title === "" || card.title === "Новая карточка");
+                                if (card.isEmpty && !card.placeholder) {
+                                    const date = new Date(card.createdAt || Date.now());
+                                    card.placeholder = `Карточка от ${date.toLocaleDateString()} ${date.toLocaleTimeString().slice(0,5)}`;
+                                }
+                            }
+                            
+                            if (card.isEmpty && card.parentIds.length === 0 && card.children.length === 0) {
+                                card.title = "";
+                            }
+                            else if (card.isEmpty) {
+                                card.title = card.placeholder;
+                                card.isEmpty = false;
+                            }
+                        });
+                        CardsModel.updateAllRelations();
+                    } catch (e) {
+                        console.error("Ошибка загрузки:", e);
+                    }
+                }
+            }
+        };
+
+        const CardsView = {
+            render: () => {
+                $('#cards-container').empty();
+                
+                CardsModel.cards.forEach(card => {
+                    const parentIds = card.parentIds || [];
+                    const parents = parentIds.map(id => {
+                        const parentCard = CardsModel.getCard(id);
+                        return parentCard ? { id: parentCard.id, title: parentCard.title } : null;
+                    }).filter(Boolean);
+                    
+                    const children = card.children || [];
+                    const mentions = card.mentions || [];
+                    
+                    const html = ejs.render($('#card-template').text(), {
+                        ...card,
+                        parents: parents,
+                        children: children,
+                        mentions: mentions
+                    });
+                    
+                    $('#cards-container').append(html);
+                });
+            },
+            
+            updateCardRelations: function(cardId) {
+                const card = CardsModel.getCard(cardId);
+                if (!card) return;
+
+                const $card = $(`[data-card-id="${cardId}"]`);
+                if (!$card.length) return;
+
+                this.updateParentsList($card, cardId);
+                this.updateChildrenList($card, cardId);
+                
+                CardsModel.cards.forEach(c => {
+                    if (c.parentIds && c.parentIds.includes(cardId)) {
+                        const $parentCard = $(`[data-card-id="${c.id}"]`);
+                        if ($parentCard.length) {
+                            this.updateChildrenList($parentCard, c.id);
+                        }
+                    }
+                });
+                
+                card.parentIds.forEach(parentId => {
+                    const $parentCard = $(`[data-card-id="${parentId}"]`);
+                    if ($parentCard.length) {
+                        this.updateChildrenList($parentCard, parentId);
+                    }
+                });
+            },
+            
+            updateParentsList: function($card, cardId) {
+                const card = CardsModel.getCard(cardId);
+                const parentIds = card.parentIds || [];
+                const parents = parentIds.map(id => {
+                    const parentCard = CardsModel.getCard(id);
+                    return parentCard ? { id: parentCard.id, title: parentCard.title } : null;
+                }).filter(Boolean);
+                
+                const parentsListHtml = parents.length > 0 
+                    ? parents.map(parent => `
+                        <div class="card__parent-item">
+                            <span class="mention" data-card-id="${parent.id}">${parent.title}</span>
+                            <span class="remove-parent" data-parent-id="${parent.id}" title="Удалить связь">×</span>
+                            <span class="remove-with-card" data-card-id="${parent.id}" title="Удалить карточку">🗑</span>
+                        </div>
+                    `).join('')
+                    : '<div>Нет родителей</div>';
+                
+                $card.find('.parents-list').html(parentsListHtml);
+            },
+            
+            updateChildrenList: function($card, parentId) {
+                const parentCard = CardsModel.getCard(parentId);
+                const children = parentCard.children || [];
+                
+                const childrenListHtml = children.length > 0
+                    ? children.map(child => `
+                        <div class="card__child-item">
+                            <span class="child-link" data-card-id="${child.id}">${child.title}</span>
+                            <span class="remove-child" data-child-id="${child.id}" title="удалить связь">×</span>
+                            <span class="remove-with-card" data-card-id="${child.id}" title="Удалить карточку">🗑</span>
+                        </div>
+                    `).join('')
+                    : '<div>Нет дочерних карточек</div>';
+                
+                $card.find('.children-list').html(childrenListHtml);
+            },
+            
+            addNewCardToView: function(card) {
+                const parentIds = card.parentIds || [];
+                const parents = parentIds.map(id => {
+                    const parentCard = CardsModel.getCard(id);
+                    return parentCard ? { id: parentCard.id, title: parentCard.title } : null;
+                }).filter(Boolean);
+                
+                const children = card.children || [];
+                const mentions = card.mentions || [];
+                
+                const html = ejs.render($('#card-template').text(), {
+                    ...card,
+                    parents: parents,
+                    children: children,
+                    mentions: mentions
+                });
+                
+                $('#cards-container').append(html);
+            }
+        };
+
+        const CardsController = {
+            init: () => {
+                CardsModel.loadState();
+                CardsView.render();
+                
+                $(document)
+                    .on('click', '#add-card-btn', CardsController.handleAddCard)
+                    .on('click', '#delete-all-btn', CardsController.handleDeleteAllCards)
+                    .on('click', '.card__delete', CardsController.handleDeleteCard)
+                    .on('input', '.card__title', CardsController.handleCardTitleChange)
+                    .on('input', '.card__textarea', CardsController.handleCardContentChange)
+                    .on('click', '.remove-parent', CardsController.handleRemoveParent)
+                    .on('click', '.remove-child', CardsController.handleRemoveChild)
+                    .on('click', '.remove-with-card', CardsController.handleRemoveWithCard)
+                    .on('click', '.mention, .child-link', CardsController.handleMentionClick)
+                    .on('input', '.parent-search-input', CardsController.handleParentSearch)
+                    .on('click', '.parent-search-add', CardsController.handleAddParent)
+                    .on('keypress', '.parent-search-input', function(e) {
+                        if (e.which === 13) CardsController.handleAddParent.call(this, e);
+                    })
+                    .on('click', '.parent-suggestion-item', CardsController.handleAddParentFromSuggestion)
+                    .on('input', '.child-search-input', CardsController.handleChildSearch)
+                    .on('click', '.child-search-add', CardsController.handleAddChild)
+                    .on('keypress', '.child-search-input', function(e) {
+                        if (e.which === 13) CardsController.handleAddChild.call(this, e);
+                    })
+                    .on('click', '.child-suggestion-item', CardsController.handleAddChildFromSuggestion)
+                    .on('click', function(e) {
+                        if (!$(e.target).closest('.suggestions').length && 
+                            !$(e.target).hasClass('search-input')) {
+                            $('.suggestions').hide();
+                        }
+                    });
+            },
+            
+            handleAddCard: function(e) {
+                e.preventDefault();
+                const newCard = CardsModel.addCard();
+                CardsView.addNewCardToView(newCard);
+                const $titleInput = $(`[data-card-id="${newCard.id}"] .card__title`);
+                $titleInput.focus();
+                
+                $titleInput.on('blur', function() {
+                    const cardId = $(this).closest('.card').data('card-id');
+                    const card = CardsModel.getCard(cardId);
+                    if (card.isEmpty && $(this).val().trim() === "") {
+                        $(this).attr('placeholder', card.placeholder);
+                    }
+                });
+            },
+            
+            handleDeleteAllCards: function(e) {
+                e.preventDefault();
+                
+                if (confirm("Вы уверены, что хотите удалить ВСЕ карточки? Это действие нельзя отменить.")) {
+                    if (CardsModel.deleteAllCards()) {
+                        $('#cards-container').empty();
+                    }
+                }
+            },
+            
+            handleDeleteCard: function(e) {
+                e.preventDefault();
+                const cardId = $(this).closest('.card').data('card-id');
+                const card = CardsModel.getCard(cardId);
+                
+                // Если карточка пустая (нет заголовка, содержимого и связей), удаляем без подтверждения
+                if (card.isEmpty && card.title === "" && card.content === "" && 
+                    (card.parentIds === undefined || card.parentIds.length === 0) && 
+                    (card.children === undefined || card.children.length === 0)) {
+                    if (CardsModel.deleteCard(cardId)) {
+                        $(this).closest('.card').remove();
+                        CardsModel.updateAllRelations();
+                    }
+                } 
+                // Иначе запрашиваем подтверждение
+                else if (confirm("Удалить эту карточку?")) {
+                    if (CardsModel.deleteCard(cardId)) {
+                        $(this).closest('.card').remove();
+                        CardsModel.updateAllRelations();
+                    }
+                }
+            },
+            
+            handleCardTitleChange: function() {
+                const cardId = $(this).closest('.card').data('card-id');
+                const newTitle = $(this).val();
+                const card = CardsModel.getCard(cardId);
+                
+                if (card.isEmpty && newTitle.length > 0) {
+                    card.isEmpty = false;
+                }
+                else if (card.isEmpty && newTitle.length === 0) {
+                    $(this).attr('placeholder', card.placeholder);
+                }
+                
+                CardsModel.updateCard(cardId, { title: newTitle });
+            },
+            
+            handleCardContentChange: function() {
+                const cardId = $(this).closest('.card').data('card-id');
+                const content = $(this).val();
+                const card = CardsModel.getCard(cardId);
+                
+                if (card.isEmpty && content.length > 0) {
+                    card.isEmpty = false;
+                    if (card.title === "") {
+                        card.title = card.placeholder;
+                        $(this).closest('.card').find('.card__title').val(card.placeholder);
+                    }
+                }
+                
+                const processedContent = content.replace(/@(\d+)/g, '[[$1]]');
+                CardsModel.updateCard(cardId, { content: processedContent });
+            },
+            
+            handleRemoveParent: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const cardId = $(this).closest('.card').data('card-id');
+                const parentId = $(this).data('parent-id');
+                
+                if (CardsModel.removeParent(cardId, parentId)) {
+                    CardsView.updateCardRelations(cardId);
+                    CardsView.updateCardRelations(parentId);
+                }
+            },
+            
+            handleRemoveChild: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const parentId = $(this).closest('.card').data('card-id');
+                const childId = $(this).data('child-id');
+                
+                if (CardsModel.removeChild(parentId, childId)) {
+                    CardsView.updateCardRelations(parentId);
+                    CardsView.updateCardRelations(childId);
+                }
+            },
+            
+            handleRemoveWithCard: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const cardIdToRemove = $(this).data('card-id');
+                const currentCardId = $(this).closest('.card').data('card-id');
+                const cardToRemove = CardsModel.getCard(cardIdToRemove);
+                
+                if (cardToRemove && confirm(`Удалить карточку "${cardToRemove.title}" и все её связи?`)) {
+                    if (CardsModel.deleteCard(cardIdToRemove)) {
+                        $(`[data-card-id="${cardIdToRemove}"]`).remove();
+                        const $currentCard = $(`[data-card-id="${currentCardId}"]`);
+                        if ($currentCard.length) {
+                            CardsView.updateCardRelations(currentCardId);
+                        }
+                    }
+                }
+            },
+            
+            handleMentionClick: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const cardId = $(this).data('card-id');
+                const cardElement = $(`[data-card-id="${cardId}"]`);
+                
+                if (cardElement.length) {
+                    $('html, body').animate({
+                        scrollTop: cardElement.offset().top - 20
+                    }, 500);
+                    
+                    cardElement.css('background', '#fffde7');
+                    setTimeout(() => {
+                        cardElement.css('background', '');
+                    }, 2000);
+                }
+            },
+            
+            handleParentSearch: function(e) {
+                const $input = $(this);
+                const query = $input.val().trim();
+                const cardId = $input.closest('.card').data('card-id');
+                const $suggestions = $input.parent().next('.suggestions');
+                
+                if (query.length > 0) {
+                    const results = CardsModel.searchCards(query, cardId, true);
+                    
+                    $suggestions.empty();
+                    if (results.length > 0) {
+                        results.forEach(card => {
+                            $suggestions.append(
+                                `<div class="suggestion-item parent-suggestion-item" data-card-id="${card.id}">${card.title}</div>`
+                            );
+                        });
+                        $suggestions.show();
+                    } else {
+                        $suggestions.hide();
+                    }
+                } else {
+                    $suggestions.hide();
+                }
+            },
+            
+            handleChildSearch: function(e) {
+                const $input = $(this);
+                const query = $input.val().trim();
+                const cardId = $input.closest('.card').data('card-id');
+                const $suggestions = $input.parent().next('.suggestions');
+                
+                if (query.length > 0) {
+                    const results = CardsModel.searchCards(query, cardId, true);
+                    
+                    $suggestions.empty();
+                    if (results.length > 0) {
+                        results.forEach(card => {
+                            $suggestions.append(
+                                `<div class="suggestion-item child-suggestion-item" data-card-id="${card.id}">${card.title}</div>`
+                            );
+                        });
+                        $suggestions.show();
+                    } else {
+                        $suggestions.hide();
+                    }
+                } else {
+                    $suggestions.hide();
+                }
+            },
+            
+            handleAddParent: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const $input = $(this).hasClass('parent-search-input') ? $(this) : $(this).siblings('.parent-search-input');
+                const query = $input.val().trim();
+                const cardId = $input.closest('.card').data('card-id');
+                const $suggestions = $input.parent().next('.suggestions');
+                
+                if (!query) return;
+                
+                if ($suggestions.is(':visible') && $suggestions.find('.suggestion-item').length > 0) {
+                    const firstSuggestion = $suggestions.find('.suggestion-item').first();
+                    const parentId = firstSuggestion.data('card-id');
+                    
+                    if (CardsModel.addParent(cardId, parentId)) {
+                        const card = CardsModel.getCard(cardId);
+                        if (card.isEmpty) {
+                            card.isEmpty = false;
+                            card.title = card.placeholder;
+                            $input.closest('.card').find('.card__title').val(card.placeholder);
+                        }
+                        $suggestions.hide();
+                        $input.val('');
+                        CardsView.updateCardRelations(cardId);
+                        CardsView.updateCardRelations(parentId);
+                        $input.focus();
+                    }
+                } else {
+                    const newCard = CardsModel.addCard(query);
+                    if (CardsModel.addParent(cardId, newCard.id)) {
+                        $input.val('');
+                        CardsView.addNewCardToView(newCard);
+                        CardsView.updateCardRelations(cardId);
+                        CardsView.updateCardRelations(newCard.id);
+                        $input.focus();
+                    }
+                }
+            },
+            
+            handleAddChild: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const $input = $(this).hasClass('child-search-input') ? $(this) : $(this).siblings('.child-search-input');
+                const query = $input.val().trim();
+                const parentId = $input.closest('.card').data('card-id');
+                const $suggestions = $input.parent().next('.suggestions');
+                
+                if (!query) return;
+                
+                if ($suggestions.is(':visible') && $suggestions.find('.suggestion-item').length > 0) {
+                    const firstSuggestion = $suggestions.find('.suggestion-item').first();
+                    const childId = firstSuggestion.data('card-id');
+                    
+                    if (CardsModel.addChild(parentId, childId)) {
+                        $suggestions.hide();
+                        $input.val('');
+                        CardsView.updateCardRelations(parentId);
+                        CardsView.updateCardRelations(childId);
+                        $input.focus();
+                    }
+                } else {
+                    const newCard = CardsModel.addCard(query);
+                    if (CardsModel.addChild(parentId, newCard.id)) {
+                        $input.val('');
+                        CardsView.addNewCardToView(newCard);
+                        CardsView.updateCardRelations(parentId);
+                        CardsView.updateCardRelations(newCard.id);
+                        $input.focus();
+                    }
+                }
+            },
+            
+            handleAddParentFromSuggestion: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const $suggestion = $(this);
+                const parentId = $suggestion.data('card-id');
+                const cardId = $suggestion.closest('.card').data('card-id');
+                const $input = $suggestion.closest('.card__parents').find('.parent-search-input');
+                
+                if (CardsModel.addParent(cardId, parentId)) {
+                    const card = CardsModel.getCard(cardId);
+                    if (card.isEmpty) {
+                        card.isEmpty = false;
+                        card.title = card.placeholder;
+                        $input.closest('.card').find('.card__title').val(card.placeholder);
+                    }
+                    $suggestion.closest('.suggestions').hide();
+                    $input.val('').focus();
+                    CardsView.updateCardRelations(cardId);
+                    CardsView.updateCardRelations(parentId);
+                }
+            },
+            
+            handleAddChildFromSuggestion: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const $suggestion = $(this);
+                const childId = $suggestion.data('card-id');
+                const parentId = $suggestion.closest('.card').data('card-id');
+                const $input = $suggestion.closest('.card__children').find('.child-search-input');
+                
+                if (CardsModel.addChild(parentId, childId)) {
+                    $suggestion.closest('.suggestions').hide();
+                    $input.val('').focus();
+                    CardsView.updateCardRelations(parentId);
+                    CardsView.updateCardRelations(childId);
+                }
+            }
+        };
+
+        $(document).ready(() => {
+            CardsController.init();
+        });
+    </script>
+</body>
+</html>
