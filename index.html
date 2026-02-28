@@ -4,18 +4,20 @@
     <title>Система карточек с автодополнением</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ejs@3.1.9/ejs.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-tap-highlight-color: transparent;
         }
         body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            padding: 12px;
             background: #f5f5f5;
-            overflow-y: scroll;
+            min-height: 100vh;
         }
         .cards-system {
             max-width: 1200px;
@@ -23,212 +25,383 @@
         }
         .cards-system__header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             color: #333;
+            font-size: clamp(1.5rem, 5vw, 2rem);
+            padding: 0 10px;
         }
         .cards-system__controls {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .cards-system__addCard,
+        .cards-system__deleteAll {
+            padding: 12px 20px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            flex: 0 1 auto;
+            min-width: 160px;
+            -webkit-appearance: none;
+            touch-action: manipulation;
         }
         .cards-system__addCard {
-            padding: 8px 15px;
             background: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
         }
         .cards-system__deleteAll {
-            padding: 8px 15px;
             background: #f44336;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+        }
+        .cards-system__addCard:active,
+        .cards-system__deleteAll:active {
+            transform: scale(0.98);
+            opacity: 0.9;
         }
         .cards-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(min(100%, 350px), 1fr));
+            gap: 16px;
+            padding: 4px;
         }
         .card {
             background: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
             position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .card:active {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         .card__header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
+            gap: 10px;
         }
         .card__title {
             margin: 0;
-            font-size: 1.2em;
-            color: #444;
+            font-size: 1.1em;
+            color: #333;
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+            -webkit-appearance: none;
+        }
+        .card__title:focus {
+            outline: none;
+            border-color: #2196F3;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
         }
         .card__delete {
             background: #f44336;
             color: white;
             border: none;
-            border-radius: 4px;
-            width: 24px;
-            height: 24px;
+            border-radius: 8px;
+            width: 44px;
+            height: 44px;
             cursor: pointer;
-            margin-left: 10px;
             flex-shrink: 0;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-appearance: none;
+            touch-action: manipulation;
+            box-shadow: 0 2px 4px rgba(244, 67, 54, 0.2);
+        }
+        .card__delete:active {
+            transform: scale(0.95);
+            background: #d32f2f;
         }
         .card__content {
-            margin: 15px 0;
+            margin: 16px 0;
         }
         .card__textarea {
             width: 100%;
-            min-height: 100px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
             resize: vertical;
+            background: #fafafa;
+            -webkit-appearance: none;
+            font-family: inherit;
+        }
+        .card__textarea:focus {
+            outline: none;
+            border-color: #2196F3;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
         }
         .card__footer {
-            font-size: .9em;
+            font-size: 0.85em;
             color: #666;
-            margin-top: 10px;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
         }
-        .card__parents {
-            margin-bottom: 10px;
+        .card__parents,
+        .card__children,
+        .card__mentions {
+            margin: 16px 0;
             position: relative;
         }
         .card__children {
-            margin-top: 10px;
-            padding-top: 10px;
+            margin-top: 20px;
+            padding-top: 12px;
             border-top: 1px dashed #ddd;
-            position: relative;
         }
         .card__parents-title,
-        .card__children-title {
-            font-weight: bold;
-            margin-bottom: 5px;
+        .card__children-title,
+        .card__mentions-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #555;
+            font-size: 0.95em;
         }
         .parents-list,
         .children-list {
             display: flex;
             flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 5px;
+            gap: 8px;
+            margin-top: 8px;
         }
         .card__parent-item,
         .card__child-item {
             display: flex;
             align-items: center;
-            padding: 5px 8px;
-            background: #f0f0f0;
-            border-radius: 4px;
+            padding: 8px 12px;
+            background: #f0f7ff;
+            border-radius: 20px;
             font-size: 14px;
+            border: 1px solid #d4e3ff;
+            width: 100%;
+        }
+        @media (min-width: 480px) {
+            .card__parent-item,
+            .card__child-item {
+                width: auto;
+            }
         }
         .children-list {
-            max-height: 150px;
+            max-height: 250px;
             overflow-y: auto;
-            padding-right: 5px;
+            padding-right: 4px;
+            -webkit-overflow-scrolling: touch;
         }
         .search-container {
             display: flex;
-            gap: 5px;
-            margin-bottom: 5px;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
         }
         .search-input {
-            flex-grow: 1;
-            padding: 8px;
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 14px;
             border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #fafafa;
+            -webkit-appearance: none;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #2196F3;
+            background: #fff;
         }
         .search-add {
             background: #4CAF50;
             color: white;
             border: none;
-            border-radius: 4px;
-            width: 34px;
+            border-radius: 8px;
+            width: 48px;
+            height: 48px;
             cursor: pointer;
-            flex-shrink: 0;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-appearance: none;
+            touch-action: manipulation;
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+        }
+        .search-add:active {
+            transform: scale(0.95);
+            background: #43a047;
         }
         .suggestions {
             position: absolute;
             background: white;
             border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 100%;
-            max-height: 200px;
+            border-radius: 12px;
+            width: calc(100% - 60px);
+            max-height: 250px;
             overflow-y: auto;
-            z-index: 100;
+            z-index: 1000;
             display: none;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-top: 4px;
+            -webkit-overflow-scrolling: touch;
         }
         .suggestion-item {
-            padding: 8px 12px;
+            padding: 14px 16px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            -webkit-tap-highlight-color: rgba(33, 150, 243, 0.1);
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
         }
         .suggestion-item:hover {
-            background-color: #f0f0f0;
+            background-color: #f5f5f5;
+        }
+        .suggestion-item:active {
+            background-color: #e3f2fd;
         }
         .card__mentions {
-            margin-top: 15px;
-            padding-top: 10px;
+            margin-top: 16px;
+            padding-top: 12px;
             border-top: 1px dashed #ddd;
         }
-        .card__mentions-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
         .card__mention-item {
-            margin: 3px 0;
-            padding: 5px;
+            margin: 6px 0;
+            padding: 10px 12px;
             background: #f8f8f8;
-            border-radius: 3px;
+            border-radius: 8px;
             font-size: 14px;
+            border: 1px solid #eee;
         }
         .mention,
         .child-link {
             color: #2196F3;
             cursor: pointer;
             text-decoration: underline;
+            padding: 4px 0;
+            display: inline-block;
         }
-        .mention:hover,
-        .child-link:hover {
+        .mention:active,
+        .child-link:active {
             color: #0d8aee;
+            opacity: 0.8;
+        }
+        .remove-parent,
+        .remove-child,
+        .remove-with-card {
+            cursor: pointer;
+            margin-left: 8px;
+            font-weight: bold;
+            font-size: 18px;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            background: rgba(0,0,0,0.05);
+            touch-action: manipulation;
         }
         .remove-parent,
         .remove-child {
             color: #f44336;
-            cursor: pointer;
-            margin-left: 5px;
-            font-weight: bold;
         }
         .remove-with-card {
             color: #ff9800;
-            cursor: pointer;
-            margin-left: 3px;
-            font-weight: bold;
+        }
+        .remove-parent:active,
+        .remove-child:active,
+        .remove-with-card:active {
+            background: rgba(0,0,0,0.1);
+            transform: scale(0.9);
+        }
+        
+        /* Улучшенная прокрутка для мобильных */
+        .cards-container {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Адаптация для очень маленьких экранов */
+        @media (max-width: 380px) {
+            .cards-system__controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .cards-system__addCard,
+            .cards-system__deleteAll {
+                width: 100%;
+            }
+            .search-container {
+                flex-direction: column;
+            }
+            .search-add {
+                width: 100%;
+                height: 48px;
+            }
+            .suggestions {
+                width: 100%;
+            }
+        }
+        
+        /* Улучшенный отклик при касании */
+        button, 
+        .suggestion-item,
+        .remove-parent,
+        .remove-child,
+        .remove-with-card,
+        .mention,
+        .child-link {
+            touch-action: manipulation;
+        }
+        
+        /* Убираем задержку при касании на мобильных */
+        a, button, input, textarea, .suggestion-item {
+            touch-action: manipulation;
+        }
+        
+        /* Стили для активного состояния карточки при скролле */
+        .card.highlight {
+            background: #fffde7;
+            transition: background 0.3s;
+        }
+        
+        /* Улучшенная читаемость на мобильных */
+        .card__title::placeholder,
+        .card__textarea::placeholder,
+        .search-input::placeholder {
+            color: #999;
+            font-size: 14px;
+        }
+        
+        /* Индикатор загрузки для touch-событий */
+        .ripple {
+            position: relative;
+            overflow: hidden;
         }
     </style>
 </head>
 <body>
     <div class="cards-system">
-        <h1 class="cards-system__header">Система карточек с автодополнением</h1>
+        <h1 class="cards-system__header">📝 Система карточек</h1>
         <div class="cards-system__controls">
-            <button class="cards-system__addCard" id="add-card-btn">+ Создать карточку</button>
-            <button class="cards-system__deleteAll" id="delete-all-btn">Удалить все карточки</button>
+            <button class="cards-system__addCard" id="add-card-btn">➕ Создать карточку</button>
+            <button class="cards-system__deleteAll" id="delete-all-btn">🗑 Удалить все</button>
         </div>
         <div class="cards-container" id="cards-container"></div>
     </div>
@@ -236,15 +409,15 @@
     <script type="text/ejs" id="card-template">
         <div class="card" data-card-id="<%= id %>">
             <div class="card__header">
-                <input type="text" class="card__title" value="<%= title %>" placeholder="<%= placeholder %>">
-                <button class="card__delete" title="Удалить карточку">×</button>
+                <input type="text" class="card__title" value="<%= title %>" placeholder="<%= placeholder %>" inputmode="text" enterkeyhint="done">
+                <button class="card__delete" title="Удалить карточку">✕</button>
             </div>
             
             <div class="card__parents">
-                <div class="card__parents-title">Родители:</div>
+                <div class="card__parents-title">👥 Родители:</div>
                 <div class="search-container">
-                    <input type="text" class="search-input parent-search-input" placeholder="Начните вводить название..." data-card-id="<%= id %>">
-                    <button class="search-add parent-search-add" title="Добавить родителя">+</button>
+                    <input type="text" class="search-input parent-search-input" placeholder="Поиск родителя..." data-card-id="<%= id %>" inputmode="search" enterkeyhint="search">
+                    <button class="search-add parent-search-add" title="Добавить родителя">➕</button>
                 </div>
                 <div class="suggestions parent-suggestions"></div>
                 
@@ -252,24 +425,24 @@
                     <% parents.forEach(function(parent) { %>
                         <div class="card__parent-item">
                             <span class="mention" data-card-id="<%= parent.id %>"><%= parent.title %></span>
-                            <span class="remove-parent" data-parent-id="<%= parent.id %>" title="Удалить связь">×</span>
+                            <span class="remove-parent" data-parent-id="<%= parent.id %>" title="Удалить связь">✕</span>
                             <span class="remove-with-card" data-card-id="<%= parent.id %>" title="Удалить карточку">🗑</span>
                         </div>
                     <% }); %>
                     <% if (parents.length === 0) { %>
-                        <div>Нет родителей</div>
+                        <div style="color: #999; width: 100%; text-align: center; padding: 10px;">Нет родителей</div>
                     <% } %>
                 </div>
             </div>
             
             <div class="card__content">
-                <textarea class="card__textarea" placeholder="Содержание карточки..."><%= content %></textarea>
+                <textarea class="card__textarea" placeholder="Содержание карточки..." inputmode="text" enterkeyhint="enter"><%= content %></textarea>
                 
                 <div class="card__children">
-                    <div class="card__children-title">Дочерние карточки:</div>
+                    <div class="card__children-title">👶 Дочерние карточки:</div>
                     <div class="search-container">
-                        <input type="text" class="search-input child-search-input" placeholder="Начните вводить название..." data-card-id="<%= id %>">
-                        <button class="search-add child-search-add" title="Добавить дочернюю карточку">+</button>
+                        <input type="text" class="search-input child-search-input" placeholder="Поиск дочерней..." data-card-id="<%= id %>" inputmode="search" enterkeyhint="search">
+                        <button class="search-add child-search-add" title="Добавить дочернюю">➕</button>
                     </div>
                     <div class="suggestions child-suggestions"></div>
                     
@@ -277,19 +450,19 @@
                         <% children.forEach(function(child) { %>
                             <div class="card__child-item">
                                 <span class="child-link" data-card-id="<%= child.id %>"><%= child.title %></span>
-                                <span class="remove-child" data-child-id="<%= child.id %>" title="Удалить связь">×</span>
+                                <span class="remove-child" data-child-id="<%= child.id %>" title="Удалить связь">✕</span>
                                 <span class="remove-with-card" data-card-id="<%= child.id %>" title="Удалить карточку">🗑</span>
                             </div>
                         <% }); %>
                         <% if (children.length === 0) { %>
-                            <div>Нет дочерних карточек</div>
+                            <div style="color: #999; width: 100%; text-align: center; padding: 10px;">Нет дочерних</div>
                         <% } %>
                     </div>
                 </div>
                 
                 <% if (mentions.length > 0) { %>
                     <div class="card__mentions">
-                        <div class="card__mentions-title">Упоминается в:</div>
+                        <div class="card__mentions-title">📌 Упоминается в:</div>
                         <% mentions.forEach(function(mention) { %>
                             <div class="card__mention-item">
                                 <span class="mention" data-card-id="<%= mention.sourceCard.id %>">
@@ -317,20 +490,20 @@
                 localStorage.setItem('cardsSystem', JSON.stringify(CardsModel.cards));
             },
             
-            addCard: () => {
+            addCard: (initialTitle = '') => {
                 const now = new Date();
                 const placeholder = `Карточка от ${now.toLocaleDateString()} ${now.toLocaleTimeString().slice(0,5)}`;
                 
                 const newCard = {
                     id: CardsModel.generateId(),
-                    title: "",
+                    title: initialTitle || "",
                     placeholder: placeholder,
                     content: "",
                     parentIds: [],
                     mentions: [],
                     children: [],
                     createdAt: now.toLocaleString(),
-                    isEmpty: true
+                    isEmpty: !initialTitle
                 };
                 CardsModel.cards.push(newCard);
                 CardsModel.saveState();
@@ -411,6 +584,7 @@
             },
             
             deleteAllCards: () => {
+                if (CardsModel.cards.length === 0) return false;
                 CardsModel.cards = [];
                 CardsModel.saveState();
                 return true;
@@ -623,11 +797,11 @@
                     ? parents.map(parent => `
                         <div class="card__parent-item">
                             <span class="mention" data-card-id="${parent.id}">${parent.title}</span>
-                            <span class="remove-parent" data-parent-id="${parent.id}" title="Удалить связь">×</span>
+                            <span class="remove-parent" data-parent-id="${parent.id}" title="Удалить связь">✕</span>
                             <span class="remove-with-card" data-card-id="${parent.id}" title="Удалить карточку">🗑</span>
                         </div>
                     `).join('')
-                    : '<div>Нет родителей</div>';
+                    : '<div style="color: #999; width: 100%; text-align: center; padding: 10px;">Нет родителей</div>';
                 
                 $card.find('.parents-list').html(parentsListHtml);
             },
@@ -640,11 +814,11 @@
                     ? children.map(child => `
                         <div class="card__child-item">
                             <span class="child-link" data-card-id="${child.id}">${child.title}</span>
-                            <span class="remove-child" data-child-id="${child.id}" title="удалить связь">×</span>
+                            <span class="remove-child" data-child-id="${child.id}" title="Удалить связь">✕</span>
                             <span class="remove-with-card" data-card-id="${child.id}" title="Удалить карточку">🗑</span>
                         </div>
                     `).join('')
-                    : '<div>Нет дочерних карточек</div>';
+                    : '<div style="color: #999; width: 100%; text-align: center; padding: 10px;">Нет дочерних</div>';
                 
                 $card.find('.children-list').html(childrenListHtml);
             },
@@ -687,22 +861,29 @@
                     .on('click', '.mention, .child-link', CardsController.handleMentionClick)
                     .on('input', '.parent-search-input', CardsController.handleParentSearch)
                     .on('click', '.parent-search-add', CardsController.handleAddParent)
-                    .on('keypress', '.parent-search-input', function(e) {
-                        if (e.which === 13) CardsController.handleAddParent.call(this, e);
-                    })
                     .on('click', '.parent-suggestion-item', CardsController.handleAddParentFromSuggestion)
                     .on('input', '.child-search-input', CardsController.handleChildSearch)
                     .on('click', '.child-search-add', CardsController.handleAddChild)
-                    .on('keypress', '.child-search-input', function(e) {
-                        if (e.which === 13) CardsController.handleAddChild.call(this, e);
-                    })
                     .on('click', '.child-suggestion-item', CardsController.handleAddChildFromSuggestion)
+                    .on('touchstart', '.suggestion-item', function(e) {
+                        $(this).css('background-color', '#e3f2fd');
+                    })
+                    .on('touchend', '.suggestion-item', function(e) {
+                        $(this).css('background-color', '');
+                    })
                     .on('click', function(e) {
                         if (!$(e.target).closest('.suggestions').length && 
                             !$(e.target).hasClass('search-input')) {
                             $('.suggestions').hide();
                         }
                     });
+                    
+                // Обработка сворачивания клавиатуры на iOS
+                $(window).on('touchstart', function() {
+                    if (!$(event.target).is('input, textarea')) {
+                        $('input, textarea').blur();
+                    }
+                });
             },
             
             handleAddCard: function(e) {
@@ -712,19 +893,21 @@
                 const $titleInput = $(`[data-card-id="${newCard.id}"] .card__title`);
                 $titleInput.focus();
                 
-                $titleInput.on('blur', function() {
-                    const cardId = $(this).closest('.card').data('card-id');
-                    const card = CardsModel.getCard(cardId);
-                    if (card.isEmpty && $(this).val().trim() === "") {
-                        $(this).attr('placeholder', card.placeholder);
-                    }
-                });
+                // Прокрутка к новой карточке
+                setTimeout(() => {
+                    $(`[data-card-id="${newCard.id}"]`).get(0).scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                }, 100);
             },
             
             handleDeleteAllCards: function(e) {
                 e.preventDefault();
                 
-                if (confirm("Вы уверены, что хотите удалить ВСЕ карточки? Это действие нельзя отменить.")) {
+                if (CardsModel.cards.length === 0) return;
+                
+                if (confirm("Удалить ВСЕ карточки? Это действие нельзя отменить.")) {
                     if (CardsModel.deleteAllCards()) {
                         $('#cards-container').empty();
                     }
@@ -733,10 +916,11 @@
             
             handleDeleteCard: function(e) {
                 e.preventDefault();
+                e.stopPropagation();
+                
                 const cardId = $(this).closest('.card').data('card-id');
                 const card = CardsModel.getCard(cardId);
                 
-                // Если карточка пустая (нет заголовка, содержимого и связей), удаляем без подтверждения
                 if (card.isEmpty && card.title === "" && card.content === "" && 
                     (card.parentIds === undefined || card.parentIds.length === 0) && 
                     (card.children === undefined || card.children.length === 0)) {
@@ -745,8 +929,7 @@
                         CardsModel.updateAllRelations();
                     }
                 } 
-                // Иначе запрашиваем подтверждение
-                else if (confirm("Удалить эту карточку?")) {
+                else if (confirm(`Удалить карточку "${card.title || 'без названия'}"?`)) {
                     if (CardsModel.deleteCard(cardId)) {
                         $(this).closest('.card').remove();
                         CardsModel.updateAllRelations();
@@ -761,9 +944,6 @@
                 
                 if (card.isEmpty && newTitle.length > 0) {
                     card.isEmpty = false;
-                }
-                else if (card.isEmpty && newTitle.length === 0) {
-                    $(this).attr('placeholder', card.placeholder);
                 }
                 
                 CardsModel.updateCard(cardId, { title: newTitle });
@@ -820,7 +1000,7 @@
                 const currentCardId = $(this).closest('.card').data('card-id');
                 const cardToRemove = CardsModel.getCard(cardIdToRemove);
                 
-                if (cardToRemove && confirm(`Удалить карточку "${cardToRemove.title}" и все её связи?`)) {
+                if (cardToRemove && confirm(`Удалить карточку "${cardToRemove.title || 'без названия'}"?`)) {
                     if (CardsModel.deleteCard(cardIdToRemove)) {
                         $(`[data-card-id="${cardIdToRemove}"]`).remove();
                         const $currentCard = $(`[data-card-id="${currentCardId}"]`);
@@ -839,14 +1019,15 @@
                 const cardElement = $(`[data-card-id="${cardId}"]`);
                 
                 if (cardElement.length) {
-                    $('html, body').animate({
-                        scrollTop: cardElement.offset().top - 20
-                    }, 500);
+                    cardElement.get(0).scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
                     
                     cardElement.css('background', '#fffde7');
                     setTimeout(() => {
                         cardElement.css('background', '');
-                    }, 2000);
+                    }, 1500);
                 }
             },
             
@@ -863,7 +1044,7 @@
                     if (results.length > 0) {
                         results.forEach(card => {
                             $suggestions.append(
-                                `<div class="suggestion-item parent-suggestion-item" data-card-id="${card.id}">${card.title}</div>`
+                                `<div class="suggestion-item parent-suggestion-item" data-card-id="${card.id}">${card.title || 'Без названия'}</div>`
                             );
                         });
                         $suggestions.show();
@@ -888,7 +1069,7 @@
                     if (results.length > 0) {
                         results.forEach(card => {
                             $suggestions.append(
-                                `<div class="suggestion-item child-suggestion-item" data-card-id="${card.id}">${card.title}</div>`
+                                `<div class="suggestion-item child-suggestion-item" data-card-id="${card.id}">${card.title || 'Без названия'}</div>`
                             );
                         });
                         $suggestions.show();
@@ -904,7 +1085,8 @@
                 e.preventDefault();
                 e.stopPropagation();
                 
-                const $input = $(this).hasClass('parent-search-input') ? $(this) : $(this).siblings('.parent-search-input');
+                const $button = $(this);
+                const $input = $button.siblings('.parent-search-input');
                 const query = $input.val().trim();
                 const cardId = $input.closest('.card').data('card-id');
                 const $suggestions = $input.parent().next('.suggestions');
@@ -944,7 +1126,8 @@
                 e.preventDefault();
                 e.stopPropagation();
                 
-                const $input = $(this).hasClass('child-search-input') ? $(this) : $(this).siblings('.child-search-input');
+                const $button = $(this);
+                const $input = $button.siblings('.child-search-input');
                 const query = $input.val().trim();
                 const parentId = $input.closest('.card').data('card-id');
                 const $suggestions = $input.parent().next('.suggestions');
