@@ -42,27 +42,44 @@
             flex-wrap: wrap;
         }
         
-        .cards-system__addCard,
-        .cards-system__deleteAll {
+        .button {
             padding: 12px 20px;
-            background: #2196F3;
-            color: white;
             border: none;
             border-radius: 8px;
             font-size: 16px;
             font-weight: 500;
-            flex: 0 1 auto;
-            min-width: 140px;
             cursor: pointer;
+            background: transparent;
+            color: inherit;
+            height: 44px;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 120px;
         }
         
-        .cards-system__deleteAll {
-            background: #f44336;
-        }
-        
-        .cards-system__addCard:active,
-        .cards-system__deleteAll:active {
+        .button:active {
             opacity: 0.8;
+        }
+        
+        .button--primary {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .button--danger {
+            background: #f44336;
+            color: white;
+        }
+        
+        .button--success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .button--full {
+            width: 100%;
         }
         
         .cards-container {
@@ -89,32 +106,19 @@
         }
         
         .card__title {
-            width: 100%;
-            padding: 10px 12px;
+            flex: 1;
+            padding: 0 12px;
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 16px;
             background: #fff;
+            height: 44px;
+            line-height: 44px;
         }
         
         .card__title:focus {
             outline: none;
             border-color: #2196F3;
-        }
-        
-        .card__delete {
-            background: #f44336;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 16px;
-            font-size: 14px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        
-        .card__delete:active {
-            opacity: 0.8;
         }
         
         .card__content {
@@ -180,12 +184,13 @@
         .card__child-item {
             display: flex;
             align-items: center;
-            padding: 8px 12px;
+            padding: 0 12px;
             background: #f5f5f5;
             border-radius: 8px;
             font-size: 14px;
             border: 1px solid #e0e0e0;
             width: 100%;
+            height: 44px;
         }
         
         @media (min-width: 480px) {
@@ -210,31 +215,18 @@
         .search-input {
             flex: 1;
             min-width: 200px;
-            padding: 12px 14px;
+            padding: 0 14px;
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 16px;
             background: #fff;
+            height: 44px;
+            line-height: 44px;
         }
         
         .search-input:focus {
             outline: none;
             border-color: #2196F3;
-        }
-        
-        .search-add {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 0 16px;
-            font-size: 14px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        
-        .search-add:active {
-            opacity: 0.8;
         }
         
         .suggestions {
@@ -256,6 +248,9 @@
             cursor: pointer;
             font-size: 15px;
             border-bottom: 1px solid #f0f0f0;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
         }
         
         .suggestion-item:last-child {
@@ -274,11 +269,14 @@
         
         .card__mention-item {
             margin: 6px 0;
-            padding: 10px 12px;
+            padding: 0 12px;
             background: #f5f5f5;
             border-radius: 8px;
             font-size: 14px;
             border: 1px solid #e0e0e0;
+            height: 44px;
+            display: flex;
+            align-items: center;
         }
         
         .mention,
@@ -286,8 +284,9 @@
             color: #2196F3;
             cursor: pointer;
             text-decoration: none;
-            padding: 4px 0;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            height: 100%;
         }
         
         .mention:active,
@@ -295,21 +294,23 @@
             opacity: 0.7;
         }
         
-        .remove-parent,
-        .remove-child,
-        .remove-with-card {
+        .action-button {
             cursor: pointer;
             margin-left: 8px;
             font-weight: bold;
             font-size: 16px;
-            padding: 4px 8px;
+            padding: 0 12px;
             border-radius: 4px;
             background: #f0f0f0;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 32px;
+            min-width: 40px;
         }
         
-        .remove-parent:active,
-        .remove-child:active,
-        .remove-with-card:active {
+        .action-button:active {
             background: #e0e0e0;
         }
         
@@ -319,8 +320,7 @@
                 align-items: stretch;
             }
             
-            .cards-system__addCard,
-            .cards-system__deleteAll {
+            .button--full-mobile {
                 width: 100%;
             }
             
@@ -328,25 +328,9 @@
                 flex-direction: column;
             }
             
-            .search-add {
-                padding: 12px 16px;
-                width: 100%;
-            }
-            
             .suggestions {
                 width: 100%;
             }
-        }
-        
-        button, 
-        .suggestion-item,
-        .remove-parent,
-        .remove-child,
-        .remove-with-card,
-        .mention,
-        .child-link {
-            cursor: pointer;
-            touch-action: manipulation;
         }
         
         .card.highlight {
@@ -358,8 +342,8 @@
     <div class="cards-system">
         <h1 class="cards-system__header">Система карточек</h1>
         <div class="cards-system__controls">
-            <button class="cards-system__addCard" id="add-card-btn">Создать карточку</button>
-            <button class="cards-system__deleteAll" id="delete-all-btn">Удалить все</button>
+            <button class="button button--primary" id="add-card-btn">Создать карточку</button>
+            <button class="button button--danger" id="delete-all-btn">Удалить все</button>
         </div>
         <div class="cards-container" id="cards-container"></div>
     </div>
@@ -368,14 +352,14 @@
         <div class="card" data-card-id="<%= id %>">
             <div class="card__header">
                 <input type="text" class="card__title" value="<%= title %>" placeholder="<%= placeholder %>">
-                <button class="card__delete">Удалить</button>
+                <button class="button button--danger">Удалить</button>
             </div>
             
             <div class="card__parents">
                 <div class="card__parents-title">Родительские карточки:</div>
                 <div class="search-container">
                     <input type="text" class="search-input parent-search-input" placeholder="Поиск родительских карточек..." data-card-id="<%= id %>">
-                    <button class="search-add parent-search-add">Добавить</button>
+                    <button class="button button--success parent-search-add">Добавить</button>
                 </div>
                 <div class="suggestions parent-suggestions"></div>
                 
@@ -383,8 +367,8 @@
                     <% parents.forEach(function(parent) { %>
                         <div class="card__parent-item">
                             <span class="mention" data-card-id="<%= parent.id %>"><%= parent.title %></span>
-                            <span class="remove-parent" data-parent-id="<%= parent.id %>">✕</span>
-                            <span class="remove-with-card" data-card-id="<%= parent.id %>">🗑</span>
+                            <button class="action-button remove-parent" data-parent-id="<%= parent.id %>">✕</button>
+                            <button class="action-button remove-with-card" data-card-id="<%= parent.id %>">🗑</button>
                         </div>
                     <% }); %>
                     <% if (parents.length === 0) { %>
@@ -400,7 +384,7 @@
                     <div class="card__children-title">Дочерние карточки:</div>
                     <div class="search-container">
                         <input type="text" class="search-input child-search-input" placeholder="Поиск дочерних карточек..." data-card-id="<%= id %>">
-                        <button class="search-add child-search-add">Добавить</button>
+                        <button class="button button--success child-search-add">Добавить</button>
                     </div>
                     <div class="suggestions child-suggestions"></div>
                     
@@ -408,8 +392,8 @@
                         <% children.forEach(function(child) { %>
                             <div class="card__child-item">
                                 <span class="child-link" data-card-id="<%= child.id %>"><%= child.title %></span>
-                                <span class="remove-child" data-child-id="<%= child.id %>">✕</span>
-                                <span class="remove-with-card" data-card-id="<%= child.id %>">🗑</span>
+                                <button class="action-button remove-child" data-child-id="<%= child.id %>">✕</button>
+                                <button class="action-button remove-with-card" data-card-id="<%= child.id %>">🗑</button>
                             </div>
                         <% }); %>
                         <% if (children.length === 0) { %>
@@ -755,8 +739,8 @@
                     ? parents.map(parent => `
                         <div class="card__parent-item">
                             <span class="mention" data-card-id="${parent.id}">${parent.title}</span>
-                            <span class="remove-parent" data-parent-id="${parent.id}">✕</span>
-                            <span class="remove-with-card" data-card-id="${parent.id}">🗑</span>
+                            <button class="action-button remove-parent" data-parent-id="${parent.id}">✕</button>
+                            <button class="action-button remove-with-card" data-card-id="${parent.id}">🗑</button>
                         </div>
                     `).join('')
                     : '<div style="color: #999; width: 100%; text-align: center; padding: 10px;">Нет родительских карточек</div>';
@@ -772,8 +756,8 @@
                     ? children.map(child => `
                         <div class="card__child-item">
                             <span class="child-link" data-card-id="${child.id}">${child.title}</span>
-                            <span class="remove-child" data-child-id="${child.id}">✕</span>
-                            <span class="remove-with-card" data-card-id="${child.id}">🗑</span>
+                            <button class="action-button remove-child" data-child-id="${child.id}">✕</button>
+                            <button class="action-button remove-with-card" data-card-id="${child.id}">🗑</button>
                         </div>
                     `).join('')
                     : '<div style="color: #999; width: 100%; text-align: center; padding: 10px;">Нет дочерних карточек</div>';
@@ -810,7 +794,7 @@
                 $(document)
                     .on('click', '#add-card-btn', CardsController.handleAddCard)
                     .on('click', '#delete-all-btn', CardsController.handleDeleteAllCards)
-                    .on('click', '.card__delete', CardsController.handleDeleteCard)
+                    .on('click', '.card__header .button--danger', CardsController.handleDeleteCard)
                     .on('input', '.card__title', CardsController.handleCardTitleChange)
                     .on('input', '.card__textarea', CardsController.handleCardContentChange)
                     .on('click', '.remove-parent', CardsController.handleRemoveParent)
