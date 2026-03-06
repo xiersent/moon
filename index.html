@@ -2,8 +2,8 @@
 <html>
 <head>
     <title>Заразка</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ejs@3.1.9/ejs.min.js"></script>
+    <script src="vendor/js/jquery-3.6.0.min.js"></script>
+    <script src="vendor/js/ejs.min.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <style>
         * {
@@ -935,27 +935,31 @@
                     }
                 }
             },
-            
-            handleMentionClick: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const cardId = $(this).data('card-id');
-                const cardElement = $(`[data-card-id="${cardId}"]`);
-                
-                if (cardElement.length) {
-                    cardElement.get(0).scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'center' 
-                    });
-                    
-                    cardElement.addClass('highlight');
-                    setTimeout(() => {
-                        cardElement.removeClass('highlight');
-                    }, 1500);
-                }
-            },
-            
+
+			handleMentionClick: function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				
+				const cardId = $(this).data('card-id');
+				const cardElement = $(`[data-card-id="${cardId}"]`);
+				
+				// Определяем, является ли кликнутый элемент родительским или дочерним
+				const isParentElement = $(this).hasClass('mention') && $(this).closest('.card__parents').length > 0;
+				
+				if (cardElement.length) {
+					// Мгновенный скролл без анимации
+					cardElement.get(0).scrollIntoView({ 
+						behavior: 'auto', 
+						block: 'center' 
+					});
+					
+					cardElement.addClass('highlight');
+					setTimeout(() => {
+						cardElement.removeClass('highlight');
+					}, 1500);
+				}
+			},
+
             handleParentSearch: function(e) {
                 const $input = $(this);
                 const query = $input.val().trim();
