@@ -443,7 +443,7 @@
                         </div>
                     <% }); %>
                     <% if (parents.length === 0) { %>
-                        <div style="color: #999; width: 100%; text-align: center; padding: 10px;">Нет родительских карточек</div>
+                        <!-- Пусто - ничего не показываем -->
                     <% } %>
                 </div>
             </div>
@@ -468,7 +468,7 @@
                             </div>
                         <% }); %>
                         <% if (children.length === 0) { %>
-                            <div style="color: #999; width: 100%; text-align: center; padding: 10px;">Нет дочерних карточек</div>
+                            <!-- Пусто - ничего не показываем -->
                         <% } %>
                     </div>
                 </div>
@@ -875,7 +875,7 @@
                             <button class="action-button remove-with-card" data-card-id="${parent.id}">🗑</button>
                         </div>
                     `).join('')
-                    : '<div style="color: #999; width: 100%; text-align: center; padding: 10px;">Нет родительских карточек</div>';
+                    : ''; // Пустая строка вместо сообщения
                 
                 $card.find('.parents-list').html(parentsListHtml);
             },
@@ -892,7 +892,7 @@
                             <button class="action-button remove-with-card" data-card-id="${child.id}">🗑</button>
                         </div>
                     `).join('')
-                    : '<div style="color: #999; width: 100%; text-align: center; padding: 10px;">Нет дочерних карточек</div>';
+                    : ''; // Пустая строка вместо сообщения
                 
                 $card.find('.children-list').html(childrenListHtml);
             },
