@@ -17,10 +17,120 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.5;
             padding: 12px;
+            padding-bottom: 80px; /* Отступ для фиксированной кнопки внизу */
             background: #f5f5f5;
             min-height: 100vh;
+            position: relative;
         }
         
+        /* Модальное окно для ввода имени */
+        .name-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+        
+        .name-modal__content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .name-modal__title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #333;
+        }
+        
+        .name-modal__input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        .name-modal__input:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+        
+        .name-modal__button {
+            width: 100%;
+            padding: 14px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .name-modal__button:hover {
+            background: #1976D2;
+        }
+        
+        .name-modal__button:active {
+            opacity: 0.8;
+        }
+        
+        /* Фиксированная кнопка с именем внизу */
+        .fixed-name-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 14px 30px;
+            font-size: 16px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 200px;
+            justify-content: center;
+            border: 2px solid white;
+        }
+        
+        .fixed-name-button:hover {
+            background: #1976D2;
+            box-shadow: 0 6px 16px rgba(33, 150, 243, 0.4);
+            transform: translateX(-50%) translateY(-2px);
+        }
+        
+        .fixed-name-button:active {
+            transform: translateX(-50%) translateY(0);
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+        }
+        
+        .fixed-name-button__icon {
+            font-size: 20px;
+        }
+        
+        /* Основной контент */
         .cards-system {
             max-width: 1200px;
             margin: 0 auto;
@@ -333,10 +443,39 @@
         .card.highlight {
             background: #fff9c4;
         }
+
+        /* Приветственное сообщение с именем */
+        .welcome-message {
+            text-align: center;
+            margin-bottom: 16px;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            color: #1976D2;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
+    <!-- Модальное окно для ввода имени (изначально скрыто) -->
+    <div class="name-modal" id="nameModal" style="display: none;">
+        <div class="name-modal__content">
+            <div class="name-modal__title">👋 Добро пожаловать!</div>
+            <input type="text" class="name-modal__input" id="userNameInput" placeholder="Введите ваше имя" maxlength="50">
+            <button class="name-modal__button" id="saveUserNameBtn">Согласиться</button>
+        </div>
+    </div>
+
+    <!-- Фиксированная кнопка с именем внизу (изначально скрыта) -->
+    <button class="fixed-name-button" id="fixedNameButton" style="display: none;">
+        <span class="fixed-name-button__icon">👤</span>
+        <span id="userNameDisplay"></span>
+    </button>
+
     <div class="cards-system">
+        <!-- Блок с приветствием (показывается если имя есть) -->
+        <div id="welcomeMessage" class="welcome-message" style="display: none;"></div>
+        
         <h1 class="cards-system__header">Система карточек</h1>
         <div class="cards-system__controls">
             <button class="button button--primary" id="add-card-btn">Создать карточку</button>
@@ -420,6 +559,100 @@
     </script>
 
     <script>
+        // Модуль для работы с именем пользователя
+        const UserModule = {
+            STORAGE_KEY: 'userName',
+            
+            // Получить имя из localStorage
+            getUserName: () => {
+                return localStorage.getItem(UserModule.STORAGE_KEY) || '';
+            },
+            
+            // Сохранить имя в localStorage
+            saveUserName: (name) => {
+                if (name && name.trim()) {
+                    localStorage.setItem(UserModule.STORAGE_KEY, name.trim());
+                    return true;
+                }
+                return false;
+            },
+            
+            // Проверить, есть ли имя
+            hasUserName: () => {
+                const name = localStorage.getItem(UserModule.STORAGE_KEY);
+                return name && name.trim().length > 0;
+            },
+            
+            // Показать модальное окно
+            showModal: () => {
+                $('#nameModal').fadeIn(300);
+                $('#userNameInput').val('').focus();
+            },
+            
+            // Скрыть модальное окно
+            hideModal: () => {
+                $('#nameModal').fadeOut(300);
+            },
+            
+            // Обновить интерфейс с именем
+            updateUI: (name) => {
+                if (name && name.trim()) {
+                    $('#userNameDisplay').text(name);
+                    $('#fixedNameButton').fadeIn(300);
+                    
+                    // Показываем приветствие
+                    const welcomeText = `👋 С возвращением, ${name}!`;
+                    $('#welcomeMessage').text(welcomeText).fadeIn(300);
+                } else {
+                    $('#fixedNameButton').fadeOut(300);
+                    $('#welcomeMessage').fadeOut(300);
+                }
+            },
+            
+            // Инициализация модуля
+            init: () => {
+                // Проверяем, есть ли сохраненное имя
+                if (UserModule.hasUserName()) {
+                    const userName = UserModule.getUserName();
+                    UserModule.updateUI(userName);
+                } else {
+                    // Если нет имени - показываем модальное окно
+                    setTimeout(() => {
+                        UserModule.showModal();
+                    }, 500); // Небольшая задержка для плавности
+                }
+                
+                // Обработчик сохранения имени
+                $('#saveUserNameBtn').on('click', function() {
+                    const userName = $('#userNameInput').val().trim();
+                    
+                    if (userName) {
+                        if (UserModule.saveUserName(userName)) {
+                            UserModule.hideModal();
+                            UserModule.updateUI(userName);
+                        }
+                    } else {
+                        alert('Пожалуйста, введите ваше имя');
+                        $('#userNameInput').focus();
+                    }
+                });
+                
+                // Обработчик нажатия Enter в поле ввода
+                $('#userNameInput').on('keypress', function(e) {
+                    if (e.which === 13) {
+                        $('#saveUserNameBtn').click();
+                    }
+                });
+                
+                // Обработчик клика по фиксированной кнопке (скролл вверх)
+                $('#fixedNameButton').on('click', function() {
+                    $('html, body').animate({
+                        scrollTop: 0
+                    }, 600, 'swing');
+                });
+            }
+        };
+
         const CardsModel = {
             cards: [],
             
@@ -936,29 +1169,25 @@
                 }
             },
 
-			handleMentionClick: function(e) {
-				e.preventDefault();
-				e.stopPropagation();
-				
-				const cardId = $(this).data('card-id');
-				const cardElement = $(`[data-card-id="${cardId}"]`);
-				
-				// Определяем, является ли кликнутый элемент родительским или дочерним
-				const isParentElement = $(this).hasClass('mention') && $(this).closest('.card__parents').length > 0;
-				
-				if (cardElement.length) {
-					// Мгновенный скролл без анимации
-					cardElement.get(0).scrollIntoView({ 
-						behavior: 'auto', 
-						block: 'center' 
-					});
-					
-					cardElement.addClass('highlight');
-					setTimeout(() => {
-						cardElement.removeClass('highlight');
-					}, 1500);
-				}
-			},
+            handleMentionClick: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const cardId = $(this).data('card-id');
+                const cardElement = $(`[data-card-id="${cardId}"]`);
+                
+                if (cardElement.length) {
+                    cardElement.get(0).scrollIntoView({ 
+                        behavior: 'auto', 
+                        block: 'center' 
+                    });
+                    
+                    cardElement.addClass('highlight');
+                    setTimeout(() => {
+                        cardElement.removeClass('highlight');
+                    }, 1500);
+                }
+            },
 
             handleParentSearch: function(e) {
                 const $input = $(this);
@@ -1128,6 +1357,10 @@
         };
 
         $(document).ready(() => {
+            // Сначала инициализируем модуль пользователя
+            UserModule.init();
+            
+            // Затем инициализируем основной контроллер
             CardsController.init();
         });
     </script>
