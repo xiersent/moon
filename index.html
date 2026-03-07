@@ -74,7 +74,7 @@
             padding: 8px 10px;
             background: #e0e0e0;
             color: #333;
-            border: none;
+            border: 1px solid #ccc;
             border-radius: 6px;
             font-size: 14px;
             font-weight: 500;
@@ -90,18 +90,18 @@
             transform: translateX(-50%);
             background: #e0e0e0;
             color: #333;
-            border: none;
+            border: 1px solid #ccc;
             border-radius: 30px;
             padding: 8px 20px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             z-index: 1000;
-            min-width: 160px;
             text-align: center;
-            border: 1px solid #ccc;
             height: 40px;
             white-space: nowrap;
+            width: auto;
+            min-width: 160px;
         }
         
         .cards-system {
@@ -123,10 +123,11 @@
             gap: 6px;
             margin-bottom: 16px;
             width: 100%;
+			justify-content: center;
         }
         
         .button {
-            padding: 8px 10px;
+            padding: 8px 12px;
             border: 1px solid #ccc;
             border-radius: 6px;
             font-size: 14px;
@@ -139,7 +140,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            flex: 1;
+            width: auto;
             min-height: 36px;
         }
         
@@ -308,6 +309,12 @@
             border-color: #999;
         }
         
+        .search-container .button--success {
+            width: auto;
+            flex: 0 0 auto;
+            padding: 8px 12px;
+        }
+        
         .suggestions {
             position: absolute;
             background: white;
@@ -385,8 +392,9 @@
             align-items: center;
             justify-content: center;
             height: 28px;
-            min-width: 36px;
             color: #333;
+            width: auto;
+            min-width: 28px;
         }
         
         .action-button:active {
@@ -443,6 +451,12 @@
             background: #e0e0e0;
             color: #333;
             border: 1px solid #ccc;
+        }
+        
+        /* Кнопки в панели управления */
+        #add-card-btn,
+        #delete-all-btn {
+            width: auto;
         }
     </style>
 </head>
