@@ -1142,25 +1142,33 @@
                 }
             },
 
-            handleMentionClick: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const cardId = $(this).data('card-id');
-                const cardElement = $(`[data-card-id="${cardId}"]`);
-                
-                if (cardElement.length) {
-                    cardElement.get(0).scrollIntoView({ 
-                        behavior: 'auto', 
-                        block: 'center' 
-                    });
-                    
-                    cardElement.addClass('highlight');
-                    setTimeout(() => {
-                        cardElement.removeClass('highlight');
-                    }, 1500);
-                }
-            },
+			handleMentionClick: function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				
+				const cardId = $(this).data('card-id');
+				console.log('Clicked mention for card ID:', cardId);
+				
+				// Ищем именно элемент карточки с этим ID
+				const cardElement = $(`.card[data-card-id="${cardId}"]`);
+				
+				if (cardElement.length) {
+					console.log('Found card element:', cardElement);
+					
+					cardElement.get(0).scrollIntoView({ 
+						behavior: 'smooth', 
+						block: 'center' 
+					});
+					
+					cardElement.addClass('highlight');
+					setTimeout(() => {
+						cardElement.removeClass('highlight');
+					}, 1500);
+				} else {
+					console.log('Card element not found for ID:', cardId);
+				}
+			},
+			
 
             handleParentSearch: function(e) {
                 const $input = $(this);
