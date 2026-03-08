@@ -262,12 +262,38 @@
         }
         
         .card__parents-title,
-        .card__children-title,
+        .card__children-title {
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #666;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
         .card__mentions-title {
             font-weight: 500;
             margin-bottom: 6px;
             color: #666;
             font-size: 13px;
+        }
+        
+        .add-text-button {
+            background: none;
+            border: none;
+            color: #666;
+            font: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 2px 8px;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        
+        .add-text-button:hover {
+            background: #f0f0f0;
         }
         
         .parents-list,
@@ -303,6 +329,11 @@
             gap: 6px;
             margin-bottom: 6px;
             width: 100%;
+            display: none; /* Скрыто по умолчанию */
+        }
+        
+        .search-container.visible {
+            display: flex; /* Показывается при добавлении класса visible */
         }
         
         .search-input {
@@ -482,8 +513,11 @@
             </div>
             
             <div class="card__parents">
-                <div class="card__parents-title">Родительские карточки:</div>
-                <div class="search-container">
+                <div class="card__parents-title">
+                    Родительские карточки:
+                    <button class="add-text-button toggle-parent-search">добавить</button>
+                </div>
+                <div class="search-container parent-search-container">
                     <input type="text" class="search-input parent-search-input" placeholder="Поиск родительских карточек..." data-card-id="<%= id %>">
                     <button class="button button--success parent-search-add"><span class="plus">✕</span></button>
                 </div>
@@ -504,8 +538,11 @@
                 <textarea class="card__textarea" placeholder="Содержание карточки..."><%= content %></textarea>
                 
                 <div class="card__children">
-                    <div class="card__children-title">Дочерние карточки:</div>
-                    <div class="search-container">
+                    <div class="card__children-title">
+                        Дочерние карточки:
+                        <button class="add-text-button toggle-child-search">добавить</button>
+                    </div>
+                    <div class="search-container child-search-container">
                         <input type="text" class="search-input child-search-input" placeholder="Поиск дочерних карточек..." data-card-id="<%= id %>">
                         <button class="button button--success child-search-add"><span class="plus">✕</span></button>
                     </div>
@@ -1008,6 +1045,8 @@
                     .on('click', '.child-search-add', CardsController.handleAddChild)
                     .on('click', '.child-suggestion-item', CardsController.handleAddChildFromSuggestion)
                     .on('click', '.bump-text-button', CardsController.handleBumpCard)
+                    .on('click', '.toggle-parent-search', CardsController.handleToggleParentSearch)
+                    .on('click', '.toggle-child-search', CardsController.handleToggleChildSearch)
                     .on('click', function(e) {
                         if (!$(e.target).closest('.suggestions').length && 
                             !$(e.target).hasClass('search-input')) {
@@ -1172,7 +1211,7 @@
                 const $input = $(this);
                 const query = $input.val().trim();
                 const cardId = $input.closest('.card').data('card-id');
-                const $suggestions = $input.parent().next('.suggestions');
+                const $suggestions = $input.closest('.card__parents').find('.parent-suggestions');
                 
                 if (query.length > 0) {
                     const results = CardsModel.searchCards(query, cardId, true);
@@ -1197,7 +1236,7 @@
                 const $input = $(this);
                 const query = $input.val().trim();
                 const cardId = $input.closest('.card').data('card-id');
-                const $suggestions = $input.parent().next('.suggestions');
+                const $suggestions = $input.closest('.card__children').find('.child-suggestions');
                 
                 if (query.length > 0) {
                     const results = CardsModel.searchCards(query, cardId, true);
@@ -1226,7 +1265,7 @@
                 const $input = $button.siblings('.parent-search-input');
                 const query = $input.val().trim();
                 const cardId = $input.closest('.card').data('card-id');
-                const $suggestions = $input.parent().next('.suggestions');
+                const $suggestions = $input.closest('.card__parents').find('.parent-suggestions');
                 
                 if (!query) return;
                 
@@ -1267,7 +1306,7 @@
                 const $input = $button.siblings('.child-search-input');
                 const query = $input.val().trim();
                 const parentId = $input.closest('.card').data('card-id');
-                const $suggestions = $input.parent().next('.suggestions');
+                const $suggestions = $input.closest('.card__children').find('.child-suggestions');
                 
                 if (!query) return;
                 
@@ -1334,7 +1373,6 @@
                 }
             },
 
-			
 			handleBumpCard: function(e) {
 				e.preventDefault();
 				e.stopPropagation();
@@ -1396,9 +1434,35 @@
 				
 				// Сохраняем состояние
 				CardsModel.saveState();
+			},
+
+			handleToggleParentSearch: function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				
+				const $button = $(this);
+				const $searchContainer = $button.closest('.card__parents').find('.parent-search-container');
+				$searchContainer.toggleClass('visible');
+				
+				// Если контейнер становится видимым, фокусируемся на инпуте
+				if ($searchContainer.hasClass('visible')) {
+					$searchContainer.find('.parent-search-input').focus();
+				}
+			},
+			
+			handleToggleChildSearch: function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				
+				const $button = $(this);
+				const $searchContainer = $button.closest('.card__children').find('.child-search-container');
+				$searchContainer.toggleClass('visible');
+				
+				// Если контейнер становится видимым, фокусируемся на инпуте
+				if ($searchContainer.hasClass('visible')) {
+					$searchContainer.find('.child-search-input').focus();
+				}
 			}
-
-
         };
 
         $(document).ready(() => {
