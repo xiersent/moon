@@ -12,6 +12,8 @@
             padding: 0;
             -webkit-tap-highlight-color: transparent;
         }
+
+		.plus {transform: rotate(45deg);}
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -148,14 +150,6 @@
             background: #d0d0d0;
         }
         
-        /* Убираем цветовые классы, оставляем только серый */
-        .button--primary,
-        .button--danger,
-        .button--success {
-            background: #e0e0e0;
-            color: #333;
-        }
-        
         .cards-container {
             display: grid;
             grid-template-columns: 1fr;
@@ -171,6 +165,7 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border: 1px solid #ddd;
             width: 100%;
+            transition: box-shadow 0.2s ease;
         }
         
         .card__header {
@@ -231,6 +226,25 @@
             margin-top: 8px;
             padding-top: 6px;
             border-top: 1px solid #eee;
+        }
+        
+        .card__footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        
+        /* Текстовая кнопка бампа - просто текст без стилей */
+        .bump-text-button {
+            background: none;
+            border: none;
+            color: inherit;
+            font: inherit;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 8px;
+            text-decoration: none;
         }
         
         .card__parents,
@@ -405,7 +419,6 @@
             background: #fff9c4;
         }
 
-        /* Специально для горизонтальной ориентации на мобильных */
         @media (orientation: landscape) and (max-height: 600px) {
             .card__textarea {
                 min-height: 60px;
@@ -424,39 +437,18 @@
             }
         }
 
-        /* Убираем все цветовые акценты */
         .name-modal__button:hover,
         .button:hover,
         .action-button:hover,
         .fixed-name-button:hover {
-            background: #d0d0d0;
+            background: none;
         }
         
-        /* Убираем синий цвет фокуса */
         .name-modal__input:focus,
         .search-input:focus,
         .card__title:focus,
         .card__textarea:focus {
             border-color: #999;
-        }
-        
-        /* Делаем все кнопки одинаковыми */
-        .card__header .button--danger {
-            background: #e0e0e0;
-            color: #333;
-            border: 1px solid #ccc;
-        }
-        
-        .search-container .button--success {
-            background: #e0e0e0;
-            color: #333;
-            border: 1px solid #ccc;
-        }
-        
-        /* Кнопки в панели управления */
-        #add-card-btn,
-        #delete-all-btn {
-            width: auto;
         }
     </style>
 </head>
@@ -479,7 +471,7 @@
         <h1 class="cards-system__header">Планетаход</h1>
         <div class="cards-system__controls">
             <button class="button button--primary" id="add-card-btn">Создать карточку</button>
-            <button class="button button--danger" id="delete-all-btn">Удалить все</button>
+            <button class="button button--danger" id="delete-all-btn">Уничтожить все</button>
         </div>
         <div class="cards-container" id="cards-container"></div>
     </div>
@@ -488,14 +480,14 @@
         <div class="card" data-card-id="<%= id %>">
             <div class="card__header">
                 <input type="text" class="card__title" value="<%= title %>" placeholder="<%= placeholder %>">
-                <button class="button button--danger">Удалить</button>
+                <button class="button button--danger">✕</button>
             </div>
             
             <div class="card__parents">
                 <div class="card__parents-title">Родительские карточки:</div>
                 <div class="search-container">
                     <input type="text" class="search-input parent-search-input" placeholder="Поиск родительских карточек..." data-card-id="<%= id %>">
-                    <button class="button button--success parent-search-add">Добавить</button>
+                    <button class="button button--success parent-search-add"><span class="plus">✕</span></button>
                 </div>
                 <div class="suggestions parent-suggestions"></div>
                 
@@ -507,9 +499,6 @@
                             <button class="action-button remove-with-card" data-card-id="<%= parent.id %>">🗑</button>
                         </div>
                     <% }); %>
-                    <% if (parents.length === 0) { %>
-                        <!-- Пусто - ничего не показываем -->
-                    <% } %>
                 </div>
             </div>
             
@@ -520,7 +509,7 @@
                     <div class="card__children-title">Дочерние карточки:</div>
                     <div class="search-container">
                         <input type="text" class="search-input child-search-input" placeholder="Поиск дочерних карточек..." data-card-id="<%= id %>">
-                        <button class="button button--success child-search-add">Добавить</button>
+                        <button class="button button--success child-search-add"><span class="plus">✕</span></button>
                     </div>
                     <div class="suggestions child-suggestions"></div>
                     
@@ -532,9 +521,6 @@
                                 <button class="action-button remove-with-card" data-card-id="<%= child.id %>">🗑</button>
                             </div>
                         <% }); %>
-                        <% if (children.length === 0) { %>
-                            <!-- Пусто - ничего не показываем -->
-                        <% } %>
                     </div>
                 </div>
                 
@@ -553,7 +539,16 @@
             </div>
             
             <div class="card__footer">
-                Создано: <%= createdAt %>
+                <div class="card__footer-content">
+                    <span>
+                        Создано: <%= createdAt %>
+                        <% if (bumpedAt && new Date(bumpedAt) > new Date(createdAt)) { %>
+                            (поднято <%= new Date(bumpedAt).toLocaleDateString() %> 
+                            <%= new Date(bumpedAt).toLocaleTimeString().slice(0,5) %>)
+                        <% } %>
+                    </span>
+                    <button class="bump-text-button" data-card-id="<%= id %>">мне важнее эта</button>
+                </div>
             </div>
         </div>
     </script>
@@ -580,17 +575,14 @@
             
             init: () => {
                 if (UserName.has()) {
-                    // Если имя есть - показываем кнопку
                     const name = UserName.get();
                     $('#userNameDisplay').text(name);
                     $('#fixedNameButton').show();
                 } else {
-                    // Если нет - показываем модальное окно
                     $('#nameModal').show();
                     $('#userNameInput').focus();
                 }
                 
-                // Сохранение имени
                 $('#saveUserNameBtn').on('click', function() {
                     const name = $('#userNameInput').val().trim();
                     if (name) {
@@ -603,14 +595,12 @@
                     }
                 });
                 
-                // Enter в поле ввода
                 $('#userNameInput').on('keypress', function(e) {
                     if (e.which === 13) {
                         $('#saveUserNameBtn').click();
                     }
                 });
                 
-                // Скролл вверх по клику на кнопку
                 $('#fixedNameButton').on('click', function() {
                     window.scrollTo({
                         top: 0,
@@ -642,6 +632,7 @@
                     mentions: [],
                     children: [],
                     createdAt: now.toLocaleString(),
+                    bumpedAt: now.toISOString(),
                     isEmpty: !initialTitle
                 };
                 CardsModel.cards.push(newCard);
@@ -843,10 +834,18 @@
                 if (savedCards) {
                     try {
                         CardsModel.cards = JSON.parse(savedCards);
+                        
+                        // Добавляем bumpedAt для старых карточек
                         CardsModel.cards.forEach(card => {
                             if (!card.parentIds) card.parentIds = [];
                             if (!card.children) card.children = [];
                             if (!card.mentions) card.mentions = [];
+                            
+                            if (!card.bumpedAt) {
+                                card.bumpedAt = card.createdAt 
+                                    ? new Date(card.createdAt).toISOString() 
+                                    : new Date().toISOString();
+                            }
                             
                             if (card.isEmpty === undefined) {
                                 card.isEmpty = (card.title === "" || card.title === "Новая карточка");
@@ -864,6 +863,12 @@
                                 card.isEmpty = false;
                             }
                         });
+                        
+                        // Сортируем по bumpedAt (новые сверху)
+                        CardsModel.cards.sort((a, b) => 
+                            new Date(b.bumpedAt) - new Date(a.bumpedAt)
+                        );
+                        
                         CardsModel.updateAllRelations();
                     } catch (e) {
                         console.error("Ошибка загрузки:", e);
@@ -940,7 +945,7 @@
                             <button class="action-button remove-with-card" data-card-id="${parent.id}">🗑</button>
                         </div>
                     `).join('')
-                    : ''; // Пустая строка вместо сообщения
+                    : '';
                 
                 $card.find('.parents-list').html(parentsListHtml);
             },
@@ -957,7 +962,7 @@
                             <button class="action-button remove-with-card" data-card-id="${child.id}">🗑</button>
                         </div>
                     `).join('')
-                    : ''; // Пустая строка вместо сообщения
+                    : '';
                 
                 $card.find('.children-list').html(childrenListHtml);
             },
@@ -1004,6 +1009,7 @@
                     .on('input', '.child-search-input', CardsController.handleChildSearch)
                     .on('click', '.child-search-add', CardsController.handleAddChild)
                     .on('click', '.child-suggestion-item', CardsController.handleAddChildFromSuggestion)
+                    .on('click', '.bump-text-button', CardsController.handleBumpCard)
                     .on('click', function(e) {
                         if (!$(e.target).closest('.suggestions').length && 
                             !$(e.target).hasClass('search-input')) {
@@ -1032,7 +1038,7 @@
                 
                 if (CardsModel.cards.length === 0) return;
                 
-                if (confirm("Удалить все карточки? Это действие нельзя отменить.")) {
+                if (confirm("Уничтожить все карточки? Это действие нельзя отменить.")) {
                     if (CardsModel.deleteAllCards()) {
                         $('#cards-container').empty();
                     }
@@ -1054,7 +1060,7 @@
                         CardsModel.updateAllRelations();
                     }
                 } 
-                else if (confirm(`Удалить карточку "${card.title || 'без названия'}"?`)) {
+                else if (confirm(`Уничтожить карточку "${card.title || 'без названия'}"?`)) {
                     if (CardsModel.deleteCard(cardId)) {
                         $(this).closest('.card').remove();
                         CardsModel.updateAllRelations();
@@ -1125,7 +1131,7 @@
                 const currentCardId = $(this).closest('.card').data('card-id');
                 const cardToRemove = CardsModel.getCard(cardIdToRemove);
                 
-                if (cardToRemove && confirm(`Удалить карточку "${cardToRemove.title || 'без названия'}"?`)) {
+                if (cardToRemove && confirm(`Уничтожить карточку "${cardToRemove.title || 'без названия'}"?`)) {
                     if (CardsModel.deleteCard(cardIdToRemove)) {
                         $(`[data-card-id="${cardIdToRemove}"]`).remove();
                         const $currentCard = $(`[data-card-id="${currentCardId}"]`);
@@ -1320,7 +1326,73 @@
                     CardsView.updateCardRelations(parentId);
                     CardsView.updateCardRelations(childId);
                 }
-            }
+            },
+
+			
+			handleBumpCard: function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				
+				const cardId = $(this).data('card-id');
+				const card = CardsModel.getCard(cardId);
+				
+				if (!card) return;
+				
+				// Обновляем время бампа
+				const now = new Date();
+				card.bumpedAt = now.toISOString();
+				
+				// Находим индекс карточки в массиве
+				const cardIndex = CardsModel.cards.findIndex(c => c.id == cardId);
+				
+				if (cardIndex > 0) {
+					// Удаляем карточку из текущей позиции и вставляем в начало
+					CardsModel.cards.splice(cardIndex, 1);
+					CardsModel.cards.unshift(card);
+					
+					// Полностью перерендериваем все карточки
+					CardsView.render();
+					
+					// Подсвечиваем нужную карточку после перерендера
+					setTimeout(() => {
+						const $card = $(`[data-card-id="${cardId}"]`);
+						$card.addClass('highlight');
+						$card.get(0).scrollIntoView({ 
+							behavior: 'smooth', 
+							block: 'center' 
+						});
+						
+						setTimeout(() => {
+							$card.removeClass('highlight');
+						}, 1000);
+					}, 50);
+				} else {
+					// Карточка уже первая - просто обновляем футер и подсвечиваем
+					const $card = $(`[data-card-id="${cardId}"]`);
+					
+					const timeStr = now.toLocaleTimeString().slice(0,5);
+					const dateStr = now.toLocaleDateString();
+					$card.find('.card__footer span').first().html(`
+						Создана: ${card.createdAt} 
+						(поднята ${dateStr} ${timeStr})
+					`);
+					
+					$card.addClass('highlight');
+					$card.get(0).scrollIntoView({ 
+						behavior: 'smooth', 
+						block: 'center' 
+					});
+					
+					setTimeout(() => {
+						$card.removeClass('highlight');
+					}, 1000);
+				}
+				
+				// Сохраняем состояние
+				CardsModel.saveState();
+			}
+
+
         };
 
         $(document).ready(() => {
