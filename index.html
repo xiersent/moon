@@ -1,3 +1,4 @@
+// index.html
 <!DOCTYPE html>
 <html>
 <head>
@@ -934,7 +935,7 @@
                             }
                         });
                         
-                        // Сортируем при загрузке - старые сверху, новые снизу
+                        // Сортируем по bumpedAt - старые сверху, новые снизу
                         CardsModel.cards.sort((a, b) => 
                             new Date(a.bumpedAt) - new Date(b.bumpedAt)
                         );
@@ -1430,45 +1431,33 @@
 				
 				if (!card) return;
 				
-				// Обновляем время бампа
-				const now = new Date();
-				card.bumpedAt = now.toISOString();
+				// Находим самую старую дату
+				let oldestDate = new Date();
+				CardsModel.cards.forEach(c => {
+					const cDate = new Date(c.bumpedAt);
+					if (cDate < oldestDate) {
+						oldestDate = cDate;
+					}
+				});
 				
-				// Находим индекс карточки в массиве
-				const cardIndex = CardsModel.cards.findIndex(c => c.id == cardId);
+				// Устанавливаем дату на 1 миллисекунду раньше самой старой
+				const newDate = new Date(oldestDate.getTime() - 1);
+				card.bumpedAt = newDate.toISOString();
 				
-				if (cardIndex > 0) {
-					// Удаляем карточку из текущей позиции и вставляем в начало
-					CardsModel.cards.splice(cardIndex, 1);
-					CardsModel.cards.unshift(card);
-					
-					// Полностью перерендериваем все карточки
-					CardsView.render();
-					
-					// Подсвечиваем нужную карточку после перерендера
-					setTimeout(() => {
-						const $card = $(`[data-card-id="${cardId}"]`);
-						$card.addClass('highlight');
-						$card.get(0).scrollIntoView({ 
-							behavior: 'smooth', 
-							block: 'center' 
-						});
-						
-						setTimeout(() => {
-							$card.removeClass('highlight');
-						}, 1000);
-					}, 50);
-				} else {
-					// Карточка уже первая - просто обновляем футер и подсвечиваем
+				// Сохраняем состояние
+				CardsModel.saveState();
+				
+				// Сортируем по bumpedAt - старые сверху, новые снизу
+				CardsModel.cards.sort((a, b) => 
+					new Date(a.bumpedAt) - new Date(b.bumpedAt)
+				);
+				
+				// Полностью перерендериваем все карточки
+				CardsView.render();
+				
+				// Подсвечиваем нужную карточку после перерендера
+				setTimeout(() => {
 					const $card = $(`[data-card-id="${cardId}"]`);
-					
-					const timeStr = now.toLocaleTimeString().slice(0,5);
-					const dateStr = now.toLocaleDateString();
-					$card.find('.card__footer span').first().html(`
-						Создана: ${card.createdAt} 
-						(поднята ${dateStr} ${timeStr})
-					`);
-					
 					$card.addClass('highlight');
 					$card.get(0).scrollIntoView({ 
 						behavior: 'smooth', 
@@ -1478,10 +1467,7 @@
 					setTimeout(() => {
 						$card.removeClass('highlight');
 					}, 1000);
-				}
-				
-				// Сохраняем состояние
-				CardsModel.saveState();
+				}, 50);
 			},
 
 			handleToggleParentSearch: function(e) {
