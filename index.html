@@ -213,6 +213,11 @@
             resize: vertical;
             background: #fff;
             font-family: inherit;
+            display: none; /* Скрыто по умолчанию */
+        }
+        
+        .card__textarea.visible {
+            display: block; /* Показывается при добавлении класса visible */
         }
         
         .card__textarea:focus {
@@ -257,8 +262,6 @@
         
         .card__children {
             margin-top: 16px;
-            padding-top: 8px;
-            border-top: 1px dashed #ddd;
         }
         
         .card__parents-title,
@@ -278,6 +281,18 @@
             margin-bottom: 6px;
             color: #666;
             font-size: 13px;
+        }
+        
+        /* Заголовок для описания как у родительских/дочерних */
+        .card__description-title {
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #666;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
         }
         
         .add-text-button {
@@ -535,7 +550,15 @@
             </div>
             
             <div class="card__content">
-                <textarea class="card__textarea" placeholder="Содержание карточки..."><%= content %></textarea>
+                <!-- Заголовок для описания как у родительских/дочерних -->
+                <div class="card__description-title">
+                    Описание:
+                    <button class="add-text-button toggle-description">
+                        <% if (content && content.trim()) { %>скрыть<% } else { %>показать<% } %>
+                    </button>
+                </div>
+                
+                <textarea class="card__textarea <%= (content && content.trim()) ? 'visible' : '' %>" placeholder="Содержание карточки..."><%= content %></textarea>
                 
                 <div class="card__children">
                     <div class="card__children-title">
@@ -653,37 +676,31 @@
             saveState: () => {
                 localStorage.setItem('cardsSystem', JSON.stringify(CardsModel.cards));
             },
-
-			
-			addCard: (initialTitle = '') => {
-				const now = new Date();
-				const placeholder = `Карточка от ${now.toLocaleDateString()} ${now.toLocaleTimeString().slice(0,5)}`;
-				
-				const newCard = {
-					id: CardsModel.generateId(),
-					title: initialTitle || "",
-					placeholder: placeholder,
-					content: "",
-					parentIds: [],
-					mentions: [],
-					children: [],
-					createdAt: now.toLocaleString(),
-					bumpedAt: now.toISOString(),
-					isEmpty: !initialTitle
-				};
-				
-				// ВАЖНО: Новые карточки добавляем в КОНЕЦ массива
-				CardsModel.cards.push(newCard);
-				
-				// НЕ сортируем весь массив, а только применяем правильный порядок при необходимости
-				// CardsModel.cards.sort((a, b) => new Date(b.bumpedAt) - new Date(a.bumpedAt));
-				
-				CardsModel.saveState();
-				CardsModel.updateAllRelations();
-				return newCard;
-			},
-
-
+            
+            addCard: (initialTitle = '') => {
+                const now = new Date();
+                const placeholder = `Карточка от ${now.toLocaleDateString()} ${now.toLocaleTimeString().slice(0,5)}`;
+                
+                const newCard = {
+                    id: CardsModel.generateId(),
+                    title: initialTitle || "",
+                    placeholder: placeholder,
+                    content: "",
+                    parentIds: [],
+                    mentions: [],
+                    children: [],
+                    createdAt: now.toLocaleString(),
+                    bumpedAt: now.toISOString(),
+                    isEmpty: !initialTitle
+                };
+                
+                // Новые карточки добавляем в КОНЕЦ массива
+                CardsModel.cards.push(newCard);
+                CardsModel.saveState();
+                CardsModel.updateAllRelations();
+                return newCard;
+            },
+            
             updateCard: (cardId, updates) => {
                 const card = CardsModel.getCard(cardId);
                 if (card) {
@@ -872,56 +889,52 @@
                 });
             },
             
-
-			loadState: () => {
-				const savedCards = localStorage.getItem('cardsSystem');
-				if (savedCards) {
-					try {
-						CardsModel.cards = JSON.parse(savedCards);
-						
-						// Добавляем bumpedAt для старых карточек
-						CardsModel.cards.forEach(card => {
-							if (!card.parentIds) card.parentIds = [];
-							if (!card.children) card.children = [];
-							if (!card.mentions) card.mentions = [];
-							
-							if (!card.bumpedAt) {
-								card.bumpedAt = card.createdAt 
-									? new Date(card.createdAt).toISOString() 
-									: new Date().toISOString();
-							}
-							
-							if (card.isEmpty === undefined) {
-								card.isEmpty = (card.title === "" || card.title === "Новая карточка");
-								if (card.isEmpty && !card.placeholder) {
-									const date = new Date(card.createdAt || Date.now());
-									card.placeholder = `Карточка от ${date.toLocaleDateString()} ${date.toLocaleTimeString().slice(0,5)}`;
-								}
-							}
-							
-							if (card.isEmpty && card.parentIds.length === 0 && card.children.length === 0) {
-								card.title = "";
-							}
-							else if (card.isEmpty) {
-								card.title = card.placeholder;
-								card.isEmpty = false;
-							}
-						});
-						
-						// ВАЖНО: Сортируем при загрузке - старые сверху, новые снизу
-						// То есть по возрастанию даты (самые старые первые)
-						CardsModel.cards.sort((a, b) => 
-							new Date(a.bumpedAt) - new Date(b.bumpedAt)
-						);
-						
-						CardsModel.updateAllRelations();
-					} catch (e) {
-						console.error("Ошибка загрузки:", e);
-					}
-				}
-			}
-
-
+            loadState: () => {
+                const savedCards = localStorage.getItem('cardsSystem');
+                if (savedCards) {
+                    try {
+                        CardsModel.cards = JSON.parse(savedCards);
+                        
+                        // Добавляем bumpedAt для старых карточек
+                        CardsModel.cards.forEach(card => {
+                            if (!card.parentIds) card.parentIds = [];
+                            if (!card.children) card.children = [];
+                            if (!card.mentions) card.mentions = [];
+                            
+                            if (!card.bumpedAt) {
+                                card.bumpedAt = card.createdAt 
+                                    ? new Date(card.createdAt).toISOString() 
+                                    : new Date().toISOString();
+                            }
+                            
+                            if (card.isEmpty === undefined) {
+                                card.isEmpty = (card.title === "" || card.title === "Новая карточка");
+                                if (card.isEmpty && !card.placeholder) {
+                                    const date = new Date(card.createdAt || Date.now());
+                                    card.placeholder = `Карточка от ${date.toLocaleDateString()} ${date.toLocaleTimeString().slice(0,5)}`;
+                                }
+                            }
+                            
+                            if (card.isEmpty && card.parentIds.length === 0 && card.children.length === 0) {
+                                card.title = "";
+                            }
+                            else if (card.isEmpty) {
+                                card.title = card.placeholder;
+                                card.isEmpty = false;
+                            }
+                        });
+                        
+                        // Сортируем при загрузке - старые сверху, новые снизу
+                        CardsModel.cards.sort((a, b) => 
+                            new Date(a.bumpedAt) - new Date(b.bumpedAt)
+                        );
+                        
+                        CardsModel.updateAllRelations();
+                    } catch (e) {
+                        console.error("Ошибка загрузки:", e);
+                    }
+                }
+            }
         };
 
         const CardsView = {
@@ -1059,6 +1072,8 @@
                     .on('click', '.bump-text-button', CardsController.handleBumpCard)
                     .on('click', '.toggle-parent-search', CardsController.handleToggleParentSearch)
                     .on('click', '.toggle-child-search', CardsController.handleToggleChildSearch)
+                    // Новый обработчик для тогглера описания
+                    .on('click', '.toggle-description', CardsController.handleToggleDescription)
                     .on('click', function(e) {
                         if (!$(e.target).closest('.suggestions').length && 
                             !$(e.target).hasClass('search-input')) {
@@ -1144,6 +1159,18 @@
                 
                 const processedContent = content.replace(/@(\d+)/g, '[[$1]]');
                 CardsModel.updateCard(cardId, { content: processedContent });
+                
+                // Обновляем текст кнопки в зависимости от наличия контента
+                const $card = $(this).closest('.card');
+                const $toggleButton = $card.find('.toggle-description');
+                
+                if (content.trim()) {
+                    $toggleButton.text('скрыть');
+                    // Если контент есть, показываем textarea по умолчанию
+                    $(this).addClass('visible');
+                } else {
+                    $toggleButton.text('показать');
+                }
             },
             
             handleRemoveParent: function(e) {
@@ -1474,7 +1501,24 @@
 				if ($searchContainer.hasClass('visible')) {
 					$searchContainer.find('.child-search-input').focus();
 				}
-			}
+			},
+
+            // Новый обработчик для тогглера описания
+            handleToggleDescription: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const $button = $(this);
+                const $textarea = $button.closest('.card').find('.card__textarea');
+                $textarea.toggleClass('visible');
+                
+                // Меняем текст кнопки в зависимости от состояния
+                if ($textarea.hasClass('visible')) {
+                    $button.text('скрыть');
+                } else {
+                    $button.text('показать');
+                }
+            }
         };
 
         $(document).ready(() => {
