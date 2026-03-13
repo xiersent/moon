@@ -168,6 +168,12 @@
             transition: box-shadow 0.2s ease;
         }
         
+        .card__parents {
+            margin-bottom: 10px;
+            position: relative;
+            width: 100%;
+        }
+        
         .card__header {
             display: flex;
             flex-direction: row;
@@ -178,13 +184,13 @@
         
         .card__title {
             flex: 1;
-            padding: 0 8px;
+            padding: 8px;
             border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 14px;
             background: #fff;
-            height: 36px;
-            line-height: 36px;
+            min-height: 36px;
+            line-height: 1.4;
         }
         
         .card__title:focus {
@@ -201,6 +207,9 @@
         .card__content {
             margin: 12px 0;
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
         
         .card__textarea {
@@ -213,11 +222,11 @@
             resize: vertical;
             background: #fff;
             font-family: inherit;
-            display: none; /* Скрыто по умолчанию */
+            display: none;
         }
         
         .card__textarea.visible {
-            display: block; /* Показывается при добавлении класса visible */
+            display: block;
         }
         
         .card__textarea:focus {
@@ -240,7 +249,6 @@
             width: 100%;
         }
         
-        /* Текстовая кнопка бампа - просто текст без стилей */
         .bump-text-button {
             background: none;
             border: none;
@@ -255,13 +263,9 @@
         .card__parents,
         .card__children,
         .card__mentions {
-            margin: 12px 0;
+            margin: 0;
             position: relative;
             width: 100%;
-        }
-        
-        .card__children {
-            margin-top: 16px;
         }
         
         .card__parents-title,
@@ -283,7 +287,6 @@
             font-size: 13px;
         }
         
-        /* Заголовок для описания как у родительских/дочерних */
         .card__description-title {
             font-weight: 500;
             margin-bottom: 6px;
@@ -311,31 +314,55 @@
             background: #f0f0f0;
         }
         
-        .parents-list,
+        .parents-list {
+            display: flex;
+            gap: 6px;
+            margin: 6px 0;
+            width: 100%;
+        }
+        
+        .card__parent-item,
+        .card__child-item,
+        .card__mention-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: #f8f8f8;
+            border-radius: 6px;
+            font-size: 13px;
+            border: 1px solid #ddd;
+            gap: 8px;
+            min-height: 36px;
+            word-break: break-word;
+        }
+        
+        .card__parent-item .mention,
+        .card__child-item .child-link,
+        .card__mention-item .mention {
+            flex: 1;
+            min-width: 0;
+            word-break: break-word;
+            line-height: 1.4;
+            padding: 2px 0;
+        }
+        
+        .card__parent-item .action-button,
+        .card__child-item .action-button,
+        .card__mention-item .action-button {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            font-size: 14px;
+        }
+        
         .children-list {
             display: flex;
             gap: 6px;
             margin-top: 6px;
             width: 100%;
-        }
-        
-        .card__parent-item,
-        .card__child-item {
-            display: flex;
-            align-items: center;
-            padding: 0 8px;
-            background: #f8f8f8;
-            border-radius: 6px;
-            font-size: 13px;
-            border: 1px solid #ddd;
-            height: 36px;
-            gap: 6px;
-        }
-        
-        .children-list {
-            max-height: 200px;
-            overflow-y: auto;
-            width: 100%;
+            max-height: none;
+            overflow-y: visible;
         }
         
         .search-container {
@@ -344,11 +371,11 @@
             gap: 6px;
             margin-bottom: 6px;
             width: 100%;
-            display: none; /* Скрыто по умолчанию */
+            display: none;
         }
         
         .search-container.visible {
-            display: flex; /* Показывается при добавлении класса visible */
+            display: flex;
         }
         
         .search-input {
@@ -397,6 +424,7 @@
             min-height: 36px;
             display: flex;
             align-items: center;
+            word-break: break-word;
         }
         
         .suggestion-item:last-child {
@@ -405,25 +433,6 @@
         
         .suggestion-item:active {
             background-color: #f0f0f0;
-        }
-        
-        .card__mentions {
-            margin-top: 12px;
-            padding-top: 8px;
-            border-top: 1px dashed #ddd;
-        }
-        
-        .card__mention-item {
-            margin: 4px 0;
-            padding: 0 8px;
-            background: #f8f8f8;
-            border-radius: 6px;
-            font-size: 13px;
-            border: 1px solid #ddd;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            width: 100%;
         }
         
         .mention,
@@ -466,10 +475,6 @@
         @media (orientation: landscape) and (max-height: 600px) {
             .card__textarea {
                 min-height: 60px;
-            }
-            
-            .children-list {
-                max-height: 120px;
             }
             
             .cards-system__controls {
@@ -522,11 +527,7 @@
 
     <script type="text/ejs" id="card-template">
         <div class="card" data-card-id="<%= id %>">
-            <div class="card__header">
-                <input type="text" class="card__title" value="<%= title %>" placeholder="<%= placeholder %>">
-                <button class="button button--danger">✕</button>
-            </div>
-            
+            <!-- Родительские карточки над заголовком карточки -->
             <div class="card__parents">
                 <div class="card__parents-title">
                     Родительские карточки:
@@ -549,8 +550,14 @@
                 </div>
             </div>
             
+            <div class="card__header">
+                <input type="text" class="card__title" value="<%= title %>" placeholder="<%= placeholder %>">
+                <button class="button button--danger">✕</button>
+            </div>
+            
+            <!-- Все остальное содержимое карточки -->
             <div class="card__content">
-                <!-- Заголовок для описания как у родительских/дочерних -->
+                <!-- Заголовок для описания -->
                 <div class="card__description-title">
                     Описание:
                     <button class="add-text-button toggle-description">
@@ -560,6 +567,7 @@
                 
                 <textarea class="card__textarea <%= (content && content.trim()) ? 'visible' : '' %>" placeholder="Содержание карточки..."><%= content %></textarea>
                 
+                <!-- Дочерние карточки -->
                 <div class="card__children">
                     <div class="card__children-title">
                         Дочерние карточки:
@@ -1072,7 +1080,6 @@
                     .on('click', '.bump-text-button', CardsController.handleBumpCard)
                     .on('click', '.toggle-parent-search', CardsController.handleToggleParentSearch)
                     .on('click', '.toggle-child-search', CardsController.handleToggleChildSearch)
-                    // Новый обработчик для тогглера описания
                     .on('click', '.toggle-description', CardsController.handleToggleDescription)
                     .on('click', function(e) {
                         if (!$(e.target).closest('.suggestions').length && 
@@ -1503,7 +1510,6 @@
 				}
 			},
 
-            // Новый обработчик для тогглера описания
             handleToggleDescription: function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1512,7 +1518,6 @@
                 const $textarea = $button.closest('.card').find('.card__textarea');
                 $textarea.toggleClass('visible');
                 
-                // Меняем текст кнопки в зависимости от состояния
                 if ($textarea.hasClass('visible')) {
                     $button.text('скрыть');
                 } else {
