@@ -150,6 +150,64 @@
             background: #d0d0d0;
         }
         
+        /* Глобальный поиск */
+        .global-search-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        
+        .global-search-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #fff;
+        }
+        
+        .global-search-input:focus {
+            outline: none;
+            border-color: #999;
+        }
+        
+        .global-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-top: 2px;
+        }
+        
+        .global-suggestion-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+        
+        .global-suggestion-item:last-child {
+            border-bottom: none;
+        }
+        
+        .global-suggestion-item:hover,
+        .global-suggestion-item:active {
+            background-color: #f5f5f5;
+        }
+        
+        .global-suggestion-item strong {
+            color: #333;
+        }
+        
         .cards-container {
             display: grid;
             grid-template-columns: 1fr;
@@ -524,6 +582,15 @@
             <button class="button button--primary" id="add-card-btn">Создать карточку</button>
             <button class="button button--danger" id="delete-all-btn">Уничтожить все</button>
         </div>
+        
+        <!-- Глобальный поиск -->
+        <div class="global-search-container">
+            <input type="text" id="global-search-input" class="global-search-input" 
+                   placeholder="Поиск карточек по названию..." 
+                   autocomplete="off">
+            <div id="global-suggestions" class="global-suggestions"></div>
+        </div>
+        
         <div class="cards-container" id="cards-container"></div>
     </div>
 
@@ -1083,10 +1150,14 @@
                     .on('click', '.toggle-parent-search', CardsController.handleToggleParentSearch)
                     .on('click', '.toggle-child-search', CardsController.handleToggleChildSearch)
                     .on('click', '.toggle-description', CardsController.handleToggleDescription)
+                    .on('input', '#global-search-input', CardsController.handleGlobalSearch)
+                    .on('click', '.global-suggestion-item', CardsController.handleGlobalSuggestionClick)
                     .on('click', function(e) {
                         if (!$(e.target).closest('.suggestions').length && 
-                            !$(e.target).hasClass('search-input')) {
+                            !$(e.target).hasClass('search-input') &&
+                            !$(e.target).closest('.global-search-container').length) {
                             $('.suggestions').hide();
+                            $('#global-suggestions').hide();
                         }
                     });
             },
@@ -1509,6 +1580,83 @@
                     $button.text('скрыть');
                 } else {
                     $button.text('показать');
+                }
+            },
+
+            handleGlobalSearch: function(e) {
+                const query = $(this).val().trim();
+                const $suggestions = $('#global-suggestions');
+                
+                if (query.length > 0) {
+                    // Ищем все карточки, содержащие query в названии
+                    const results = CardsModel.cards.filter(card => 
+                        card.title.toLowerCase().includes(query.toLowerCase())
+                    );
+                    
+                    $suggestions.empty();
+                    
+                    if (results.length > 0) {
+                        results.forEach(card => {
+                            // Выделяем совпадающую часть жирным
+                            const title = card.title || 'Без названия';
+                            const index = title.toLowerCase().indexOf(query.toLowerCase());
+                            let displayTitle = title;
+                            
+                            if (index !== -1) {
+                                const before = title.substring(0, index);
+                                const match = title.substring(index, index + query.length);
+                                const after = title.substring(index + query.length);
+                                displayTitle = `${before}<strong>${match}</strong>${after}`;
+                            }
+                            
+                            $suggestions.append(
+                                `<div class="global-suggestion-item" data-card-id="${card.id}">
+                                    ${displayTitle}
+                                </div>`
+                            );
+                        });
+                        $suggestions.show();
+                    } else {
+                        $suggestions.append(
+                            '<div class="global-suggestion-item" style="color: #999;">Карточки не найдены</div>'
+                        );
+                        $suggestions.show();
+                    }
+                } else {
+                    $suggestions.hide();
+                }
+            },
+
+            handleGlobalSuggestionClick: function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const cardId = $(this).data('card-id');
+                const $suggestions = $('#global-suggestions');
+                const $searchInput = $('#global-search-input');
+                
+                // Находим карточку
+                const cardElement = $(`.card[data-card-id="${cardId}"]`);
+                
+                if (cardElement.length) {
+                    // Очищаем поле поиска и скрываем подсказки
+                    $searchInput.val('');
+                    $suggestions.hide();
+                    
+                    // Скроллим к карточке
+                    cardElement.get(0).scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                    
+                    // Подсвечиваем карточку
+                    cardElement.addClass('highlight');
+                    setTimeout(() => {
+                        cardElement.removeClass('highlight');
+                    }, 1500);
+                } else {
+                    alert('Карточка не найдена');
+                    $suggestions.hide();
                 }
             }
         };
