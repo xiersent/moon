@@ -1,133 +1,243 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>Заразка</title>
-    <script src="vendor/js/jquery-3.6.0.min.js"></script>
-    <script src="vendor/js/ejs.min.js"></script>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Заразка</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ejs@3.1.8/ejs.min.js"></script>
     <style>
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
 
-		.plus {transform: rotate(45deg);}
-        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.5;
-            padding: 8px;
-            padding-bottom: 70px;
             background: #f5f5f5;
             min-height: 100vh;
-            max-width: 100%;
-            overflow-x: hidden;
-        }
-        
-        /* Модальное окно */
-        .name-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
-        
-        .name-modal__content {
-            background: white;
             padding: 16px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            padding-bottom: 90px;
+            line-height: 1.5;
+            overflow-y: scroll;
         }
-        
-        .name-modal__title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #333;
-        }
-        
-        .name-modal__input {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-bottom: 12px;
-            height: 36px;
-        }
-        
-        .name-modal__input:focus {
-            outline: none;
-            border-color: #999;
-        }
-        
-        .name-modal__button {
-            width: 100%;
-            padding: 8px 10px;
-            background: #e0e0e0;
-            color: #333;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            height: 36px;
-        }
-        
-        /* Фиксированная кнопка внизу */
-        .fixed-name-button {
-            position: fixed;
-            bottom: 12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #e0e0e0;
-            color: #333;
-            border: 1px solid #ccc;
-            border-radius: 30px;
-            padding: 8px 20px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            z-index: 1000;
-            text-align: center;
-            height: 40px;
-            white-space: nowrap;
-            width: auto;
-            min-width: 160px;
-        }
-        
-        .cards-system {
-            width: 100%;
+
+        .app-container {
+            max-width: 700px;
             margin: 0 auto;
         }
-        
-        .cards-system__header {
+
+        .mode-switch-header {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #e8e8e8;
             text-align: center;
-            margin-bottom: 12px;
-            color: #333;
-            font-size: 20px;
-            padding: 0 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        
+
+        .mode-switch-header:active {
+            background: #f5f5f5;
+        }
+
+        .mode-arrow {
+            font-size: 20px;
+            font-weight: 600;
+            color: #666;
+            user-select: none;
+        }
+
+        .mode-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            letter-spacing: -0.3px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .global-search {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .global-search__input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 15px;
+            background: #fff;
+            transition: all 0.2s;
+        }
+
+        .global-search__input:focus {
+            outline: none;
+            border-color: #999;
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+        }
+
+        .global-search__suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            margin-top: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .global-suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            transition: background 0.1s;
+        }
+
+        .global-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .global-suggestion-item:hover {
+            background: #f9f9f9;
+        }
+
+        .suggestion-type {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 8px;
+            font-weight: 500;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .view-container {
+            display: none;
+        }
+
+        .view-container.active {
+            display: block;
+        }
+
+        .journal {
+            width: 100%;
+        }
+
+        .days-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .day-group {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #e8e8e8;
+        }
+
+        .day-group__header {
+            padding: 16px 20px;
+            text-align: center;
+            background: #fafafa;
+            border-bottom: 1px solid #efefef;
+        }
+
+        .day-group__date {
+            font-weight: 600;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .day-group__weekday {
+            font-size: 13px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .entries-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .entry-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .entry-item:last-child {
+            border-bottom: none;
+        }
+
+        .entry-item:hover {
+            background: #f9f9f9;
+        }
+
+        .entry-item.highlight {
+            background: #fff9c4;
+            animation: highlightPulse 0.6s ease;
+        }
+
+        @keyframes highlightPulse {
+            0% { background: #fff3bf; }
+            100% { background: #fff9c4; }
+        }
+
+        .entry-item__content {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #333;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .entry-item__footer {
+            margin-top: 8px;
+            font-size: 11px;
+            color: #bbb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: #fff;
+            border-radius: 16px;
+            color: #aaa;
+        }
+
+        .cards-system {
+            width: 100%;
+        }
+
         .cards-system__controls {
             display: flex;
             flex-direction: row;
             gap: 6px;
             margin-bottom: 16px;
             width: 100%;
-			justify-content: center;
+            justify-content: center;
         }
-        
+
         .button {
             padding: 8px 12px;
             border: 1px solid #ccc;
@@ -142,72 +252,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: auto;
-            min-height: 36px;
         }
-        
-        .button:active {
-            background: #d0d0d0;
-        }
-        
-        /* Глобальный поиск */
-        .global-search-container {
-            position: relative;
-            width: 100%;
-            margin-bottom: 16px;
-        }
-        
-        .global-search-input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            background: #fff;
-        }
-        
-        .global-search-input:focus {
-            outline: none;
-            border-color: #999;
-        }
-        
-        .global-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            max-height: 300px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            margin-top: 2px;
-        }
-        
-        .global-suggestion-item {
-            padding: 10px 12px;
-            cursor: pointer;
-            font-size: 13px;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background 0.2s;
-        }
-        
-        .global-suggestion-item:last-child {
-            border-bottom: none;
-        }
-        
-        .global-suggestion-item:hover,
-        .global-suggestion-item:active {
-            background-color: #f5f5f5;
-        }
-        
-        .global-suggestion-item strong {
-            color: #333;
-        }
-        
+
         .cards-container {
             display: grid;
             grid-template-columns: 1fr;
@@ -215,7 +261,7 @@
             padding: 0;
             width: 100%;
         }
-        
+
         .card {
             background: #fff;
             padding: 12px;
@@ -223,15 +269,14 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border: 1px solid #ddd;
             width: 100%;
-            transition: box-shadow 0.2s ease;
         }
-        
+
         .card__parents {
             margin-bottom: 10px;
             position: relative;
             width: 100%;
         }
-        
+
         .card__header {
             display: flex;
             flex-direction: row;
@@ -239,7 +284,7 @@
             margin-bottom: 10px;
             align-items: center;
         }
-        
+
         .card__title {
             flex: 1;
             padding: 8px;
@@ -248,20 +293,13 @@
             font-size: 14px;
             background: #fff;
             min-height: 36px;
-            line-height: 1.4;
         }
-        
+
         .card__title:focus {
             outline: none;
             border-color: #999;
         }
-        
-        .card__header .button--danger {
-            width: auto;
-            flex: 0 0 auto;
-            padding: 8px 12px;
-        }
-        
+
         .card__content {
             margin: 12px 0;
             width: 100%;
@@ -269,7 +307,7 @@
             flex-direction: column;
             gap: 12px;
         }
-        
+
         .card__textarea {
             width: 100%;
             min-height: 100px;
@@ -282,16 +320,11 @@
             font-family: inherit;
             display: none;
         }
-        
+
         .card__textarea.visible {
             display: block;
         }
-        
-        .card__textarea:focus {
-            outline: none;
-            border-color: #999;
-        }
-        
+
         .card__footer {
             font-size: 11px;
             color: #999;
@@ -299,14 +332,14 @@
             padding-top: 6px;
             border-top: 1px solid #eee;
         }
-        
+
         .card__footer-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
             width: 100%;
         }
-        
+
         .bump-text-button {
             background: none;
             border: none;
@@ -315,17 +348,8 @@
             cursor: pointer;
             padding: 0;
             margin-left: 8px;
-            text-decoration: none;
         }
-        
-        .card__parents,
-        .card__children,
-        .card__mentions {
-            margin: 0;
-            position: relative;
-            width: 100%;
-        }
-        
+
         .card__parents-title,
         .card__children-title {
             font-weight: 500;
@@ -337,14 +361,7 @@
             align-items: center;
             cursor: pointer;
         }
-        
-        .card__mentions-title {
-            font-weight: 500;
-            margin-bottom: 6px;
-            color: #666;
-            font-size: 13px;
-        }
-        
+
         .card__description-title {
             font-weight: 500;
             margin-bottom: 6px;
@@ -355,7 +372,7 @@
             align-items: center;
             cursor: pointer;
         }
-        
+
         .add-text-button {
             background: none;
             border: none;
@@ -364,25 +381,20 @@
             font-size: 13px;
             cursor: pointer;
             padding: 2px 8px;
-            text-decoration: none;
             border-radius: 4px;
         }
-        
-        .add-text-button:hover {
-            background: #f0f0f0;
-        }
-        
-        .parents-list {
+
+        .parents-list,
+        .children-list {
             display: flex;
             flex-direction: column;
             gap: 6px;
             margin: 6px 0;
             width: 100%;
         }
-        
+
         .card__parent-item,
-        .card__child-item,
-        .card__mention-item {
+        .card__child-item {
             display: flex;
             align-items: center;
             padding: 8px;
@@ -392,123 +404,20 @@
             border: 1px solid #ddd;
             gap: 8px;
             min-height: 36px;
-            word-break: break-word;
         }
-        
-        .card__parent-item .mention,
-        .card__child-item .child-link,
-        .card__mention-item .mention {
+
+        .mention,
+        .child-link {
             flex: 1;
             min-width: 0;
             word-break: break-word;
-            line-height: 1.4;
-            padding: 2px 0;
-        }
-        
-        .card__parent-item .action-button,
-        .card__child-item .action-button,
-        .card__mention-item .action-button {
-            flex-shrink: 0;
-            width: 28px;
-            height: 28px;
-            padding: 0;
-            font-size: 14px;
-        }
-        
-        .children-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-top: 6px;
-            width: 100%;
-            max-height: none;
-            overflow-y: visible;
-        }
-        
-        .search-container {
-            display: flex;
-            flex-direction: row;
-            gap: 6px;
-            margin-bottom: 6px;
-            width: 100%;
-            display: none;
-        }
-        
-        .search-container.visible {
-            display: flex;
-        }
-        
-        .search-input {
-            flex: 1;
-            padding: 0 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            background: #fff;
-            height: 36px;
-            line-height: 36px;
-        }
-        
-        .search-input:focus {
-            outline: none;
-            border-color: #999;
-        }
-        
-        .search-container .button--success {
-            width: auto;
-            flex: 0 0 auto;
-            padding: 8px 12px;
-        }
-        
-        .suggestions {
-            position: absolute;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            width: 100%;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            margin-top: 2px;
-            left: 0;
-            right: 0;
-        }
-        
-        .suggestion-item {
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 13px;
-            border-bottom: 1px solid #f0f0f0;
-            min-height: 36px;
-            display: flex;
-            align-items: center;
-            word-break: break-word;
-        }
-        
-        .suggestion-item:last-child {
-            border-bottom: none;
-        }
-        
-        .suggestion-item:active {
-            background-color: #f0f0f0;
-        }
-        
-        .mention,
-        .child-link {
             color: #666;
             cursor: pointer;
             text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            height: 100%;
-            flex: 1;
         }
-        
+
         .action-button {
             cursor: pointer;
-            margin-left: auto;
             font-weight: normal;
             font-size: 14px;
             padding: 0 8px;
@@ -520,49 +429,319 @@
             justify-content: center;
             height: 28px;
             color: #333;
-            width: auto;
-            min-width: 28px;
         }
-        
-        .action-button:active {
-            background: #d0d0d0;
+
+        .search-container {
+            display: flex;
+            flex-direction: row;
+            gap: 6px;
+            margin-bottom: 6px;
+            width: 100%;
+            display: none;
         }
-        
+
+        .search-container.visible {
+            display: flex;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #fff;
+            height: 36px;
+        }
+
+        .suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            width: calc(100% - 24px);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-top: 2px;
+            left: 12px;
+        }
+
+        .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            border-bottom: 1px solid #f0f0f0;
+            min-height: 36px;
+        }
+
         .card.highlight {
             background: #fff9c4;
         }
 
-        @media (orientation: landscape) and (max-height: 600px) {
-            .card__textarea {
-                min-height: 60px;
-            }
-            
-            .cards-system__controls {
-                flex-direction: row;
-            }
-            
-            body {
-                padding-bottom: 60px;
-            }
+        .plus {
+            transform: rotate(45deg);
+            display: inline-block;
         }
 
-        .name-modal__button:hover,
-        .button:hover,
-        .action-button:hover,
-        .fixed-name-button:hover {
-            background: none;
+        .floating-add-button {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 56px;
+            height: 56px;
+            background: #333;
+            border: none;
+            border-radius: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            z-index: 1000;
+            font-size: 28px;
+            font-weight: 400;
+            color: white;
+            line-height: 1;
         }
-        
-        .name-modal__input:focus,
-        .search-input:focus,
-        .card__title:focus,
-        .card__textarea:focus {
-            border-color: #999;
+
+        .floating-add-button:active {
+            transform: translateX(-50%) scale(0.94);
+        }
+
+        .fixed-name-button {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #e0e0e0;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 30px;
+            padding: 8px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 1000;
+            text-align: center;
+            height: 40px;
+            white-space: nowrap;
+            min-width: 160px;
+            transition: all 0.2s;
+        }
+
+        .fixed-name-button:active {
+            transform: translateX(-50%) scale(0.96);
+        }
+
+        .fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #fff;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.2s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .fullscreen-modal__header {
+            padding: 20px 20px 16px 20px;
+            border-bottom: 1px solid #efefef;
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        .fullscreen-modal__title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .fullscreen-modal__actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .fullscreen-modal__button {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            background: #fff;
+            color: #333;
+            text-align: center;
+        }
+
+        .fullscreen-modal__button--save {
+            background: #333;
+            border-color: #333;
+            color: white;
+        }
+
+        .fullscreen-modal__button--delete {
+            border-color: #ffccc7;
+            color: #d4380d;
+        }
+
+        .fullscreen-modal__content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .fullscreen-modal__datetime {
+            display: flex;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .fullscreen-modal__datetime-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            background: #fafafa;
+            text-align: center;
+        }
+
+        .fullscreen-modal__textarea-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .fullscreen-modal__textarea {
+            width: 100%;
+            flex: 1;
+            padding: 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: none;
+            background: #fafafa;
+        }
+
+        .name-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .name-modal__content {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .name-modal__title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .name-modal__input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .name-modal__button {
+            width: 100%;
+            padding: 8px 10px;
+            background: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+                padding-bottom: 90px;
+            }
+            
+            .fullscreen-modal__actions {
+                flex-wrap: nowrap;
+            }
+            
+            .fullscreen-modal__datetime {
+                flex-direction: row;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Модальное окно -->
+    <div class="app-container">
+        <div class="mode-switch-header" id="modeSwitchHeader">
+            <span class="mode-arrow">←</span>
+            <div class="mode-title" id="modeTitle">Планетаход</div>
+            <span class="mode-arrow">→</span>
+        </div>
+
+        <div class="global-search">
+            <input type="text" id="globalSearchInput" class="global-search__input" 
+                   placeholder="Поиск по всем записям и карточкам..." autocomplete="off">
+            <div id="globalSuggestions" class="global-search__suggestions"></div>
+        </div>
+
+        <div id="cardsView" class="view-container active">
+            <div class="cards-system">
+                <div class="cards-system__controls">
+                    <button class="button button--primary" id="add-card-btn">Создать карточку</button>
+                    <button class="button button--danger" id="delete-all-btn">Уничтожить все</button>
+                </div>
+                <div class="cards-container" id="cards-container"></div>
+            </div>
+        </div>
+
+        <div id="journalView" class="view-container">
+            <div class="journal">
+                <div class="days-container" id="daysContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <button class="floating-add-button" id="floatingBtn">+</button>
+    <button class="fixed-name-button" id="fixedNameButton" style="display: none;">
+        <span id="userNameDisplay"></span>
+    </button>
+
     <div class="name-modal" id="nameModal" style="display: none;">
         <div class="name-modal__content">
             <div class="name-modal__title">Введите ваше имя</div>
@@ -571,32 +750,32 @@
         </div>
     </div>
 
-    <!-- Кнопка внизу -->
-    <button class="fixed-name-button" id="fixedNameButton" style="display: none;">
-        <span id="userNameDisplay"></span>
-    </button>
+    <script type="text/ejs" id="dayGroupTemplate">
+        <div class="day-group" data-date="<%= date %>">
+            <div class="day-group__header">
+                <div class="day-group__date"><%= formattedDate %></div>
+                <div class="day-group__weekday"><%= weekday %></div>
+            </div>
+            <div class="entries-list">
+                <% entries.forEach(function(entry) { %>
+                    <div class="entry-item" data-entry-id="<%= entry.id %>">
+                        <div class="entry-item__content"><%= entry.text %></div>
+                        <div class="entry-item__footer"><%= entry.time %></div>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+    </script>
 
-    <div class="cards-system">
-        <h1 class="cards-system__header">Планетаход</h1>
-        <div class="cards-system__controls">
-            <button class="button button--primary" id="add-card-btn">Создать карточку</button>
-            <button class="button button--danger" id="delete-all-btn">Уничтожить все</button>
+    <script type="text/ejs" id="emptyTemplate">
+        <div class="empty-state">
+            <div class="empty-state__text">Нет записей</div>
+            <div class="empty-state__text" style="font-size: 13px; margin-top: 8px;">Нажмите + внизу, чтобы добавить</div>
         </div>
-        
-        <!-- Глобальный поиск -->
-        <div class="global-search-container">
-            <input type="text" id="global-search-input" class="global-search-input" 
-                   placeholder="Поиск карточек по названию..." 
-                   autocomplete="off">
-            <div id="global-suggestions" class="global-suggestions"></div>
-        </div>
-        
-        <div class="cards-container" id="cards-container"></div>
-    </div>
+    </script>
 
     <script type="text/ejs" id="card-template">
         <div class="card" data-card-id="<%= id %>">
-            <!-- Родительские карточки над заголовком карточки -->
             <div class="card__parents">
                 <div class="card__parents-title">
                     Родительские карточки:
@@ -624,9 +803,7 @@
                 <button class="button button--danger">✕</button>
             </div>
             
-            <!-- Все остальное содержимое карточки -->
             <div class="card__content">
-                <!-- Заголовок для описания -->
                 <div class="card__description-title">
                     Описание:
                     <button class="add-text-button toggle-description">
@@ -636,7 +813,6 @@
                 
                 <textarea class="card__textarea <%= (content && content.trim()) ? 'visible' : '' %>" placeholder="Содержание карточки..."><%= content %></textarea>
                 
-                <!-- Дочерние карточки -->
                 <div class="card__children">
                     <div class="card__children-title">
                         Дочерние карточки:
@@ -677,9 +853,13 @@
                 <div class="card__footer-content">
                     <span>
                         Создано: <%= createdAt %>
-                        <% if (bumpedAt && new Date(bumpedAt) > new Date(createdAt)) { %>
-                            (поднято <%= new Date(bumpedAt).toLocaleDateString() %> 
-                            <%= new Date(bumpedAt).toLocaleTimeString().slice(0,5) %>)
+                        <% 
+                            const bumped = bumpedAt ? new Date(bumpedAt) : null;
+                            const created = new Date(createdAt);
+                            if (bumped && !isNaN(bumped.getTime()) && bumped > created) { 
+                        %>
+                            (поднято <%= bumped.toLocaleDateString() %> 
+                            <%= bumped.toLocaleTimeString().slice(0,5) %>)
                         <% } %>
                     </span>
                     <button class="bump-text-button" data-card-id="<%= id %>">мне важнее эта</button>
@@ -689,982 +869,537 @@
     </script>
 
     <script>
-        // Простой модуль для имени
-        const UserName = {
-            key: 'userName',
-            
-            get: () => localStorage.getItem(UserName.key) || '',
-            
-            save: (name) => {
-                if (name && name.trim()) {
-                    localStorage.setItem(UserName.key, name.trim());
-                    return true;
+        // ==================== МОДЕЛЬ ДНЕВНИКА ====================
+        const JournalModel = {
+            entries: [],
+            generateId: () => Date.now() + Math.random() * 10000,
+            load: function() {
+                const saved = localStorage.getItem('journal_entries_v6');
+                if (saved) { try { this.entries = JSON.parse(saved); this.sortEntries(); } catch(e) { } }
+                if (this.entries.length === 0) {
+                    const today = new Date(), todayStr = today.toISOString().slice(0,10);
+                    const yesterday = new Date(Date.now() - 86400000), yesterdayStr = yesterday.toISOString().slice(0,10);
+                    this.entries.push({ id: this.generateId(), date: yesterdayStr, text: "Первая запись! Здесь можно вести дневник. Записи группируются по датам.", createdAt: yesterday.toISOString() });
+                    this.entries.push({ id: this.generateId(), date: todayStr, text: "Сегодняшний день. Нажмите + внизу, чтобы добавить новую запись.", createdAt: today.toISOString() });
+                    this.save();
                 }
-                return false;
             },
-            
-            has: () => {
-                const name = localStorage.getItem(UserName.key);
-                return name && name.trim().length > 0;
-            },
-            
-            init: () => {
-                if (UserName.has()) {
-                    const name = UserName.get();
-                    $('#userNameDisplay').text(name);
-                    $('#fixedNameButton').show();
-                } else {
-                    $('#nameModal').show();
-                    $('#userNameInput').focus();
+            sortEntries: function() { this.entries.sort((a,b) => { if(a.date !== b.date) return a.date.localeCompare(b.date); return new Date(a.createdAt) - new Date(b.createdAt); }); },
+            save: function() { this.sortEntries(); localStorage.setItem('journal_entries_v6', JSON.stringify(this.entries)); },
+            getGroupedEntries: function() {
+                const groups = new Map();
+                this.entries.forEach(entry => { if(!groups.has(entry.date)) groups.set(entry.date, []); groups.get(entry.date).push(entry); });
+                const result = [];
+                for(let [date, entries] of groups.entries()) {
+                    const formattedEntries = entries.map(entry => ({ ...entry, time: new Date(entry.createdAt).toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' }) }));
+                    const dateObj = new Date(date);
+                    result.push({ date, formattedDate: dateObj.toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' }), weekday: dateObj.toLocaleDateString('ru-RU', { weekday:'long' }), entries: formattedEntries });
                 }
-                
-                $('#saveUserNameBtn').on('click', function() {
-                    const name = $('#userNameInput').val().trim();
-                    if (name) {
-                        UserName.save(name);
-                        $('#nameModal').hide();
-                        $('#userNameDisplay').text(name);
-                        $('#fixedNameButton').show();
-                    } else {
-                        alert('Введите имя');
-                    }
-                });
-                
-                $('#userNameInput').on('keypress', function(e) {
-                    if (e.which === 13) {
-                        $('#saveUserNameBtn').click();
-                    }
-                });
-                
-                $('#fixedNameButton').on('click', function() {
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
-                });
-            }
+                result.sort((a,b) => a.date.localeCompare(b.date));
+                return result;
+            },
+            addEntry: function(date, time, text) { if(!text || !text.trim()) return null; const createdAt = new Date(`${date}T${time}:00`); const newEntry = { id: this.generateId(), date, text: text.trim(), createdAt: createdAt.toISOString() }; this.entries.push(newEntry); this.save(); return newEntry; },
+            updateEntry: function(id, date, time, newText) { const entry = this.entries.find(e => e.id == id); if(entry && newText && newText.trim()) { const createdAt = new Date(`${date}T${time}:00`); entry.text = newText.trim(); entry.date = date; entry.createdAt = createdAt.toISOString(); this.save(); return true; } return false; },
+            deleteEntry: function(id) { const index = this.entries.findIndex(e => e.id == id); if(index !== -1) { this.entries.splice(index,1); this.save(); return true; } return false; },
+            searchEntries: function(query) { if(!query || !query.trim()) return []; const lowerQuery = query.toLowerCase().trim(); return this.entries.filter(entry => entry.text.toLowerCase().includes(lowerQuery)).map(entry => ({ id: entry.id, type:'journal', title: entry.text.substring(0,50) + (entry.text.length>50?'...':''), date: new Date(entry.date).toLocaleDateString('ru-RU') })); },
+            getTodayDate: function() { return new Date().toISOString().slice(0,10); },
+            getCurrentTime: function() { const now = new Date(); return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; },
+            getEntryById: function(id) { return this.entries.find(e => e.id == id); }
         };
-
-        const CardsModel = {
-            cards: [],
-            
-            generateId: () => Date.now(),
-            
-            saveState: () => {
-                localStorage.setItem('cardsSystem', JSON.stringify(CardsModel.cards));
+        
+        // ==================== ПРЕДСТАВЛЕНИЕ ДНЕВНИКА ====================
+        const JournalView = {
+            render: function() {
+                const groups = JournalModel.getGroupedEntries();
+                const $container = $('#daysContainer'); $container.empty();
+                if(groups.length === 0) { $container.html(ejs.render($('#emptyTemplate').text(), {})); return; }
+                groups.forEach(group => { $container.append(ejs.render($('#dayGroupTemplate').text(), group)); });
+                this.bindEvents();
             },
-            
-            addCard: (initialTitle = '') => {
-                const now = new Date();
-                const placeholder = `Карточка от ${now.toLocaleDateString()} ${now.toLocaleTimeString().slice(0,5)}`;
-                
-                const newCard = {
-                    id: CardsModel.generateId(),
-                    title: initialTitle || "",
-                    placeholder: placeholder,
-                    content: "",
-                    parentIds: [],
-                    mentions: [],
-                    children: [],
-                    createdAt: now.toLocaleString(),
-                    bumpedAt: now.toISOString(),
-                    isEmpty: !initialTitle
-                };
-                
-                // Новые карточки добавляем в КОНЕЦ массива
-                CardsModel.cards.push(newCard);
-                CardsModel.saveState();
-                CardsModel.updateAllRelations();
-                return newCard;
-            },
-            
-            updateCard: (cardId, updates) => {
-                const card = CardsModel.getCard(cardId);
-                if (card) {
-                    Object.assign(card, updates);
-                    card.updatedAt = new Date().toLocaleString();
-                    CardsModel.saveState();
-                    CardsModel.updateAllRelations();
-                    return true;
-                }
-                return false;
-            },
-            
-            addParent: (cardId, parentId) => {
-                const card = CardsModel.getCard(cardId);
-                const parentCard = CardsModel.getCard(parentId);
-                
-                if (card && parentCard && cardId != parentId) {
-                    if (!card.parentIds) card.parentIds = [];
-                    
-                    if (!card.parentIds.some(id => id == parentId)) {
-                        card.parentIds.push(parentId);
-                        if (card.isEmpty) {
-                            card.isEmpty = false;
-                            card.title = card.placeholder;
-                        }
-                        CardsModel.saveState();
-                        CardsModel.updateAllRelations();
-                        return true;
-                    }
-                }
-                return false;
-            },
-            
-            addChild: (parentId, childId) => {
-                return CardsModel.addParent(childId, parentId);
-            },
-            
-            removeParent: (cardId, parentId) => {
-                const card = CardsModel.getCard(cardId);
-                if (card && card.parentIds) {
-                    const index = card.parentIds.findIndex(id => id == parentId);
-                    if (index !== -1) {
-                        card.parentIds.splice(index, 1);
-                        CardsModel.saveState();
-                        CardsModel.updateAllRelations();
-                        return true;
-                    }
-                }
-                return false;
-            },
-            
-            removeChild: (parentId, childId) => {
-                return CardsModel.removeParent(childId, parentId);
-            },
-            
-            deleteCard: (cardId) => {
-                const index = CardsModel.cards.findIndex(c => c.id == cardId);
-                if (index !== -1) {
-                    CardsModel.cards.forEach(card => {
-                        if (card.parentIds) {
-                            card.parentIds = card.parentIds.filter(id => id != cardId);
-                        }
-                    });
-                    
-                    CardsModel.cards.splice(index, 1);
-                    CardsModel.saveState();
-                    CardsModel.updateAllRelations();
-                    return true;
-                }
-                return false;
-            },
-            
-            deleteAllCards: () => {
-                if (CardsModel.cards.length === 0) return false;
-                CardsModel.cards = [];
-                CardsModel.saveState();
-                return true;
-            },
-            
-            updateAllRelations: () => {
-                CardsModel.updateMentions();
-                CardsModel.updateChildrenRelations();
-            },
-            
-            updateMentions: () => {
-                CardsModel.cards.forEach(card => {
-                    card.mentions = [];
-                });
-                
-                CardsModel.cards.forEach(sourceCard => {
-                    const matches = sourceCard.content.match(/\[\[(\d+)\]\]/g) || [];
-                    matches.forEach(match => {
-                        const cardId = match.match(/\d+/)[0];
-                        const targetCard = CardsModel.getCard(cardId);
-                        if (targetCard) {
-                            targetCard.mentions.push({
-                                sourceCard: { id: sourceCard.id, title: sourceCard.title },
-                                context: sourceCard.content
-                            });
-                        }
-                    });
-                });
-            },
-            
-            updateChildrenRelations: () => {
-                CardsModel.cards.forEach(card => {
-                    card.children = [];
-                });
-                
-                CardsModel.cards.forEach(card => {
-                    if (card.parentIds && card.parentIds.length > 0) {
-                        card.parentIds.forEach(parentId => {
-                            const parentCard = CardsModel.getCard(parentId);
-                            if (parentCard) {
-                                parentCard.children.push({
-                                    id: card.id,
-                                    title: card.title
-                                });
-                            }
-                        });
-                    }
-                });
-            },
-            
-            getAllParentIds: (cardId) => {
-                const allParentIds = new Set();
-                const queue = [cardId];
-                
-                while (queue.length > 0) {
-                    const currentId = queue.shift();
-                    const currentCard = CardsModel.getCard(currentId);
-                    
-                    if (currentCard && currentCard.parentIds) {
-                        currentCard.parentIds.forEach(parentId => {
-                            if (!allParentIds.has(parentId)) {
-                                allParentIds.add(parentId);
-                                queue.push(parentId);
-                            }
-                        });
-                    }
-                }
-                
-                return Array.from(allParentIds);
-            },
-            
-            getAllChildIds: (cardId) => {
-                const allChildIds = new Set();
-                const queue = [cardId];
-                
-                while (queue.length > 0) {
-                    const currentId = queue.shift();
-                    const currentCard = CardsModel.getCard(currentId);
-                    
-                    if (currentCard && currentCard.children) {
-                        currentCard.children.forEach(child => {
-                            if (!allChildIds.has(child.id)) {
-                                allChildIds.add(child.id);
-                                queue.push(child.id);
-                            }
-                        });
-                    }
-                }
-                
-                return Array.from(allChildIds);
-            },
-            
-            getCard: (cardId) => {
-                return CardsModel.cards.find(c => c.id == cardId);
-            },
-            
-            searchCards: (query, excludeCardId, excludeChildren = false) => {
-                if (!query) return [];
-                
-                let excludeIds = excludeCardId ? [excludeCardId] : [];
-                
-                if (excludeCardId) {
-                    excludeIds = excludeIds.concat(CardsModel.getAllParentIds(excludeCardId));
-                    if (excludeChildren) {
-                        excludeIds = excludeIds.concat(CardsModel.getAllChildIds(excludeCardId));
-                    }
-                }
-                
-                return CardsModel.cards.filter(card => {
-                    return card.title.toLowerCase().includes(query.toLowerCase()) && 
-                           !excludeIds.includes(card.id);
-                });
-            },
-            
-            loadState: () => {
-                const savedCards = localStorage.getItem('cardsSystem');
-                if (savedCards) {
-                    try {
-                        CardsModel.cards = JSON.parse(savedCards);
-                        
-                        // Добавляем bumpedAt для старых карточек
-                        CardsModel.cards.forEach(card => {
-                            if (!card.parentIds) card.parentIds = [];
-                            if (!card.children) card.children = [];
-                            if (!card.mentions) card.mentions = [];
-                            
-                            if (!card.bumpedAt) {
-                                card.bumpedAt = card.createdAt 
-                                    ? new Date(card.createdAt).toISOString() 
-                                    : new Date().toISOString();
-                            }
-                            
-                            if (card.isEmpty === undefined) {
-                                card.isEmpty = (card.title === "" || card.title === "Новая карточка");
-                                if (card.isEmpty && !card.placeholder) {
-                                    const date = new Date(card.createdAt || Date.now());
-                                    card.placeholder = `Карточка от ${date.toLocaleDateString()} ${date.toLocaleTimeString().slice(0,5)}`;
-                                }
-                            }
-                            
-                            if (card.isEmpty && card.parentIds.length === 0 && card.children.length === 0) {
-                                card.title = "";
-                            }
-                            else if (card.isEmpty) {
-                                card.title = card.placeholder;
-                                card.isEmpty = false;
-                            }
-                        });
-                        
-                        // Сортируем по bumpedAt - старые сверху, новые снизу
-                        CardsModel.cards.sort((a, b) => 
-                            new Date(a.bumpedAt) - new Date(b.bumpedAt)
-                        );
-                        
-                        CardsModel.updateAllRelations();
-                    } catch (e) {
-                        console.error("Ошибка загрузки:", e);
-                    }
-                }
-            }
+            bindEvents: function() { $('.entry-item').off('click').on('click', function(e) { e.stopPropagation(); const entryId = $(this).data('entry-id'); if(entryId) JournalController.openEditModal(entryId); }); },
+            highlightEntryById: function(entryId) { const $entry = $(`.entry-item[data-entry-id="${entryId}"]`); if($entry.length) { $entry.addClass('highlight'); setTimeout(() => $entry.removeClass('highlight'),1000); $entry.get(0).scrollIntoView({ behavior: 'auto', block: 'center' }); } }
         };
-
-        const CardsView = {
-            render: () => {
-                $('#cards-container').empty();
-                
-                CardsModel.cards.forEach(card => {
-                    const parentIds = card.parentIds || [];
-                    const parents = parentIds.map(id => {
-                        const parentCard = CardsModel.getCard(id);
-                        return parentCard ? { id: parentCard.id, title: parentCard.title } : null;
-                    }).filter(Boolean);
-                    
-                    const children = card.children || [];
-                    const mentions = card.mentions || [];
-                    
-                    const html = ejs.render($('#card-template').text(), {
-                        ...card,
-                        parents: parents,
-                        children: children,
-                        mentions: mentions
-                    });
-                    
-                    $('#cards-container').append(html);
-                });
+        
+        // ==================== КОНТРОЛЛЕР ДНЕВНИКА ====================
+        const JournalController = {
+            openAddModal: function() { this.showFullscreenModal({ title:'Новая запись', dateValue: JournalModel.getTodayDate(), timeValue: JournalModel.getCurrentTime(), textValue:'', showDelete:false, onSave: (date,time,text) => { if(text && text.trim()) { const newEntry = JournalModel.addEntry(date,time,text); if(newEntry) { JournalView.render(); setTimeout(() => JournalView.highlightEntryById(newEntry.id),100); } return true; } return false; } }); },
+            openEditModal: function(entryId) { const entry = JournalModel.getEntryById(entryId); if(!entry) return; const entryTime = new Date(entry.createdAt).toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' }); this.showFullscreenModal({ title:'Редактировать запись', dateValue:entry.date, timeValue:entryTime, textValue:entry.text, showDelete:true, onSave: (date,time,text) => { if(text && text.trim()) { JournalModel.updateEntry(entryId,date,time,text); JournalView.render(); setTimeout(() => JournalView.highlightEntryById(entryId),100); return true; } return false; }, onDelete: () => { if(confirm('Уничтожить эту запись?')) { JournalModel.deleteEntry(entryId); JournalView.render(); return true; } return false; } }); },
+            showFullscreenModal: function(options) {
+                const modalId = 'fullscreenModal_' + Date.now();
+                const deleteButtonHtml = options.showDelete ? '<button class="fullscreen-modal__button fullscreen-modal__button--delete" id="deleteBtn">Уничтожить</button>' : '';
+                const modalHtml = `<div class="fullscreen-modal" id="${modalId}"><div class="fullscreen-modal__header"><div class="fullscreen-modal__title">${options.title}</div><div class="fullscreen-modal__actions"><button class="fullscreen-modal__button fullscreen-modal__button--save" id="saveBtn">Сохранить</button>${deleteButtonHtml}<button class="fullscreen-modal__button" id="cancelBtn">Отмена</button></div></div><div class="fullscreen-modal__content"><div class="fullscreen-modal__datetime"><input type="date" id="dateInput" class="fullscreen-modal__datetime-input" value="${options.dateValue}"><input type="time" id="timeInput" class="fullscreen-modal__datetime-input" value="${options.timeValue}"></div><div class="fullscreen-modal__textarea-wrapper"><textarea id="textInput" class="fullscreen-modal__textarea" placeholder="Введите текст...">${this.escapeHtml(options.textValue)}</textarea></div></div></div>`;
+                $('body').append(modalHtml); const $modal = $('#'+modalId); const $dateInput=$modal.find('#dateInput'), $timeInput=$modal.find('#timeInput'), $textInput=$modal.find('#textInput');
+                setTimeout(() => $textInput.focus(),100);
+                const closeModal = () => { $modal.remove(); };
+                $modal.find('#saveBtn').on('click',()=>{ const date=$dateInput.val(), time=$timeInput.val(), text=$textInput.val(); if(!date||!time){alert('Заполните дату и время'); return;} if(options.onSave(date,time,text)) closeModal(); else if(!text.trim()) alert('Запись не может быть пустой'); });
+                if(options.showDelete) $modal.find('#deleteBtn').on('click',()=>{ if(options.onDelete()) closeModal(); });
+                $modal.find('#cancelBtn').on('click',closeModal);
+                $(document).on('keydown.'+modalId, (e)=>{ if(e.key==='Escape') { closeModal(); $(document).off('keydown.'+modalId); } });
             },
-            
-            updateCardRelations: function(cardId) {
-                const card = CardsModel.getCard(cardId);
-                if (!card) return;
-
-                const $card = $(`[data-card-id="${cardId}"]`);
-                if (!$card.length) return;
-
-                this.updateParentsList($card, cardId);
-                this.updateChildrenList($card, cardId);
-                
-                CardsModel.cards.forEach(c => {
-                    if (c.parentIds && c.parentIds.includes(cardId)) {
-                        const $parentCard = $(`[data-card-id="${c.id}"]`);
-                        if ($parentCard.length) {
-                            this.updateChildrenList($parentCard, c.id);
-                        }
-                    }
-                });
-                
-                card.parentIds.forEach(parentId => {
-                    const $parentCard = $(`[data-card-id="${parentId}"]`);
-                    if ($parentCard.length) {
-                        this.updateChildrenList($parentCard, parentId);
-                    }
-                });
-            },
-            
-            updateParentsList: function($card, cardId) {
-                const card = CardsModel.getCard(cardId);
-                const parentIds = card.parentIds || [];
-                const parents = parentIds.map(id => {
-                    const parentCard = CardsModel.getCard(id);
-                    return parentCard ? { id: parentCard.id, title: parentCard.title } : null;
-                }).filter(Boolean);
-                
-                const parentsListHtml = parents.length > 0 
-                    ? parents.map(parent => `
-                        <div class="card__parent-item">
-                            <span class="mention" data-card-id="${parent.id}">${parent.title}</span>
-                            <button class="action-button remove-parent" data-parent-id="${parent.id}">✕</button>
-                            <button class="action-button remove-with-card" data-card-id="${parent.id}">🗑</button>
-                        </div>
-                    `).join('')
-                    : '';
-                
-                $card.find('.parents-list').html(parentsListHtml);
-            },
-            
-            updateChildrenList: function($card, parentId) {
-                const parentCard = CardsModel.getCard(parentId);
-                const children = parentCard.children || [];
-                
-                const childrenListHtml = children.length > 0
-                    ? children.map(child => `
-                        <div class="card__child-item">
-                            <span class="child-link" data-card-id="${child.id}">${child.title}</span>
-                            <button class="action-button remove-child" data-child-id="${child.id}">✕</button>
-                            <button class="action-button remove-with-card" data-card-id="${child.id}">🗑</button>
-                        </div>
-                    `).join('')
-                    : '';
-                
-                $card.find('.children-list').html(childrenListHtml);
-            },
-            
-            addNewCardToView: function(card) {
-                const parentIds = card.parentIds || [];
-                const parents = parentIds.map(id => {
-                    const parentCard = CardsModel.getCard(id);
-                    return parentCard ? { id: parentCard.id, title: parentCard.title } : null;
-                }).filter(Boolean);
-                
-                const children = card.children || [];
-                const mentions = card.mentions || [];
-                
-                const html = ejs.render($('#card-template').text(), {
-                    ...card,
-                    parents: parents,
-                    children: children,
-                    mentions: mentions
-                });
-                
-                $('#cards-container').append(html);
-            }
+            escapeHtml: function(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
         };
-
-        const CardsController = {
-            init: () => {
-                CardsModel.loadState();
-                CardsView.render();
-                
-                $(document)
-                    .on('click', '#add-card-btn', CardsController.handleAddCard)
-                    .on('click', '#delete-all-btn', CardsController.handleDeleteAllCards)
-                    .on('click', '.card__header .button--danger', CardsController.handleDeleteCard)
-                    .on('input', '.card__title', CardsController.handleCardTitleChange)
-                    .on('input', '.card__textarea', CardsController.handleCardContentChange)
-                    .on('click', '.remove-parent', CardsController.handleRemoveParent)
-                    .on('click', '.remove-child', CardsController.handleRemoveChild)
-                    .on('click', '.remove-with-card', CardsController.handleRemoveWithCard)
-                    .on('click', '.mention, .child-link', CardsController.handleMentionClick)
-                    .on('input', '.parent-search-input', CardsController.handleParentSearch)
-                    .on('click', '.parent-search-add', CardsController.handleAddParent)
-                    .on('click', '.parent-suggestion-item', CardsController.handleAddParentFromSuggestion)
-                    .on('input', '.child-search-input', CardsController.handleChildSearch)
-                    .on('click', '.child-search-add', CardsController.handleAddChild)
-                    .on('click', '.child-suggestion-item', CardsController.handleAddChildFromSuggestion)
-                    .on('click', '.bump-text-button', CardsController.handleBumpCard)
-                    .on('click', '.toggle-parent-search', CardsController.handleToggleParentSearch)
-                    .on('click', '.toggle-child-search', CardsController.handleToggleChildSearch)
-                    .on('click', '.toggle-description', CardsController.handleToggleDescription)
-                    .on('input', '#global-search-input', CardsController.handleGlobalSearch)
-                    .on('click', '.global-suggestion-item', CardsController.handleGlobalSuggestionClick)
-                    .on('click', function(e) {
-                        if (!$(e.target).closest('.suggestions').length && 
-                            !$(e.target).hasClass('search-input') &&
-                            !$(e.target).closest('.global-search-container').length) {
-                            $('.suggestions').hide();
-                            $('#global-suggestions').hide();
-                        }
-                    });
+        
+        // ==================== МОДЕЛЬ КАРТОЧЕК (Планетаход) ====================
+        const CardsModel = { 
+            cards: [], 
+            generateId: () => Date.now() + Math.random() * 10000, 
+            saveState: () => localStorage.setItem('cardsSystem', JSON.stringify(CardsModel.cards)),
+            
+            addCard: (initialTitle='') => { 
+                const now=new Date(); 
+                const placeholder = `Карточка от ${now.toLocaleDateString()} ${now.toLocaleTimeString().slice(0,5)}`; 
+                const newCard={ 
+                    id:CardsModel.generateId(), 
+                    title:initialTitle||"", 
+                    placeholder, 
+                    content:"", 
+                    parentIds:[], 
+                    mentions:[], 
+                    children:[], 
+                    createdAt:now.toLocaleString(), 
+                    bumpedAt:now.toISOString(), 
+                    isEmpty:!initialTitle 
+                }; 
+                CardsModel.cards.push(newCard); 
+                CardsModel.saveState(); 
+                CardsModel.updateAllRelations(); 
+                return newCard; 
             },
             
-            handleAddCard: function(e) {
-                e.preventDefault();
-                const newCard = CardsModel.addCard();
-                CardsView.addNewCardToView(newCard);
-                const $titleInput = $(`[data-card-id="${newCard.id}"] .card__title`);
-                $titleInput.focus();
-                
-                setTimeout(() => {
-                    $(`[data-card-id="${newCard.id}"]`).get(0).scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'center' 
-                    });
-                }, 100);
-            },
-            
-            handleDeleteAllCards: function(e) {
-                e.preventDefault();
-                
-                if (CardsModel.cards.length === 0) return;
-                
-                if (confirm("Уничтожить все карточки? Это действие нельзя отменить.")) {
-                    if (CardsModel.deleteAllCards()) {
-                        $('#cards-container').empty();
-                    }
-                }
-            },
-            
-            handleDeleteCard: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const cardId = $(this).closest('.card').data('card-id');
-                const card = CardsModel.getCard(cardId);
-                
-                if (card.isEmpty && card.title === "" && card.content === "" && 
-                    (card.parentIds === undefined || card.parentIds.length === 0) && 
-                    (card.children === undefined || card.children.length === 0)) {
-                    if (CardsModel.deleteCard(cardId)) {
-                        $(this).closest('.card').remove();
-                        CardsModel.updateAllRelations();
-                    }
+            updateCard: (cardId, updates) => { 
+                const card=CardsModel.getCard(cardId); 
+                if(card){ 
+                    Object.assign(card,updates); 
+                    CardsModel.saveState(); 
+                    CardsModel.updateAllRelations(); 
+                    return true; 
                 } 
-                else if (confirm(`Уничтожить карточку "${card.title || 'без названия'}"?`)) {
-                    if (CardsModel.deleteCard(cardId)) {
-                        $(this).closest('.card').remove();
-                        CardsModel.updateAllRelations();
-                    }
-                }
+                return false; 
             },
             
-            handleCardTitleChange: function() {
-                const cardId = $(this).closest('.card').data('card-id');
-                const newTitle = $(this).val();
-                const card = CardsModel.getCard(cardId);
-                
-                if (card.isEmpty && newTitle.length > 0) {
-                    card.isEmpty = false;
-                }
-                
-                CardsModel.updateCard(cardId, { title: newTitle });
+            addParent: (cardId, parentId) => { 
+                const card=CardsModel.getCard(cardId), parentCard=CardsModel.getCard(parentId); 
+                if(card && parentCard && cardId!=parentId && !(card.parentIds||[]).some(id=>id==parentId)){ 
+                    if(!card.parentIds) card.parentIds=[]; 
+                    card.parentIds.push(parentId); 
+                    if(card.isEmpty){ 
+                        card.isEmpty=false; 
+                        card.title=card.placeholder; 
+                    } 
+                    CardsModel.saveState(); 
+                    CardsModel.updateAllRelations(); 
+                    return true; 
+                } 
+                return false; 
             },
             
-            handleCardContentChange: function() {
-                const cardId = $(this).closest('.card').data('card-id');
-                const content = $(this).val();
-                const card = CardsModel.getCard(cardId);
-                
-                if (card.isEmpty && content.length > 0) {
-                    card.isEmpty = false;
-                    if (card.title === "") {
-                        card.title = card.placeholder;
-                        $(this).closest('.card').find('.card__title').val(card.placeholder);
-                    }
-                }
-                
-                const processedContent = content.replace(/@(\d+)/g, '[[$1]]');
-                CardsModel.updateCard(cardId, { content: processedContent });
-                
-                // Обновляем текст кнопки в зависимости от наличия контента
-                const $card = $(this).closest('.card');
-                const $toggleButton = $card.find('.toggle-description');
-                
-                if (content.trim()) {
-                    $toggleButton.text('скрыть');
-                    // Если контент есть, показываем textarea по умолчанию
-                    $(this).addClass('visible');
-                } else {
-                    $toggleButton.text('показать');
-                }
+            addChild: (parentId, childId) => CardsModel.addParent(childId, parentId),
+            
+            removeParent: (cardId, parentId) => { 
+                const card=CardsModel.getCard(cardId); 
+                if(card && card.parentIds){ 
+                    const idx=card.parentIds.findIndex(id=>id==parentId); 
+                    if(idx!==-1){ 
+                        card.parentIds.splice(idx,1); 
+                        CardsModel.saveState(); 
+                        CardsModel.updateAllRelations(); 
+                        return true; 
+                    } 
+                } 
+                return false; 
             },
             
-            handleRemoveParent: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const cardId = $(this).closest('.card').data('card-id');
-                const parentId = $(this).data('parent-id');
-                
-                if (CardsModel.removeParent(cardId, parentId)) {
-                    CardsView.updateCardRelations(cardId);
-                    CardsView.updateCardRelations(parentId);
-                }
+            removeChild: (parentId, childId) => CardsModel.removeParent(childId, parentId),
+            
+            deleteCard: (cardId) => { 
+                const idx=CardsModel.cards.findIndex(c=>c.id==cardId); 
+                if(idx!==-1){ 
+                    CardsModel.cards.forEach(card=>{ 
+                        if(card.parentIds) card.parentIds=card.parentIds.filter(id=>id!=cardId); 
+                    }); 
+                    CardsModel.cards.splice(idx,1); 
+                    CardsModel.saveState(); 
+                    CardsModel.updateAllRelations(); 
+                    return true; 
+                } 
+                return false; 
             },
             
-            handleRemoveChild: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const parentId = $(this).closest('.card').data('card-id');
-                const childId = $(this).data('child-id');
-                
-                if (CardsModel.removeChild(parentId, childId)) {
-                    CardsView.updateCardRelations(parentId);
-                    CardsView.updateCardRelations(childId);
-                }
+            deleteAllCards: () => { 
+                if(CardsModel.cards.length===0) return false; 
+                CardsModel.cards=[]; 
+                CardsModel.saveState(); 
+                return true; 
             },
             
-            handleRemoveWithCard: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
+            updateAllRelations: () => { 
+                CardsModel.cards.forEach(card=>card.mentions=[]); 
+                CardsModel.cards.forEach(sourceCard=>{ 
+                    const matches=sourceCard.content.match(/\[\[(\d+)\]\]/g)||[]; 
+                    matches.forEach(match=>{ 
+                        const cardId=match.match(/\d+/)[0]; 
+                        const targetCard=CardsModel.getCard(cardId); 
+                        if(targetCard) targetCard.mentions.push({ sourceCard:{ id:sourceCard.id, title:sourceCard.title }, context:sourceCard.content }); 
+                    }); 
+                }); 
                 
-                const cardIdToRemove = $(this).data('card-id');
-                const currentCardId = $(this).closest('.card').data('card-id');
-                const cardToRemove = CardsModel.getCard(cardIdToRemove);
-                
-                if (cardToRemove && confirm(`Уничтожить карточку "${cardToRemove.title || 'без названия'}"?`)) {
-                    if (CardsModel.deleteCard(cardIdToRemove)) {
-                        $(`[data-card-id="${cardIdToRemove}"]`).remove();
-                        const $currentCard = $(`[data-card-id="${currentCardId}"]`);
-                        if ($currentCard.length) {
-                            CardsView.updateCardRelations(currentCardId);
-                        }
-                    }
-                }
-            },
-
-			handleMentionClick: function(e) {
-				e.preventDefault();
-				e.stopPropagation();
-				
-				const cardId = $(this).data('card-id');
-				console.log('Clicked mention for card ID:', cardId);
-				
-				// Ищем именно элемент карточки с этим ID
-				const cardElement = $(`.card[data-card-id="${cardId}"]`);
-				
-				if (cardElement.length) {
-					console.log('Found card element:', cardElement);
-					
-					cardElement.get(0).scrollIntoView({ 
-						behavior: 'smooth', 
-						block: 'center' 
-					});
-					
-					cardElement.addClass('highlight');
-					setTimeout(() => {
-						cardElement.removeClass('highlight');
-					}, 1500);
-				} else {
-					console.log('Card element not found for ID:', cardId);
-				}
-			},
-			
-
-            handleParentSearch: function(e) {
-                const $input = $(this);
-                const query = $input.val().trim();
-                const cardId = $input.closest('.card').data('card-id');
-                const $suggestions = $input.closest('.card__parents').find('.parent-suggestions');
-                
-                if (query.length > 0) {
-                    const results = CardsModel.searchCards(query, cardId, true);
-                    
-                    $suggestions.empty();
-                    if (results.length > 0) {
-                        results.forEach(card => {
-                            $suggestions.append(
-                                `<div class="suggestion-item parent-suggestion-item" data-card-id="${card.id}">${card.title || 'Без названия'}</div>`
-                            );
-                        });
-                        $suggestions.show();
-                    } else {
-                        $suggestions.hide();
-                    }
-                } else {
-                    $suggestions.hide();
-                }
+                CardsModel.cards.forEach(card=>{ card.children=[]; }); 
+                CardsModel.cards.forEach(card=>{ 
+                    if(card.parentIds) card.parentIds.forEach(parentId=>{ 
+                        const parentCard=CardsModel.getCard(parentId); 
+                        if(parentCard) parentCard.children.push({ id:card.id, title:card.title }); 
+                    }); 
+                }); 
             },
             
-            handleChildSearch: function(e) {
-                const $input = $(this);
-                const query = $input.val().trim();
-                const cardId = $input.closest('.card').data('card-id');
-                const $suggestions = $input.closest('.card__children').find('.child-suggestions');
-                
-                if (query.length > 0) {
-                    const results = CardsModel.searchCards(query, cardId, true);
-                    
-                    $suggestions.empty();
-                    if (results.length > 0) {
-                        results.forEach(card => {
-                            $suggestions.append(
-                                `<div class="suggestion-item child-suggestion-item" data-card-id="${card.id}">${card.title || 'Без названия'}</div>`
-                            );
-                        });
-                        $suggestions.show();
-                    } else {
-                        $suggestions.hide();
-                    }
-                } else {
-                    $suggestions.hide();
-                }
+            getCard: (cardId) => CardsModel.cards.find(c=>c.id==cardId),
+            
+            getAllParentIds: (cardId) => { 
+                const all=new Set(); 
+                const queue=[cardId]; 
+                while(queue.length){ 
+                    const cur=queue.shift(); 
+                    const curCard=CardsModel.getCard(cur); 
+                    if(curCard && curCard.parentIds) curCard.parentIds.forEach(pid=>{ 
+                        if(!all.has(pid)){ 
+                            all.add(pid); 
+                            queue.push(pid); 
+                        } 
+                    }); 
+                } 
+                return Array.from(all); 
             },
             
-            handleAddParent: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const $button = $(this);
-                const $input = $button.siblings('.parent-search-input');
-                const query = $input.val().trim();
-                const cardId = $input.closest('.card').data('card-id');
-                const $suggestions = $input.closest('.card__parents').find('.parent-suggestions');
-                
-                if (!query) return;
-                
-                if ($suggestions.is(':visible') && $suggestions.find('.suggestion-item').length > 0) {
-                    const firstSuggestion = $suggestions.find('.suggestion-item').first();
-                    const parentId = firstSuggestion.data('card-id');
-                    
-                    if (CardsModel.addParent(cardId, parentId)) {
-                        const card = CardsModel.getCard(cardId);
-                        if (card.isEmpty) {
-                            card.isEmpty = false;
-                            card.title = card.placeholder;
-                            $input.closest('.card').find('.card__title').val(card.placeholder);
-                        }
-                        $suggestions.hide();
-                        $input.val('');
-                        CardsView.updateCardRelations(cardId);
-                        CardsView.updateCardRelations(parentId);
-                        $input.focus();
-                    }
-                } else {
-                    const newCard = CardsModel.addCard(query);
-                    if (CardsModel.addParent(cardId, newCard.id)) {
-                        $input.val('');
-                        CardsView.addNewCardToView(newCard);
-                        CardsView.updateCardRelations(cardId);
-                        CardsView.updateCardRelations(newCard.id);
-                        $input.focus();
-                    }
-                }
+            getAllChildIds: (cardId) => { 
+                const all=new Set(); 
+                const queue=[cardId]; 
+                while(queue.length){ 
+                    const cur=queue.shift(); 
+                    const curCard=CardsModel.getCard(cur); 
+                    if(curCard && curCard.children) curCard.children.forEach(child=>{ 
+                        if(!all.has(child.id)){ 
+                            all.add(child.id); 
+                            queue.push(child.id); 
+                        } 
+                    }); 
+                } 
+                return Array.from(all); 
             },
             
-            handleAddChild: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const $button = $(this);
-                const $input = $button.siblings('.child-search-input');
-                const query = $input.val().trim();
-                const parentId = $input.closest('.card').data('card-id');
-                const $suggestions = $input.closest('.card__children').find('.child-suggestions');
-                
-                if (!query) return;
-                
-                if ($suggestions.is(':visible') && $suggestions.find('.suggestion-item').length > 0) {
-                    const firstSuggestion = $suggestions.find('.suggestion-item').first();
-                    const childId = firstSuggestion.data('card-id');
-                    
-                    if (CardsModel.addChild(parentId, childId)) {
-                        $suggestions.hide();
-                        $input.val('');
-                        CardsView.updateCardRelations(parentId);
-                        CardsView.updateCardRelations(childId);
-                        $input.focus();
-                    }
-                } else {
-                    const newCard = CardsModel.addCard(query);
-                    if (CardsModel.addChild(parentId, newCard.id)) {
-                        $input.val('');
-                        CardsView.addNewCardToView(newCard);
-                        CardsView.updateCardRelations(parentId);
-                        CardsView.updateCardRelations(newCard.id);
-                        $input.focus();
-                    }
-                }
+            searchCards: (query, excludeCardId, excludeChildren=false) => { 
+                if(!query) return []; 
+                let excludeIds=excludeCardId?[excludeCardId]:[]; 
+                if(excludeCardId){ 
+                    excludeIds=excludeIds.concat(CardsModel.getAllParentIds(excludeCardId)); 
+                    if(excludeChildren) excludeIds=excludeIds.concat(CardsModel.getAllChildIds(excludeCardId)); 
+                } 
+                return CardsModel.cards.filter(card=> 
+                    card.title.toLowerCase().includes(query.toLowerCase()) && 
+                    !excludeIds.includes(card.id)
+                ).map(card=>({ 
+                    id:card.id, 
+                    type:'card', 
+                    title:card.title, 
+                    date: card.createdAt ? new Date(card.createdAt).toLocaleDateString('ru-RU') : '' 
+                })); 
             },
             
-            handleAddParentFromSuggestion: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const $suggestion = $(this);
-                const parentId = $suggestion.data('card-id');
-                const cardId = $suggestion.closest('.card').data('card-id');
-                const $input = $suggestion.closest('.card__parents').find('.parent-search-input');
-                
-                if (CardsModel.addParent(cardId, parentId)) {
-                    const card = CardsModel.getCard(cardId);
-                    if (card.isEmpty) {
-                        card.isEmpty = false;
-                        card.title = card.placeholder;
-                        $input.closest('.card').find('.card__title').val(card.placeholder);
-                    }
-                    $suggestion.closest('.suggestions').hide();
-                    $input.val('').focus();
-                    CardsView.updateCardRelations(cardId);
-                    CardsView.updateCardRelations(parentId);
-                }
-            },
-            
-            handleAddChildFromSuggestion: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const $suggestion = $(this);
-                const childId = $suggestion.data('card-id');
-                const parentId = $suggestion.closest('.card').data('card-id');
-                const $input = $suggestion.closest('.card__children').find('.child-search-input');
-                
-                if (CardsModel.addChild(parentId, childId)) {
-                    $suggestion.closest('.suggestions').hide();
-                    $input.val('').focus();
-                    CardsView.updateCardRelations(parentId);
-                    CardsView.updateCardRelations(childId);
-                }
-            },
-
-			handleBumpCard: function(e) {
-				e.preventDefault();
-				e.stopPropagation();
-				
-				const cardId = $(this).data('card-id');
-				const card = CardsModel.getCard(cardId);
-				
-				if (!card) return;
-				
-				// Находим самую старую дату
-				let oldestDate = new Date();
-				CardsModel.cards.forEach(c => {
-					const cDate = new Date(c.bumpedAt);
-					if (cDate < oldestDate) {
-						oldestDate = cDate;
-					}
-				});
-				
-				// Устанавливаем дату на 1 миллисекунду раньше самой старой
-				const newDate = new Date(oldestDate.getTime() - 1);
-				card.bumpedAt = newDate.toISOString();
-				
-				// Сохраняем состояние
-				CardsModel.saveState();
-				
-				// Сортируем по bumpedAt - старые сверху, новые снизу
-				CardsModel.cards.sort((a, b) => 
-					new Date(a.bumpedAt) - new Date(b.bumpedAt)
-				);
-				
-				// Полностью перерендериваем все карточки
-				CardsView.render();
-				
-				// Подсвечиваем нужную карточку после перерендера
-				setTimeout(() => {
-					const $card = $(`[data-card-id="${cardId}"]`);
-					$card.addClass('highlight');
-					$card.get(0).scrollIntoView({ 
-						behavior: 'smooth', 
-						block: 'center' 
-					});
-					
-					setTimeout(() => {
-						$card.removeClass('highlight');
-					}, 1000);
-				}, 50);
-			},
-
-			handleToggleParentSearch: function(e) {
-				e.preventDefault();
-				e.stopPropagation();
-				
-				const $button = $(this);
-				const $searchContainer = $button.closest('.card__parents').find('.parent-search-container');
-				$searchContainer.toggleClass('visible');
-				
-				// Если контейнер становится видимым, фокусируемся на инпуте
-				if ($searchContainer.hasClass('visible')) {
-					$searchContainer.find('.parent-search-input').focus();
-				}
-			},
-			
-			handleToggleChildSearch: function(e) {
-				e.preventDefault();
-				e.stopPropagation();
-				
-				const $button = $(this);
-				const $searchContainer = $button.closest('.card__children').find('.child-search-container');
-				$searchContainer.toggleClass('visible');
-				
-				// Если контейнер становится видимым, фокусируемся на инпуте
-				if ($searchContainer.hasClass('visible')) {
-					$searchContainer.find('.child-search-input').focus();
-				}
-			},
-
-            handleToggleDescription: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const $button = $(this);
-                const $textarea = $button.closest('.card').find('.card__textarea');
-                $textarea.toggleClass('visible');
-                
-                if ($textarea.hasClass('visible')) {
-                    $button.text('скрыть');
-                } else {
-                    $button.text('показать');
-                }
-            },
-
-            handleGlobalSearch: function(e) {
-                const query = $(this).val().trim();
-                const $suggestions = $('#global-suggestions');
-                
-                if (query.length > 0) {
-                    // Ищем все карточки, содержащие query в названии
-                    const results = CardsModel.cards.filter(card => 
-                        card.title.toLowerCase().includes(query.toLowerCase())
-                    );
-                    
-                    $suggestions.empty();
-                    
-                    if (results.length > 0) {
-                        results.forEach(card => {
-                            // Выделяем совпадающую часть жирным
-                            const title = card.title || 'Без названия';
-                            const index = title.toLowerCase().indexOf(query.toLowerCase());
-                            let displayTitle = title;
-                            
-                            if (index !== -1) {
-                                const before = title.substring(0, index);
-                                const match = title.substring(index, index + query.length);
-                                const after = title.substring(index + query.length);
-                                displayTitle = `${before}<strong>${match}</strong>${after}`;
+            loadState: () => { 
+                const saved=localStorage.getItem('cardsSystem'); 
+                if(saved){ 
+                    try{ 
+                        CardsModel.cards=JSON.parse(saved); 
+                        CardsModel.cards.forEach(c=>{ 
+                            if(!c.parentIds) c.parentIds=[]; 
+                            if(!c.children) c.children=[]; 
+                            if(!c.mentions) c.mentions=[]; 
+                            if(!c.bumpedAt) c.bumpedAt=c.createdAt?new Date(c.createdAt).toISOString():new Date().toISOString(); 
+                            if(c.isEmpty===undefined) c.isEmpty=(c.title===""); 
+                            if(!c.placeholder && c.isEmpty) {
+                                const date = c.createdAt ? new Date(c.createdAt) : new Date();
+                                c.placeholder = `Карточка от ${date.toLocaleDateString()} ${date.toLocaleTimeString().slice(0,5)}`;
                             }
-                            
-                            $suggestions.append(
-                                `<div class="global-suggestion-item" data-card-id="${card.id}">
-                                    ${displayTitle}
-                                </div>`
-                            );
-                        });
-                        $suggestions.show();
-                    } else {
-                        $suggestions.append(
-                            '<div class="global-suggestion-item" style="color: #999;">Карточки не найдены</div>'
-                        );
-                        $suggestions.show();
-                    }
-                } else {
-                    $suggestions.hide();
-                }
-            },
-
-            handleGlobalSuggestionClick: function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const cardId = $(this).data('card-id');
-                const $suggestions = $('#global-suggestions');
-                const $searchInput = $('#global-search-input');
-                
-                // Находим карточку
-                const cardElement = $(`.card[data-card-id="${cardId}"]`);
-                
-                if (cardElement.length) {
-                    // Очищаем поле поиска и скрываем подсказки
-                    $searchInput.val('');
-                    $suggestions.hide();
-                    
-                    // Скроллим к карточке
-                    cardElement.get(0).scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'center' 
-                    });
-                    
-                    // Подсвечиваем карточку
-                    cardElement.addClass('highlight');
-                    setTimeout(() => {
-                        cardElement.removeClass('highlight');
-                    }, 1500);
-                } else {
-                    alert('Карточка не найдена');
-                    $suggestions.hide();
-                }
+                            if(!c.placeholder && !c.isEmpty) c.placeholder = c.title || "Карточка";
+                        }); 
+                        CardsModel.cards.sort((a,b)=>new Date(a.bumpedAt)-new Date(b.bumpedAt)); 
+                        CardsModel.updateAllRelations(); 
+                    }catch(e){} 
+                } else { 
+                    const id1=CardsModel.generateId(), id2=CardsModel.generateId(); 
+                    CardsModel.cards.push({ 
+                        id:id1, 
+                        title:"Планетаход", 
+                        placeholder:"Карточка", 
+                        content:"Это главная карточка. Попробуй добавить родительскую или дочернюю карточку.", 
+                        parentIds:[], 
+                        mentions:[], 
+                        children:[], 
+                        createdAt:new Date().toLocaleString(), 
+                        bumpedAt:new Date().toISOString(), 
+                        isEmpty:false 
+                    }); 
+                    CardsModel.cards.push({ 
+                        id:id2, 
+                        title:"Пример связи", 
+                        placeholder:"Карточка", 
+                        content:"Эта карточка связана с Планетаходом.", 
+                        parentIds:[id1], 
+                        mentions:[], 
+                        children:[], 
+                        createdAt:new Date(Date.now()-86400000).toLocaleString(), 
+                        bumpedAt:new Date(Date.now()-86400000).toISOString(), 
+                        isEmpty:false 
+                    }); 
+                    CardsModel.saveState(); 
+                    CardsModel.updateAllRelations(); 
+                } 
             }
         };
-
-        $(document).ready(() => {
-            UserName.init();
-            CardsController.init();
-        });
+        
+        // ==================== ПРЕДСТАВЛЕНИЕ КАРТОЧЕК ====================
+        const CardsView = { 
+            render: () => { 
+                $('#cards-container').empty(); 
+                CardsModel.cards.forEach(card=>{ 
+                    const parents=(card.parentIds||[]).map(id=>{ const p=CardsModel.getCard(id); return p?{ id:p.id, title:p.title }:null; }).filter(Boolean); 
+                    const html=ejs.render($('#card-template').text(),{ ...card, parents, children:card.children||[], mentions:card.mentions||[] }); 
+                    $('#cards-container').append(html); 
+                }); 
+                CardsView.bindEvents(); 
+            }, 
+            
+            bindEvents: () => { 
+                $(document)
+                    .off('click', '#add-card-btn').on('click', '#add-card-btn', ()=>{ 
+                        const newCard=CardsModel.addCard(); 
+                        CardsView.render(); 
+                        setTimeout(()=>CardsView.highlightCard(newCard.id),100);
+                        // Обновляем все поисковые поля для новых карточек
+                        $('.parent-search-input, .child-search-input').off('input').on('input', function(){ 
+                            CardsView.handleSearchInput($(this)); 
+                        });
+                    })
+                    .off('click', '#delete-all-btn').on('click', '#delete-all-btn', ()=>{ if(CardsModel.cards.length && confirm("Уничтожить все карточки?")){ CardsModel.deleteAllCards(); CardsView.render(); } })
+                    .off('click', '.card__header .button--danger').on('click', '.card__header .button--danger', function(e){ e.preventDefault(); const cardId=$(this).closest('.card').data('card-id'); const card=CardsModel.getCard(cardId); if(confirm(`Уничтожить карточку "${card?.title||'без названия'}"?`)){ CardsModel.deleteCard(cardId); $(this).closest('.card').remove(); } })
+                    .off('input', '.card__title').on('input', '.card__title', function(){ const cardId=$(this).closest('.card').data('card-id'); CardsModel.updateCard(cardId,{ title:$(this).val() }); })
+                    .off('click', '.remove-parent').on('click', '.remove-parent', function(e){ e.preventDefault(); const cardId=$(this).closest('.card').data('card-id'); const parentId=$(this).data('parent-id'); if(CardsModel.removeParent(cardId,parentId)){ CardsView.updateCardRelations(cardId); CardsView.updateCardRelations(parentId); } })
+                    .off('click', '.remove-child').on('click', '.remove-child', function(e){ e.preventDefault(); const parentId=$(this).closest('.card').data('card-id'); const childId=$(this).data('child-id'); if(CardsModel.removeChild(parentId,childId)){ CardsView.updateCardRelations(parentId); CardsView.updateCardRelations(childId); } })
+                    .off('click', '.remove-with-card').on('click', '.remove-with-card', function(e){ e.preventDefault(); const cardIdToRemove=$(this).data('card-id'); const currentCardId=$(this).closest('.card').data('card-id'); const cardToRemove=CardsModel.getCard(cardIdToRemove); if(cardToRemove && confirm(`Уничтожить карточку "${cardToRemove.title||'без названия'}"?`)){ CardsModel.deleteCard(cardIdToRemove); $(`[data-card-id="${cardIdToRemove}"]`).remove(); CardsView.updateCardRelations(currentCardId); } })
+                    .off('click', '.bump-text-button').on('click', '.bump-text-button', function(e){ e.preventDefault(); const cardId=$(this).data('card-id'); const card=CardsModel.getCard(cardId); if(card){ let oldestDate=new Date(); CardsModel.cards.forEach(c=>{ if(new Date(c.bumpedAt)<oldestDate) oldestDate=new Date(c.bumpedAt); }); card.bumpedAt=new Date(oldestDate.getTime()-1).toISOString(); CardsModel.saveState(); CardsModel.cards.sort((a,b)=>new Date(a.bumpedAt)-new Date(b.bumpedAt)); CardsView.render(); setTimeout(()=>CardsView.highlightCard(cardId),50); } })
+                    .off('click', '.mention, .child-link').on('click', '.mention, .child-link', function(e){ e.preventDefault(); const cardId=$(this).data('card-id'); CardsView.highlightCard(cardId); })
+                    .off('click', '.toggle-parent-search').on('click', '.toggle-parent-search', function(e){ e.preventDefault(); e.stopPropagation(); const $searchContainer=$(this).closest('.card__parents').find('.parent-search-container'); $searchContainer.toggleClass('visible'); if($searchContainer.hasClass('visible')) $searchContainer.find('.parent-search-input').focus(); })
+                    .off('click', '.toggle-child-search').on('click', '.toggle-child-search', function(e){ e.preventDefault(); e.stopPropagation(); const $searchContainer=$(this).closest('.card__children').find('.child-search-container'); $searchContainer.toggleClass('visible'); if($searchContainer.hasClass('visible')) $searchContainer.find('.child-search-input').focus(); })
+                    .off('click', '.toggle-description').on('click', '.toggle-description', function(e){ e.preventDefault(); e.stopPropagation(); const $textarea=$(this).closest('.card').find('.card__textarea'); $textarea.toggleClass('visible'); $(this).text($textarea.hasClass('visible') ? 'скрыть' : 'показать'); })
+                    .off('input', '.parent-search-input').on('input', '.parent-search-input', function(){ CardsView.handleSearchInput($(this)); })
+                    .off('click', '.parent-suggestion-item').on('click', '.parent-suggestion-item', function(){ 
+                        const parentId=$(this).data('card-id'); 
+                        const cardId=$(this).closest('.card').data('card-id'); 
+                        const $input=$(this).closest('.card__parents').find('.parent-search-input'); 
+                        if(CardsModel.addParent(cardId,parentId)){ 
+                            $(this).closest('.suggestions').hide(); 
+                            $input.val('').focus(); 
+                            CardsView.updateCardRelations(cardId); 
+                            CardsView.updateCardRelations(parentId); 
+                        } 
+                    })
+                    .off('click', '.parent-search-add').on('click', '.parent-search-add', function(e){ 
+                        e.preventDefault(); 
+                        e.stopPropagation(); 
+                        const $input=$(this).siblings('.parent-search-input'); 
+                        const query=$input.val().trim(); 
+                        const cardId=$input.closest('.card').data('card-id'); 
+                        const $suggestions=$input.closest('.card__parents').find('.parent-suggestions'); 
+                        if(!query) return; 
+                        if($suggestions.is(':visible') && $suggestions.find('.suggestion-item').length>0){ 
+                            const firstSuggestion=$suggestions.find('.suggestion-item').first(); 
+                            const parentId=firstSuggestion.data('card-id'); 
+                            if(CardsModel.addParent(cardId,parentId)){ 
+                                $suggestions.hide(); 
+                                $input.val(''); 
+                                CardsView.updateCardRelations(cardId); 
+                                CardsView.updateCardRelations(parentId); 
+                                $input.focus(); 
+                            } 
+                        } else { 
+                            const newCard=CardsModel.addCard(query); 
+                            if(CardsModel.addParent(cardId,newCard.id)){ 
+                                $input.val(''); 
+                                CardsView.render(); 
+                                CardsView.updateCardRelations(cardId); 
+                                setTimeout(()=>CardsView.highlightCard(newCard.id),100); 
+                                $input.focus(); 
+                            } 
+                        } 
+                    })
+                    .off('input', '.child-search-input').on('input', '.child-search-input', function(){ CardsView.handleSearchInput($(this)); })
+                    .off('click', '.child-suggestion-item').on('click', '.child-suggestion-item', function(){ 
+                        const childId=$(this).data('card-id'); 
+                        const parentId=$(this).closest('.card').data('card-id'); 
+                        const $input=$(this).closest('.card__children').find('.child-search-input'); 
+                        if(CardsModel.addChild(parentId,childId)){ 
+                            $(this).closest('.suggestions').hide(); 
+                            $input.val('').focus(); 
+                            CardsView.updateCardRelations(parentId); 
+                            CardsView.updateCardRelations(childId); 
+                        } 
+                    })
+                    .off('click', '.child-search-add').on('click', '.child-search-add', function(e){ 
+                        e.preventDefault(); 
+                        e.stopPropagation(); 
+                        const $input=$(this).siblings('.child-search-input'); 
+                        const query=$input.val().trim(); 
+                        const parentId=$input.closest('.card').data('card-id'); 
+                        const $suggestions=$input.closest('.card__children').find('.child-suggestions'); 
+                        if(!query) return; 
+                        if($suggestions.is(':visible') && $suggestions.find('.suggestion-item').length>0){ 
+                            const firstSuggestion=$suggestions.find('.suggestion-item').first(); 
+                            const childId=firstSuggestion.data('card-id'); 
+                            if(CardsModel.addChild(parentId,childId)){ 
+                                $suggestions.hide(); 
+                                $input.val(''); 
+                                CardsView.updateCardRelations(parentId); 
+                                CardsView.updateCardRelations(childId); 
+                                $input.focus(); 
+                            } 
+                        } else { 
+                            const newCard=CardsModel.addCard(query); 
+                            if(CardsModel.addChild(parentId,newCard.id)){ 
+                                $input.val(''); 
+                                CardsView.render(); 
+                                CardsView.updateCardRelations(parentId); 
+                                setTimeout(()=>CardsView.highlightCard(newCard.id),100); 
+                                $input.focus(); 
+                            } 
+                        } 
+                    });
+            },
+            
+            handleSearchInput: function($input) {
+                const query=$input.val().trim(); 
+                const cardId=$input.closest('.card').data('card-id'); 
+                const isParent=$input.hasClass('parent-search-input');
+                const $suggestions=$input.closest(isParent ? '.card__parents' : '.card__children').find(isParent ? '.parent-suggestions' : '.child-suggestions');
+                
+                if(query.length>0){ 
+                    const results=CardsModel.searchCards(query,cardId,true); 
+                    $suggestions.empty(); 
+                    if(results.length>0){ 
+                        results.forEach(card=>{ 
+                            $suggestions.append(`<div class="suggestion-item ${isParent ? 'parent-suggestion-item' : 'child-suggestion-item'}" data-card-id="${card.id}">${CardsView.escapeHtml(card.title) || 'Без названия'}</div>`); 
+                        }); 
+                        $suggestions.show(); 
+                    } else $suggestions.hide(); 
+                } else $suggestions.hide(); 
+            },
+            
+            escapeHtml: function(str) { 
+                if(!str) return ''; 
+                return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); 
+            },
+            
+            highlightCard: (cardId)=>{ 
+                const $card=$(`.card[data-card-id="${cardId}"]`); 
+                if($card.length){ 
+                    $card.addClass('highlight'); 
+                    $card.get(0).scrollIntoView({ behavior: 'auto', block: 'center' }); 
+                    setTimeout(()=>$card.removeClass('highlight'),1500); 
+                } 
+            }, 
+            
+            updateCardRelations: (cardId)=>{ 
+                const card=CardsModel.getCard(cardId); 
+                if(!card) return; 
+                const $card=$(`.card[data-card-id="${cardId}"]`); 
+                if(!$card.length) return; 
+                const parents=(card.parentIds||[]).map(id=>{ const p=CardsModel.getCard(id); return p?{ id:p.id, title:p.title }:null; }).filter(Boolean); 
+                $card.find('.parents-list').html(parents.map(p=>`<div class="card__parent-item"><span class="mention" data-card-id="${p.id}">${CardsView.escapeHtml(p.title)}</span><button class="action-button remove-parent" data-parent-id="${p.id}">✕</button><button class="action-button remove-with-card" data-card-id="${p.id}">🗑</button></div>`).join('')); 
+                $card.find('.children-list').html((card.children||[]).map(c=>`<div class="card__child-item"><span class="child-link" data-card-id="${c.id}">${CardsView.escapeHtml(c.title)}</span><button class="action-button remove-child" data-child-id="${c.id}">✕</button><button class="action-button remove-with-card" data-card-id="${c.id}">🗑</button></div>`).join('')); 
+            } 
+        };
+        
+        // ==================== ИМЯ ПОЛЬЗОВАТЕЛЯ ====================
+        const UserName = { 
+            key:'userName', 
+            get:()=>localStorage.getItem(UserName.key)||'', 
+            save:(name)=>{ if(name&&name.trim()){ localStorage.setItem(UserName.key,name.trim()); return true; } return false; }, 
+            has:()=>{ const n=localStorage.getItem(UserName.key); return n&&n.trim().length>0; }, 
+            scrollDirection: 'up',
+            init:()=>{ 
+                if(UserName.has()){ $('#userNameDisplay').text(UserName.get()); $('#fixedNameButton').show(); } 
+                else { $('#nameModal').show(); $('#userNameInput').focus(); } 
+                $('#saveUserNameBtn').on('click',function(){ const name=$('#userNameInput').val().trim(); if(name){ UserName.save(name); $('#nameModal').hide(); $('#userNameDisplay').text(name); $('#fixedNameButton').show(); } else alert('Введите имя'); }); 
+                $('#userNameInput').on('keypress',function(e){ if(e.which===13)$('#saveUserNameBtn').click(); }); 
+                $('#fixedNameButton').on('click', function(){ 
+                    const isAtBottom = (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 50;
+                    if (isAtBottom || UserName.scrollDirection === 'down') {
+                        window.scrollTo({ top: 0, behavior: 'auto' });
+                        UserName.scrollDirection = 'up';
+                    } else {
+                        window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' });
+                        UserName.scrollDirection = 'down';
+                    }
+                }); 
+            } 
+        };
+        
+        // ==================== ГЛАВНЫЙ КОНТРОЛЛЕР ====================
+        const AppController = { 
+            currentView: 'cards', 
+            init: function() { 
+                UserName.init(); 
+                JournalModel.load(); 
+                CardsModel.loadState(); 
+                JournalView.render(); 
+                CardsView.render(); 
+                this.loadViewPreference(); 
+                this.bindEvents(); 
+            }, 
+            bindEvents: function() { 
+                $('#modeSwitchHeader').on('click',()=>{ this.switchView(this.currentView==='cards'?'journal':'cards'); }); 
+                $('#floatingBtn').on('click',()=>{ JournalController.openAddModal(); }); 
+                $('#globalSearchInput').on('input',(e)=>this.handleGlobalSearch(e.target.value)); 
+                $(document).on('click',(e)=>{ if(!$(e.target).closest('.global-search').length)$('#globalSuggestions').hide(); }); 
+            }, 
+            switchView: function(view) { 
+                this.currentView=view; 
+                localStorage.setItem('appViewPreference',view); 
+                $('#modeTitle').text(view==='cards'?'Планетаход':'Дневник'); 
+                $('.view-container').removeClass('active'); 
+                $(`#${view}View`).addClass('active'); 
+                if(view==='journal'){ $('#floatingBtn').show(); $('#fixedNameButton').hide(); } 
+                else { $('#floatingBtn').hide(); $('#fixedNameButton').show(); } 
+            }, 
+            loadViewPreference: function() { 
+                const saved=localStorage.getItem('appViewPreference'); 
+                if(saved && (saved==='cards'||saved==='journal')) this.switchView(saved); 
+                else this.switchView('cards'); 
+            }, 
+            handleGlobalSearch: function(query) { 
+                const $suggestions=$('#globalSuggestions'); 
+                if(!query.trim()){ $suggestions.hide(); return; } 
+                const journalResults=JournalModel.searchEntries(query); 
+                const cardResults=CardsModel.searchCards(query,null,false); 
+                const results=[...journalResults,...cardResults]; 
+                if(results.length===0){ $suggestions.html('<div class="global-suggestion-item">Ничего не найдено</div>').show(); return; } 
+                $suggestions.empty(); 
+                results.slice(0,10).forEach(item=>{ 
+                    const typeLabel=item.type==='journal'?'Запись':'Карточка'; 
+                    $suggestions.append(`<div class="global-suggestion-item" data-id="${item.id}" data-type="${item.type}"><div><span class="suggestion-type">${typeLabel}</span><strong>${this.escapeHtml(item.title)}</strong></div><div style="font-size:11px;color:#888;margin-top:4px;">${item.date || ''}</div></div>`); 
+                }); 
+                $suggestions.show(); 
+                $('.global-suggestion-item').off('click').on('click',function(){ 
+                    const id=$(this).data('id'); 
+                    const type=$(this).data('type'); 
+                    $('#globalSearchInput').val(''); 
+                    $('#globalSuggestions').hide(); 
+                    if(type==='journal'){ AppController.switchView('journal'); setTimeout(()=>JournalView.highlightEntryById(id),100); } 
+                    else { AppController.switchView('cards'); setTimeout(()=>CardsView.highlightCard(id),100); } 
+                }); 
+            }, 
+            escapeHtml: function(str) { if(!str) return ''; return str.replace(/[&<>]/g,m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); } 
+        };
+        
+        $(document).ready(()=>{ AppController.init(); });
     </script>
 </body>
 </html>
