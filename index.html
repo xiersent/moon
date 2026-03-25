@@ -690,6 +690,11 @@
             cursor: pointer;
         }
 
+        /* Скрываем оба контейнера до инициализации, чтобы избежать мерцания */
+        .view-container {
+            display: none;
+        }
+
         @media (max-width: 600px) {
             body {
                 padding: 12px;
@@ -720,7 +725,7 @@
             <div id="globalSuggestions" class="global-search__suggestions"></div>
         </div>
 
-        <div id="cardsView" class="view-container active">
+        <div id="cardsView" class="view-container">
             <div class="cards-system">
                 <div class="cards-system__controls">
                     <button class="button button--primary" id="add-card-btn">Создать карточку</button>
@@ -917,12 +922,17 @@
                 this.bindEvents();
             },
             bindEvents: function() { $('.entry-item').off('click').on('click', function(e) { e.stopPropagation(); const entryId = $(this).data('entry-id'); if(entryId) JournalController.openEditModal(entryId); }); },
-            highlightEntryById: function(entryId) { const $entry = $(`.entry-item[data-entry-id="${entryId}"]`); if($entry.length) { $entry.addClass('highlight'); setTimeout(() => $entry.removeClass('highlight'),1000); $entry.get(0).scrollIntoView({ behavior: 'auto', block: 'center' }); } }
+            highlightEntryById: function(entryId) { const $entry = $(`.entry-item[data-entry-id="${entryId}"]`); if($entry.length) { $entry.addClass('highlight'); setTimeout(() => $entry.removeClass('highlight'),1000); $entry.get(0).scrollIntoView({ behavior: 'auto', block: 'center' }); } },
+            scrollToBottom: function() {
+                setTimeout(() => {
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' });
+                }, 50);
+            }
         };
         
         // ==================== КОНТРОЛЛЕР ДНЕВНИКА ====================
         const JournalController = {
-            openAddModal: function() { this.showFullscreenModal({ title:'Новая запись', dateValue: JournalModel.getTodayDate(), timeValue: JournalModel.getCurrentTime(), textValue:'', showDelete:false, onSave: (date,time,text) => { if(text && text.trim()) { const newEntry = JournalModel.addEntry(date,time,text); if(newEntry) { JournalView.render(); setTimeout(() => JournalView.highlightEntryById(newEntry.id),100); } return true; } return false; } }); },
+            openAddModal: function() { this.showFullscreenModal({ title:'Новая запись', dateValue: JournalModel.getTodayDate(), timeValue: JournalModel.getCurrentTime(), textValue:'', showDelete:false, onSave: (date,time,text) => { if(text && text.trim()) { const newEntry = JournalModel.addEntry(date,time,text); if(newEntry) { JournalView.render(); setTimeout(() => JournalView.highlightEntryById(newEntry.id),100); JournalView.scrollToBottom(); } return true; } return false; } }); },
             openEditModal: function(entryId) { const entry = JournalModel.getEntryById(entryId); if(!entry) return; const entryTime = new Date(entry.createdAt).toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' }); this.showFullscreenModal({ title:'Редактировать запись', dateValue:entry.date, timeValue:entryTime, textValue:entry.text, showDelete:true, onSave: (date,time,text) => { if(text && text.trim()) { JournalModel.updateEntry(entryId,date,time,text); JournalView.render(); setTimeout(() => JournalView.highlightEntryById(entryId),100); return true; } return false; }, onDelete: () => { if(confirm('Уничтожить эту запись?')) { JournalModel.deleteEntry(entryId); JournalView.render(); return true; } return false; } }); },
             showFullscreenModal: function(options) {
                 const modalId = 'fullscreenModal_' + Date.now();
@@ -939,12 +949,11 @@
             escapeHtml: function(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
         };
         
-        // ==================== МОДЕЛЬ КАРТОЧЕК (Планетаход) ====================
+        // ==================== МОДЕЛЬ КАРТОЧЕК ====================
         const CardsModel = { 
             cards: [], 
             generateId: () => Date.now() + Math.random() * 10000, 
             saveState: () => localStorage.setItem('cardsSystem', JSON.stringify(CardsModel.cards)),
-            
             addCard: (initialTitle='') => { 
                 const now=new Date(); 
                 const placeholder = `Карточка от ${now.toLocaleDateString()} ${now.toLocaleTimeString().slice(0,5)}`; 
@@ -965,7 +974,6 @@
                 CardsModel.updateAllRelations(); 
                 return newCard; 
             },
-            
             updateCard: (cardId, updates) => { 
                 const card=CardsModel.getCard(cardId); 
                 if(card){ 
@@ -976,7 +984,6 @@
                 } 
                 return false; 
             },
-            
             addParent: (cardId, parentId) => { 
                 const card=CardsModel.getCard(cardId), parentCard=CardsModel.getCard(parentId); 
                 if(card && parentCard && cardId!=parentId && !(card.parentIds||[]).some(id=>id==parentId)){ 
@@ -992,9 +999,7 @@
                 } 
                 return false; 
             },
-            
             addChild: (parentId, childId) => CardsModel.addParent(childId, parentId),
-            
             removeParent: (cardId, parentId) => { 
                 const card=CardsModel.getCard(cardId); 
                 if(card && card.parentIds){ 
@@ -1008,9 +1013,7 @@
                 } 
                 return false; 
             },
-            
             removeChild: (parentId, childId) => CardsModel.removeParent(childId, parentId),
-            
             deleteCard: (cardId) => { 
                 const idx=CardsModel.cards.findIndex(c=>c.id==cardId); 
                 if(idx!==-1){ 
@@ -1024,14 +1027,12 @@
                 } 
                 return false; 
             },
-            
             deleteAllCards: () => { 
                 if(CardsModel.cards.length===0) return false; 
                 CardsModel.cards=[]; 
                 CardsModel.saveState(); 
                 return true; 
             },
-            
             updateAllRelations: () => { 
                 CardsModel.cards.forEach(card=>card.mentions=[]); 
                 CardsModel.cards.forEach(sourceCard=>{ 
@@ -1042,7 +1043,6 @@
                         if(targetCard) targetCard.mentions.push({ sourceCard:{ id:sourceCard.id, title:sourceCard.title }, context:sourceCard.content }); 
                     }); 
                 }); 
-                
                 CardsModel.cards.forEach(card=>{ card.children=[]; }); 
                 CardsModel.cards.forEach(card=>{ 
                     if(card.parentIds) card.parentIds.forEach(parentId=>{ 
@@ -1051,9 +1051,7 @@
                     }); 
                 }); 
             },
-            
             getCard: (cardId) => CardsModel.cards.find(c=>c.id==cardId),
-            
             getAllParentIds: (cardId) => { 
                 const all=new Set(); 
                 const queue=[cardId]; 
@@ -1069,7 +1067,6 @@
                 } 
                 return Array.from(all); 
             },
-            
             getAllChildIds: (cardId) => { 
                 const all=new Set(); 
                 const queue=[cardId]; 
@@ -1085,7 +1082,6 @@
                 } 
                 return Array.from(all); 
             },
-            
             searchCards: (query, excludeCardId, excludeChildren=false) => { 
                 if(!query) return []; 
                 let excludeIds=excludeCardId?[excludeCardId]:[]; 
@@ -1103,7 +1099,6 @@
                     date: card.createdAt ? new Date(card.createdAt).toLocaleDateString('ru-RU') : '' 
                 })); 
             },
-            
             loadState: () => { 
                 const saved=localStorage.getItem('cardsSystem'); 
                 if(saved){ 
@@ -1167,18 +1162,9 @@
                 }); 
                 CardsView.bindEvents(); 
             }, 
-            
-            bindEvents: () => { 
+            bindEvents: () => { /* ...existing bind events code... */ 
                 $(document)
-                    .off('click', '#add-card-btn').on('click', '#add-card-btn', ()=>{ 
-                        const newCard=CardsModel.addCard(); 
-                        CardsView.render(); 
-                        setTimeout(()=>CardsView.highlightCard(newCard.id),100);
-                        // Обновляем все поисковые поля для новых карточек
-                        $('.parent-search-input, .child-search-input').off('input').on('input', function(){ 
-                            CardsView.handleSearchInput($(this)); 
-                        });
-                    })
+                    .off('click', '#add-card-btn').on('click', '#add-card-btn', ()=>{ const newCard=CardsModel.addCard(); CardsView.render(); setTimeout(()=>CardsView.highlightCard(newCard.id),100); })
                     .off('click', '#delete-all-btn').on('click', '#delete-all-btn', ()=>{ if(CardsModel.cards.length && confirm("Уничтожить все карточки?")){ CardsModel.deleteAllCards(); CardsView.render(); } })
                     .off('click', '.card__header .button--danger').on('click', '.card__header .button--danger', function(e){ e.preventDefault(); const cardId=$(this).closest('.card').data('card-id'); const card=CardsModel.getCard(cardId); if(confirm(`Уничтожить карточку "${card?.title||'без названия'}"?`)){ CardsModel.deleteCard(cardId); $(this).closest('.card').remove(); } })
                     .off('input', '.card__title').on('input', '.card__title', function(){ const cardId=$(this).closest('.card').data('card-id'); CardsModel.updateCard(cardId,{ title:$(this).val() }); })
@@ -1191,130 +1177,16 @@
                     .off('click', '.toggle-child-search').on('click', '.toggle-child-search', function(e){ e.preventDefault(); e.stopPropagation(); const $searchContainer=$(this).closest('.card__children').find('.child-search-container'); $searchContainer.toggleClass('visible'); if($searchContainer.hasClass('visible')) $searchContainer.find('.child-search-input').focus(); })
                     .off('click', '.toggle-description').on('click', '.toggle-description', function(e){ e.preventDefault(); e.stopPropagation(); const $textarea=$(this).closest('.card').find('.card__textarea'); $textarea.toggleClass('visible'); $(this).text($textarea.hasClass('visible') ? 'скрыть' : 'показать'); })
                     .off('input', '.parent-search-input').on('input', '.parent-search-input', function(){ CardsView.handleSearchInput($(this)); })
-                    .off('click', '.parent-suggestion-item').on('click', '.parent-suggestion-item', function(){ 
-                        const parentId=$(this).data('card-id'); 
-                        const cardId=$(this).closest('.card').data('card-id'); 
-                        const $input=$(this).closest('.card__parents').find('.parent-search-input'); 
-                        if(CardsModel.addParent(cardId,parentId)){ 
-                            $(this).closest('.suggestions').hide(); 
-                            $input.val('').focus(); 
-                            CardsView.updateCardRelations(cardId); 
-                            CardsView.updateCardRelations(parentId); 
-                        } 
-                    })
-                    .off('click', '.parent-search-add').on('click', '.parent-search-add', function(e){ 
-                        e.preventDefault(); 
-                        e.stopPropagation(); 
-                        const $input=$(this).siblings('.parent-search-input'); 
-                        const query=$input.val().trim(); 
-                        const cardId=$input.closest('.card').data('card-id'); 
-                        const $suggestions=$input.closest('.card__parents').find('.parent-suggestions'); 
-                        if(!query) return; 
-                        if($suggestions.is(':visible') && $suggestions.find('.suggestion-item').length>0){ 
-                            const firstSuggestion=$suggestions.find('.suggestion-item').first(); 
-                            const parentId=firstSuggestion.data('card-id'); 
-                            if(CardsModel.addParent(cardId,parentId)){ 
-                                $suggestions.hide(); 
-                                $input.val(''); 
-                                CardsView.updateCardRelations(cardId); 
-                                CardsView.updateCardRelations(parentId); 
-                                $input.focus(); 
-                            } 
-                        } else { 
-                            const newCard=CardsModel.addCard(query); 
-                            if(CardsModel.addParent(cardId,newCard.id)){ 
-                                $input.val(''); 
-                                CardsView.render(); 
-                                CardsView.updateCardRelations(cardId); 
-                                setTimeout(()=>CardsView.highlightCard(newCard.id),100); 
-                                $input.focus(); 
-                            } 
-                        } 
-                    })
+                    .off('click', '.parent-suggestion-item').on('click', '.parent-suggestion-item', function(){ const parentId=$(this).data('card-id'); const cardId=$(this).closest('.card').data('card-id'); if(CardsModel.addParent(cardId,parentId)){ $(this).closest('.suggestions').hide(); $(this).closest('.card__parents').find('.parent-search-input').val('').focus(); CardsView.updateCardRelations(cardId); CardsView.updateCardRelations(parentId); } })
+                    .off('click', '.parent-search-add').on('click', '.parent-search-add', function(e){ e.preventDefault(); e.stopPropagation(); const $input=$(this).siblings('.parent-search-input'); const query=$input.val().trim(); const cardId=$input.closest('.card').data('card-id'); if(!query) return; const newCard=CardsModel.addCard(query); if(CardsModel.addParent(cardId,newCard.id)){ $input.val(''); CardsView.render(); CardsView.updateCardRelations(cardId); setTimeout(()=>CardsView.highlightCard(newCard.id),100); $input.focus(); } })
                     .off('input', '.child-search-input').on('input', '.child-search-input', function(){ CardsView.handleSearchInput($(this)); })
-                    .off('click', '.child-suggestion-item').on('click', '.child-suggestion-item', function(){ 
-                        const childId=$(this).data('card-id'); 
-                        const parentId=$(this).closest('.card').data('card-id'); 
-                        const $input=$(this).closest('.card__children').find('.child-search-input'); 
-                        if(CardsModel.addChild(parentId,childId)){ 
-                            $(this).closest('.suggestions').hide(); 
-                            $input.val('').focus(); 
-                            CardsView.updateCardRelations(parentId); 
-                            CardsView.updateCardRelations(childId); 
-                        } 
-                    })
-                    .off('click', '.child-search-add').on('click', '.child-search-add', function(e){ 
-                        e.preventDefault(); 
-                        e.stopPropagation(); 
-                        const $input=$(this).siblings('.child-search-input'); 
-                        const query=$input.val().trim(); 
-                        const parentId=$input.closest('.card').data('card-id'); 
-                        const $suggestions=$input.closest('.card__children').find('.child-suggestions'); 
-                        if(!query) return; 
-                        if($suggestions.is(':visible') && $suggestions.find('.suggestion-item').length>0){ 
-                            const firstSuggestion=$suggestions.find('.suggestion-item').first(); 
-                            const childId=firstSuggestion.data('card-id'); 
-                            if(CardsModel.addChild(parentId,childId)){ 
-                                $suggestions.hide(); 
-                                $input.val(''); 
-                                CardsView.updateCardRelations(parentId); 
-                                CardsView.updateCardRelations(childId); 
-                                $input.focus(); 
-                            } 
-                        } else { 
-                            const newCard=CardsModel.addCard(query); 
-                            if(CardsModel.addChild(parentId,newCard.id)){ 
-                                $input.val(''); 
-                                CardsView.render(); 
-                                CardsView.updateCardRelations(parentId); 
-                                setTimeout(()=>CardsView.highlightCard(newCard.id),100); 
-                                $input.focus(); 
-                            } 
-                        } 
-                    });
+                    .off('click', '.child-suggestion-item').on('click', '.child-suggestion-item', function(){ const childId=$(this).data('card-id'); const parentId=$(this).closest('.card').data('card-id'); if(CardsModel.addChild(parentId,childId)){ $(this).closest('.suggestions').hide(); $(this).closest('.card__children').find('.child-search-input').val('').focus(); CardsView.updateCardRelations(parentId); CardsView.updateCardRelations(childId); } })
+                    .off('click', '.child-search-add').on('click', '.child-search-add', function(e){ e.preventDefault(); e.stopPropagation(); const $input=$(this).siblings('.child-search-input'); const query=$input.val().trim(); const parentId=$input.closest('.card').data('card-id'); if(!query) return; const newCard=CardsModel.addCard(query); if(CardsModel.addChild(parentId,newCard.id)){ $input.val(''); CardsView.render(); CardsView.updateCardRelations(parentId); setTimeout(()=>CardsView.highlightCard(newCard.id),100); $input.focus(); } });
             },
-            
-            handleSearchInput: function($input) {
-                const query=$input.val().trim(); 
-                const cardId=$input.closest('.card').data('card-id'); 
-                const isParent=$input.hasClass('parent-search-input');
-                const $suggestions=$input.closest(isParent ? '.card__parents' : '.card__children').find(isParent ? '.parent-suggestions' : '.child-suggestions');
-                
-                if(query.length>0){ 
-                    const results=CardsModel.searchCards(query,cardId,true); 
-                    $suggestions.empty(); 
-                    if(results.length>0){ 
-                        results.forEach(card=>{ 
-                            $suggestions.append(`<div class="suggestion-item ${isParent ? 'parent-suggestion-item' : 'child-suggestion-item'}" data-card-id="${card.id}">${CardsView.escapeHtml(card.title) || 'Без названия'}</div>`); 
-                        }); 
-                        $suggestions.show(); 
-                    } else $suggestions.hide(); 
-                } else $suggestions.hide(); 
-            },
-            
-            escapeHtml: function(str) { 
-                if(!str) return ''; 
-                return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); 
-            },
-            
-            highlightCard: (cardId)=>{ 
-                const $card=$(`.card[data-card-id="${cardId}"]`); 
-                if($card.length){ 
-                    $card.addClass('highlight'); 
-                    $card.get(0).scrollIntoView({ behavior: 'auto', block: 'center' }); 
-                    setTimeout(()=>$card.removeClass('highlight'),1500); 
-                } 
-            }, 
-            
-            updateCardRelations: (cardId)=>{ 
-                const card=CardsModel.getCard(cardId); 
-                if(!card) return; 
-                const $card=$(`.card[data-card-id="${cardId}"]`); 
-                if(!$card.length) return; 
-                const parents=(card.parentIds||[]).map(id=>{ const p=CardsModel.getCard(id); return p?{ id:p.id, title:p.title }:null; }).filter(Boolean); 
-                $card.find('.parents-list').html(parents.map(p=>`<div class="card__parent-item"><span class="mention" data-card-id="${p.id}">${CardsView.escapeHtml(p.title)}</span><button class="action-button remove-parent" data-parent-id="${p.id}">✕</button><button class="action-button remove-with-card" data-card-id="${p.id}">🗑</button></div>`).join('')); 
-                $card.find('.children-list').html((card.children||[]).map(c=>`<div class="card__child-item"><span class="child-link" data-card-id="${c.id}">${CardsView.escapeHtml(c.title)}</span><button class="action-button remove-child" data-child-id="${c.id}">✕</button><button class="action-button remove-with-card" data-card-id="${c.id}">🗑</button></div>`).join('')); 
-            } 
+            handleSearchInput: function($input) { const query=$input.val().trim(); const cardId=$input.closest('.card').data('card-id'); const isParent=$input.hasClass('parent-search-input'); const $suggestions=$input.closest(isParent ? '.card__parents' : '.card__children').find(isParent ? '.parent-suggestions' : '.child-suggestions'); if(query.length>0){ const results=CardsModel.searchCards(query,cardId,true); $suggestions.empty(); if(results.length>0){ results.forEach(card=>{ $suggestions.append(`<div class="suggestion-item ${isParent ? 'parent-suggestion-item' : 'child-suggestion-item'}" data-card-id="${card.id}">${CardsView.escapeHtml(card.title) || 'Без названия'}</div>`); }); $suggestions.show(); } else $suggestions.hide(); } else $suggestions.hide(); },
+            escapeHtml: function(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); },
+            highlightCard: (cardId)=>{ const $card=$(`.card[data-card-id="${cardId}"]`); if($card.length){ $card.addClass('highlight'); $card.get(0).scrollIntoView({ behavior: 'auto', block: 'center' }); setTimeout(()=>$card.removeClass('highlight'),1500); } }, 
+            updateCardRelations: (cardId)=>{ const card=CardsModel.getCard(cardId); if(!card) return; const $card=$(`.card[data-card-id="${cardId}"]`); if(!$card.length) return; const parents=(card.parentIds||[]).map(id=>{ const p=CardsModel.getCard(id); return p?{ id:p.id, title:p.title }:null; }).filter(Boolean); $card.find('.parents-list').html(parents.map(p=>`<div class="card__parent-item"><span class="mention" data-card-id="${p.id}">${CardsView.escapeHtml(p.title)}</span><button class="action-button remove-parent" data-parent-id="${p.id}">✕</button><button class="action-button remove-with-card" data-card-id="${p.id}">🗑</button></div>`).join('')); $card.find('.children-list').html((card.children||[]).map(c=>`<div class="card__child-item"><span class="child-link" data-card-id="${c.id}">${CardsView.escapeHtml(c.title)}</span><button class="action-button remove-child" data-child-id="${c.id}">✕</button><button class="action-button remove-with-card" data-card-id="${c.id}">🗑</button></div>`).join('')); } 
         };
         
         // ==================== ИМЯ ПОЛЬЗОВАТЕЛЯ ====================
@@ -1366,13 +1238,26 @@
                 $('#modeTitle').text(view==='cards'?'Планетаход':'Дневник'); 
                 $('.view-container').removeClass('active'); 
                 $(`#${view}View`).addClass('active'); 
-                if(view==='journal'){ $('#floatingBtn').show(); $('#fixedNameButton').hide(); } 
-                else { $('#floatingBtn').hide(); $('#fixedNameButton').show(); } 
+                if(view==='journal'){ 
+                    $('#floatingBtn').show(); 
+                    $('#fixedNameButton').hide(); 
+                    // Автоматическая прокрутка в конец дневника
+                    setTimeout(() => {
+                        window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' });
+                    }, 50);
+                } 
+                else { 
+                    $('#floatingBtn').hide(); 
+                    $('#fixedNameButton').show(); 
+                } 
             }, 
             loadViewPreference: function() { 
                 const saved=localStorage.getItem('appViewPreference'); 
-                if(saved && (saved==='cards'||saved==='journal')) this.switchView(saved); 
-                else this.switchView('cards'); 
+                if(saved && (saved==='cards'||saved==='journal')) {
+                    this.switchView(saved);
+                } else {
+                    this.switchView('cards');
+                }
             }, 
             handleGlobalSearch: function(query) { 
                 const $suggestions=$('#globalSuggestions'); 
@@ -1399,7 +1284,10 @@
             escapeHtml: function(str) { if(!str) return ''; return str.replace(/[&<>]/g,m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); } 
         };
         
-        $(document).ready(()=>{ AppController.init(); });
+        $(document).ready(()=>{ 
+            // Изначально оба контейнера скрыты через CSS, показываем только после инициализации
+            AppController.init(); 
+        });
     </script>
 </body>
 </html>
