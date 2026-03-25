@@ -1,3 +1,4 @@
+// index.html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -960,9 +961,10 @@
             addCard: (initialTitle='') => { 
                 const now=new Date(); 
                 const placeholder = `Карточка от ${now.toLocaleDateString()} ${now.toLocaleTimeString().slice(0,5)}`; 
+                const hasTitle = initialTitle && initialTitle.trim().length > 0;
                 const newCard={ 
                     id:CardsModel.generateId(), 
-                    title:initialTitle||"", 
+                    title: hasTitle ? initialTitle.trim() : "", 
                     placeholder, 
                     content:"", 
                     parentIds:[], 
@@ -970,7 +972,7 @@
                     children:[], 
                     createdAt:now.toLocaleString(), 
                     bumpedAt:now.toISOString(), 
-                    isEmpty:!initialTitle 
+                    isEmpty: !hasTitle
                 }; 
                 CardsModel.cards.push(newCard); 
                 CardsModel.saveState(); 
@@ -981,6 +983,9 @@
                 const card=CardsModel.getCard(cardId); 
                 if(card){ 
                     Object.assign(card,updates); 
+                    if (updates.title !== undefined && updates.title.trim() !== "") {
+                        card.isEmpty = false;
+                    }
                     CardsModel.saveState(); 
                     CardsModel.updateAllRelations(); 
                     return true; 
@@ -992,10 +997,11 @@
                 if(card && parentCard && cardId!=parentId && !(card.parentIds||[]).some(id=>id==parentId)){ 
                     if(!card.parentIds) card.parentIds=[]; 
                     card.parentIds.push(parentId); 
-                    if(card.isEmpty){ 
-                        card.isEmpty=false; 
-                        card.title=card.placeholder; 
-                    } 
+                    // НЕ перезаписываем название карточки, даже если она пустая
+                    // Просто снимаем флаг isEmpty, если он был
+                    if(card.isEmpty && card.title && card.title.trim() !== "") {
+                        card.isEmpty = false;
+                    }
                     CardsModel.saveState(); 
                     CardsModel.updateAllRelations(); 
                     return true; 
@@ -1112,12 +1118,13 @@
                             if(!c.children) c.children=[]; 
                             if(!c.mentions) c.mentions=[]; 
                             if(!c.bumpedAt) c.bumpedAt=c.createdAt?new Date(c.createdAt).toISOString():new Date().toISOString(); 
-                            if(c.isEmpty===undefined) c.isEmpty=(c.title===""); 
-                            if(!c.placeholder && c.isEmpty) {
+                            if(c.isEmpty===undefined) {
+                                c.isEmpty = (c.title === "" || !c.title);
+                            }
+                            if(!c.placeholder) {
                                 const date = c.createdAt ? new Date(c.createdAt) : new Date();
                                 c.placeholder = `Карточка от ${date.toLocaleDateString()} ${date.toLocaleTimeString().slice(0,5)}`;
                             }
-                            if(!c.placeholder && !c.isEmpty) c.placeholder = c.title || "Карточка";
                         }); 
                         CardsModel.cards.sort((a,b)=>new Date(a.bumpedAt)-new Date(b.bumpedAt)); 
                         CardsModel.updateAllRelations(); 
@@ -1170,7 +1177,11 @@
                     .off('click', '#add-card-btn').on('click', '#add-card-btn', ()=>{ const newCard=CardsModel.addCard(); CardsView.render(); setTimeout(()=>CardsView.highlightCard(newCard.id),100); })
                     .off('click', '#delete-all-btn').on('click', '#delete-all-btn', ()=>{ if(CardsModel.cards.length && confirm("Уничтожить все карточки?")){ CardsModel.deleteAllCards(); CardsView.render(); } })
                     .off('click', '.card__header .button--danger').on('click', '.card__header .button--danger', function(e){ e.preventDefault(); const cardId=$(this).closest('.card').data('card-id'); const card=CardsModel.getCard(cardId); if(confirm(`Уничтожить карточку "${card?.title||'без названия'}"?`)){ CardsModel.deleteCard(cardId); $(this).closest('.card').remove(); } })
-                    .off('input', '.card__title').on('input', '.card__title', function(){ const cardId=$(this).closest('.card').data('card-id'); CardsModel.updateCard(cardId,{ title:$(this).val() }); })
+                    .off('input', '.card__title').on('input', '.card__title', function(){ 
+                        const cardId=$(this).closest('.card').data('card-id'); 
+                        const newTitle = $(this).val();
+                        CardsModel.updateCard(cardId,{ title:newTitle }); 
+                    })
                     .off('click', '.remove-parent').on('click', '.remove-parent', function(e){ e.preventDefault(); const cardId=$(this).closest('.card').data('card-id'); const parentId=$(this).data('parent-id'); if(CardsModel.removeParent(cardId,parentId)){ CardsView.updateCardRelations(cardId); CardsView.updateCardRelations(parentId); } })
                     .off('click', '.remove-child').on('click', '.remove-child', function(e){ e.preventDefault(); const parentId=$(this).closest('.card').data('card-id'); const childId=$(this).data('child-id'); if(CardsModel.removeChild(parentId,childId)){ CardsView.updateCardRelations(parentId); CardsView.updateCardRelations(childId); } })
                     .off('click', '.remove-with-card').on('click', '.remove-with-card', function(e){ e.preventDefault(); const cardIdToRemove=$(this).data('card-id'); const currentCardId=$(this).closest('.card').data('card-id'); const cardToRemove=CardsModel.getCard(cardIdToRemove); if(cardToRemove && confirm(`Уничтожить карточку "${cardToRemove.title||'без названия'}"?`)){ CardsModel.deleteCard(cardIdToRemove); $(`[data-card-id="${cardIdToRemove}"]`).remove(); CardsView.updateCardRelations(currentCardId); } })
@@ -1189,7 +1200,15 @@
             handleSearchInput: function($input) { const query=$input.val().trim(); const cardId=$input.closest('.card').data('card-id'); const isParent=$input.hasClass('parent-search-input'); const $suggestions=$input.closest(isParent ? '.card__parents' : '.card__children').find(isParent ? '.parent-suggestions' : '.child-suggestions'); if(query.length>0){ const results=CardsModel.searchCards(query,cardId,true); $suggestions.empty(); if(results.length>0){ results.forEach(card=>{ $suggestions.append(`<div class="suggestion-item ${isParent ? 'parent-suggestion-item' : 'child-suggestion-item'}" data-card-id="${card.id}">${CardsView.escapeHtml(card.title) || 'Без названия'}</div>`); }); $suggestions.show(); } else $suggestions.hide(); } else $suggestions.hide(); },
             escapeHtml: function(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); },
             highlightCard: (cardId)=>{ const $card=$(`.card[data-card-id="${cardId}"]`); if($card.length){ $card.addClass('highlight'); $card.get(0).scrollIntoView({ behavior: 'auto', block: 'center' }); setTimeout(()=>$card.removeClass('highlight'),1500); } }, 
-            updateCardRelations: (cardId)=>{ const card=CardsModel.getCard(cardId); if(!card) return; const $card=$(`.card[data-card-id="${cardId}"]`); if(!$card.length) return; const parents=(card.parentIds||[]).map(id=>{ const p=CardsModel.getCard(id); return p?{ id:p.id, title:p.title }:null; }).filter(Boolean); $card.find('.parents-list').html(parents.map(p=>`<div class="card__parent-item"><span class="mention" data-card-id="${p.id}">${CardsView.escapeHtml(p.title)}</span><button class="action-button remove-parent" data-parent-id="${p.id}">✕</button><button class="action-button action-button--bolder remove-with-card" data-card-id="${p.id}">✕</button></div>`).join('')); $card.find('.children-list').html((card.children||[]).map(c=>`<div class="card__child-item"><span class="child-link" data-card-id="${c.id}">${CardsView.escapeHtml(c.title)}</span><button class="action-button remove-child" data-child-id="${c.id}">✕</button><button class="action-button action-button--bolder remove-with-card" data-card-id="${c.id}">✕</button></div>`).join('')); } 
+            updateCardRelations: (cardId)=>{ 
+                const card=CardsModel.getCard(cardId); 
+                if(!card) return; 
+                const $card=$(`.card[data-card-id="${cardId}"]`); 
+                if(!$card.length) return; 
+                const parents=(card.parentIds||[]).map(id=>{ const p=CardsModel.getCard(id); return p?{ id:p.id, title:p.title }:null; }).filter(Boolean); 
+                $card.find('.parents-list').html(parents.map(p=>`<div class="card__parent-item"><span class="mention" data-card-id="${p.id}">${CardsView.escapeHtml(p.title)}</span><button class="action-button remove-parent" data-parent-id="${p.id}">✕</button><button class="action-button action-button--bolder remove-with-card" data-card-id="${p.id}">✕</button></div>`).join('')); 
+                $card.find('.children-list').html((card.children||[]).map(c=>`<div class="card__child-item"><span class="child-link" data-card-id="${c.id}">${CardsView.escapeHtml(c.title)}</span><button class="action-button remove-child" data-child-id="${c.id}">✕</button><button class="action-button action-button--bolder remove-with-card" data-card-id="${c.id}">✕</button></div>`).join('')); 
+            } 
         };
         
         // ==================== ИМЯ ПОЛЬЗОВАТЕЛЯ ====================
