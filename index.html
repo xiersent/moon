@@ -612,6 +612,19 @@
                         const newTitle = $(this).val();
                         CardsModel.updateCard(cardId,{ title:newTitle }); 
                     })
+					.off('input', '.card__textarea').on('input', '.card__textarea', function(){ 
+						const cardId = $(this).closest('.card').data('card-id'); 
+						const newContent = $(this).val();
+						CardsModel.updateCard(cardId, { content: newContent }); 
+					})
+					.off('blur', '.card__textarea').on('blur', '.card__textarea', function(){ 
+						const cardId = $(this).closest('.card').data('card-id'); 
+						const newContent = $(this).val();
+						const card = CardsModel.getCard(cardId);
+						if (card && card.content !== newContent) {
+							CardsModel.updateCard(cardId, { content: newContent });
+						}
+					})
                     .off('click', '.removeParent').on('click', '.removeParent', function(e){ e.preventDefault(); const cardId=$(this).closest('.card').data('card-id'); const parentId=$(this).data('parent-id'); if(CardsModel.removeParent(cardId,parentId)){ CardsView.updateCardRelations(cardId); CardsView.updateCardRelations(parentId); } })
                     .off('click', '.removeChild').on('click', '.removeChild', function(e){ e.preventDefault(); const parentId=$(this).closest('.card').data('card-id'); const childId=$(this).data('child-id'); if(CardsModel.removeChild(parentId,childId)){ CardsView.updateCardRelations(parentId); CardsView.updateCardRelations(childId); } })
                     .off('click', '.removeWithCard').on('click', '.removeWithCard', function(e){ e.preventDefault(); const cardIdToRemove=$(this).data('card-id'); const currentCardId=$(this).closest('.card').data('card-id'); const cardToRemove=CardsModel.getCard(cardIdToRemove); if(cardToRemove && confirm(`Уничтожить карточку "${cardToRemove.title||'без названия'}"?`)){ CardsModel.deleteCard(cardIdToRemove); $(`[data-card-id="${cardIdToRemove}"]`).remove(); CardsView.updateCardRelations(currentCardId); } })
