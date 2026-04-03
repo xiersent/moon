@@ -4,771 +4,201 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Заразка</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ejs@3.1.8/ejs.min.js"></script>
+    <script src="/vendor/js/jquery-3.6.0.min.js"></script>
+    <script src="/vendor/js/ejs.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #f5f5f5;
-            min-height: 100vh;
-            padding: 16px;
-            padding-bottom: 90px;
-            line-height: 1.5;
-            overflow-y: scroll;
-        }
-
-        .app-container {
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
-        .mode-switch-header {
-            background: #fff;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border: 1px solid #e8e8e8;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .mode-switch-header:active {
-            background: #f5f5f5;
-        }
-
-        .mode-arrow {
-            font-size: 20px;
-            font-weight: 600;
-            color: #666;
-            user-select: none;
-        }
-
-        .mode-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
-            letter-spacing: -0.3px;
-            flex: 1;
-            text-align: center;
-        }
-
-        .global-search {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        .global-search__input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 15px;
-            background: #fff;
-            transition: all 0.2s;
-        }
-
-        .global-search__input:focus {
-            outline: none;
-            border-color: #999;
-            box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
-        }
-
-        .global-search__suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            max-height: 400px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            margin-top: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .global-suggestion-item {
-            padding: 12px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 14px;
-            transition: background 0.1s;
-        }
-
-        .global-suggestion-item:last-child {
-            border-bottom: none;
-        }
-
-        .global-suggestion-item:hover {
-            background: #f9f9f9;
-        }
-
-        .suggestion-type {
-            display: inline-block;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-right: 8px;
-            font-weight: 500;
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .view-container {
-            display: none;
-        }
-
-        .view-container.active {
-            display: block;
-        }
-
-        .journal {
-            width: 100%;
-        }
-
-        .days-container {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .day-group {
-            background: #fff;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border: 1px solid #e8e8e8;
-        }
-
-        .day-group__header {
-            padding: 16px 20px;
-            text-align: center;
-            background: #fafafa;
-            border-bottom: 1px solid #efefef;
-        }
-
-        .day-group__date {
-            font-weight: 600;
-            font-size: 18px;
-            color: #333;
-        }
-
-        .day-group__weekday {
-            font-size: 13px;
-            color: #888;
-            margin-top: 4px;
-        }
-
-        .entries-list {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .entry-item {
-            padding: 16px 20px;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .entry-item:last-child {
-            border-bottom: none;
-        }
-
-        .entry-item:hover {
-            background: #f9f9f9;
-        }
-
-        .entry-item.highlight {
-            background: #fff9c4;
-            animation: highlightPulse 0.6s ease;
-        }
-
-        @keyframes highlightPulse {
-            0% { background: #fff3bf; }
-            100% { background: #fff9c4; }
-        }
-
-        .entry-item__content {
-            font-size: 15px;
-            line-height: 1.5;
-            color: #333;
-            word-break: break-word;
-            white-space: pre-wrap;
-        }
-
-        .entry-item__footer {
-            margin-top: 8px;
-            font-size: 11px;
-            color: #bbb;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            background: #fff;
-            border-radius: 16px;
-            color: #aaa;
-        }
-
-        .cards-system {
-            width: 100%;
-        }
-
-        .cards-system__controls {
-            display: flex;
-            flex-direction: row;
-            gap: 6px;
-            margin-bottom: 16px;
-            width: 100%;
-            justify-content: center;
-        }
-
-        .button {
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 400;
-            cursor: pointer;
-            background: #e0e0e0;
-            color: #333;
-            height: 36px;
-            line-height: 1;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .cards-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-            padding: 0;
-            width: 100%;
-        }
-
-        .card {
-            background: #fff;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #ddd;
-            width: 100%;
-        }
-
-        .card__parents {
-            margin-bottom: 10px;
-            position: relative;
-            width: 100%;
-        }
-
-        .card__header {
-            display: flex;
-            flex-direction: row;
-            gap: 6px;
-            margin-bottom: 10px;
-            align-items: center;
-        }
-
-        .card__title {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            background: #fff;
-            min-height: 36px;
-        }
-
-        .card__title:focus {
-            outline: none;
-            border-color: #999;
-        }
-
-        .card__content {
-            margin: 12px 0;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .card__textarea {
-            width: 100%;
-            min-height: 100px;
-            padding: 8px 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            resize: vertical;
-            background: #fff;
-            font-family: inherit;
-            display: none;
-        }
-
-        .card__textarea.visible {
-            display: block;
-        }
-
-        .card__footer {
-            font-size: 11px;
-            color: #999;
-            margin-top: 8px;
-            padding-top: 6px;
-            border-top: 1px solid #eee;
-        }
-
-        .card__footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-        }
-
-        .bump-text-button {
-            background: none;
-            border: none;
-            color: inherit;
-            font: inherit;
-            cursor: pointer;
-            padding: 0;
-            margin-left: 8px;
-        }
-
-        .card__parents-title,
-        .card__children-title {
-            font-weight: 500;
-            margin-bottom: 6px;
-            color: #666;
-            font-size: 13px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .card__description-title {
-            font-weight: 500;
-            margin-bottom: 6px;
-            color: #666;
-            font-size: 13px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .add-text-button {
-            background: none;
-            border: none;
-            color: #666;
-            font: inherit;
-            font-size: 13px;
-            cursor: pointer;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-
-        .parents-list,
-        .children-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin: 6px 0;
-            width: 100%;
-        }
-
-        .card__parent-item,
-        .card__child-item {
-            display: flex;
-            align-items: center;
-            padding: 8px;
-            background: #f8f8f8;
-            border-radius: 6px;
-            font-size: 13px;
-            border: 1px solid #ddd;
-            gap: 8px;
-            min-height: 36px;
-        }
-
-        .mention,
-        .child-link {
-            flex: 1;
-            min-width: 0;
-            word-break: break-word;
-            color: #666;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .action-button {
-            cursor: pointer;
-            font-weight: normal;
-            font-size: 14px;
-            padding: 0 8px;
-            border-radius: 4px;
-            background: #e0e0e0;
-            border: 1px solid #ccc;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            height: 28px;
-            color: #333;
-        }
-
-        .action-button--bolder {
-            font-weight: bold;
-        }
-
-        .search-container {
-            display: flex;
-            flex-direction: row;
-            gap: 6px;
-            margin-bottom: 6px;
-            width: 100%;
-            display: none;
-        }
-
-        .search-container.visible {
-            display: flex;
-        }
-
-        .search-input {
-            flex: 1;
-            padding: 0 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            background: #fff;
-            height: 36px;
-        }
-
-        .suggestions {
-            position: absolute;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            width: calc(100% - 24px);
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            margin-top: 2px;
-            left: 12px;
-        }
-
-        .suggestion-item {
-            padding: 8px 12px;
-            cursor: pointer;
-            font-size: 13px;
-            border-bottom: 1px solid #f0f0f0;
-            min-height: 36px;
-        }
-
-        .card.highlight {
-            background: #fff9c4;
-        }
-
-        .plus {
-            transform: rotate(45deg);
-            display: inline-block;
-        }
-
-        .floating-add-button {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 56px;
-            height: 56px;
-            background: #333;
-            border: none;
-            border-radius: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            z-index: 1000;
-            font-size: 28px;
-            font-weight: 400;
-            color: white;
-            line-height: 1;
-        }
-
-        .floating-add-button:active {
-            transform: translateX(-50%) scale(0.94);
-        }
-
-        .fixed-name-button {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #e0e0e0;
-            color: #333;
-            border: 1px solid #ccc;
-            border-radius: 30px;
-            padding: 8px 20px;
-            font-size: 14px;
-            cursor: pointer;
-            z-index: 1000;
-            text-align: center;
-            height: 40px;
-            white-space: nowrap;
-            min-width: 160px;
-            transition: all 0.2s;
-        }
-
-        .fixed-name-button:active {
-            transform: translateX(-50%) scale(0.96);
-        }
-
-        .fullscreen-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #fff;
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            animation: slideUp 0.2s ease;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-
-        .fullscreen-modal__header {
-            padding: 20px 20px 16px 20px;
-            border-bottom: 1px solid #efefef;
-            background: #fff;
-            flex-shrink: 0;
-        }
-
-        .fullscreen-modal__title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #333;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .fullscreen-modal__actions {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .fullscreen-modal__button {
-            flex: 1;
-            padding: 10px 16px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            background: #fff;
-            color: #333;
-            text-align: center;
-        }
-
-        .fullscreen-modal__button--save {
-            background: #333;
-            border-color: #333;
-            color: white;
-        }
-
-        .fullscreen-modal__button--delete {
-            border-color: #ffccc7;
-            color: #d4380d;
-        }
-
-        .fullscreen-modal__content {
-            flex: 1;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            overflow-y: auto;
-        }
-
-        .fullscreen-modal__datetime {
-            display: flex;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-
-        .fullscreen-modal__datetime-input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 15px;
-            font-family: inherit;
-            background: #fafafa;
-            text-align: center;
-        }
-
-        .fullscreen-modal__textarea-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-
-        .fullscreen-modal__textarea {
-            width: 100%;
-            flex: 1;
-            padding: 14px;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 15px;
-            font-family: inherit;
-            resize: none;
-            background: #fafafa;
-        }
-
-        .name-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
-
-        .name-modal__content {
-            background: white;
-            padding: 16px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 400px;
-        }
-
-        .name-modal__title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-
-        .name-modal__input {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-
-        .name-modal__button {
-            width: 100%;
-            padding: 8px 10px;
-            background: #e0e0e0;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .view-container {
-            display: none;
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 12px;
-                padding-bottom: 90px;
-            }
-            
-            .fullscreen-modal__actions {
-                flex-wrap: nowrap;
-            }
-            
-            .fullscreen-modal__datetime {
-                flex-direction: row;
-            }
+        /* Сброс стилей */
+        *{margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent;}
+        body{font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f5f5f5; min-height: 100vh; padding: 16px; padding-bottom: 90px; line-height: 1.5; overflow-y: scroll;}
+
+        /* Базовые стили */
+
+        .actionButton{cursor: pointer; font-weight: normal; font-size: 14px; padding: 0 8px; border-radius: 4px; background: #e0e0e0; border: 1px solid #ccc; display: inline-flex; align-items: center; justify-content: center; height: 28px; color: #333;}
+        .actionButton--bolder{font-weight: bold;}
+
+        .addTextButton{background: none; border: none; color: #666; font: inherit; font-size: 13px; cursor: pointer; padding: 2px 8px; border-radius: 4px;}
+
+        .appContainer{max-width: 700px; margin: 0 auto;}
+
+        .button{padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-weight: 400; cursor: pointer; background: #e0e0e0; color: #333; height: 36px; line-height: 1; display: inline-flex; align-items: center; justify-content: center;}
+
+        .bumpTextButton{background: none; border: none; color: inherit; font: inherit; cursor: pointer; padding: 0; margin-left: 8px;}
+
+        .card{background: #fff; padding: 12px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #ddd; width: 100%;}
+        .card__childItem{display: flex; align-items: center; padding: 8px; background: #f8f8f8; border-radius: 6px; font-size: 13px; border: 1px solid #ddd; gap: 8px; min-height: 36px;}
+        .card__childrenTitle{font-weight: 500; margin-bottom: 6px; color: #666; font-size: 13px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;}
+        .card__content{margin: 12px 0; width: 100%; display: flex; flex-direction: column; gap: 12px;}
+        .card__descriptionTitle{font-weight: 500; margin-bottom: 6px; color: #666; font-size: 13px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;}
+        .card__footer{font-size: 11px; color: #999; margin-top: 8px; padding-top: 6px; border-top: 1px solid #eee;}
+        .card__footerContent{display: flex; justify-content: space-between; align-items: center; width: 100%;}
+        .card__header{display: flex; flex-direction: row; gap: 6px; margin-bottom: 10px; align-items: center;}
+        .card__parentItem{display: flex; align-items: center; padding: 8px; background: #f8f8f8; border-radius: 6px; font-size: 13px; border: 1px solid #ddd; gap: 8px; min-height: 36px;}
+        .card__parents{margin-bottom: 10px; position: relative; width: 100%;}
+        .card__parentsTitle{font-weight: 500; margin-bottom: 6px; color: #666; font-size: 13px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;}
+        .card__textarea{width: 100%; min-height: 100px; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; resize: vertical; background: #fff; font-family: inherit; display: none;}
+        .card__textarea.visible{display: block;}
+        .card__title{flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: #fff; min-height: 36px;}
+        .card__title:focus{outline: none; border-color: #999;}
+        .card.highlight{background: #fff9c4;}
+
+        .cardsContainer{display: grid; grid-template-columns: 1fr; gap: 10px; padding: 0; width: 100%;}
+
+        .cardsSystem{width: 100%;}
+        .cardsSystem__controls{display: flex; flex-direction: row; gap: 6px; margin-bottom: 16px; width: 100%; justify-content: center;}
+
+        .childLink{flex: 1; min-width: 0; word-break: break-word; color: #666; cursor: pointer; text-decoration: none;}
+
+        .childrenList{display: flex; flex-direction: column; gap: 6px; margin: 6px 0; width: 100%;}
+
+        .dayGroup{background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e8e8e8;}
+        .dayGroup__date{font-weight: 600; font-size: 18px; color: #333;}
+        .dayGroup__header{padding: 16px 20px; text-align: center; background: #fafafa; border-bottom: 1px solid #efefef;}
+        .dayGroup__weekday{font-size: 13px; color: #888; margin-top: 4px;}
+
+        .daysContainer{display: flex; flex-direction: column; gap: 24px;}
+
+        .emptyState{text-align: center; padding: 60px 20px; background: #fff; border-radius: 16px; color: #aaa;}
+
+        .entriesList{display: flex; flex-direction: column;}
+
+        .entryItem{padding: 16px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s;}
+        .entryItem:last-child{border-bottom: none;}
+        .entryItem:hover{background: #f9f9f9;}
+        .entryItem.highlight{background: #fff9c4; animation: highlightPulse 0.6s ease;}
+        .entryItem__content{font-size: 15px; line-height: 1.5; color: #333; word-break: break-word; white-space: pre-wrap;}
+        .entryItem__footer{margin-top: 8px; font-size: 11px; color: #bbb;}
+
+        .fixedNameButton{position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #e0e0e0; color: #333; border: 1px solid #ccc; border-radius: 30px; padding: 8px 20px; font-size: 14px; cursor: pointer; z-index: 1000; text-align: center; height: 40px; white-space: nowrap; min-width: 160px; transition: all 0.2s;}
+        .fixedNameButton:active{transform: translateX(-50%) scale(0.96);}
+
+        .floatingAddButton{position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); width: 56px; height: 56px; background: #333; border: none; border-radius: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; z-index: 1000; font-size: 28px; font-weight: 400; color: white; line-height: 1;}
+        .floatingAddButton:active{transform: translateX(-50%) scale(0.94);}
+
+        .fullscreenModal{position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #fff; z-index: 2000; display: flex; flex-direction: column; animation: slideUp 0.2s ease;}
+        .fullscreenModal__actions{display: flex; gap: 12px; justify-content: center;}
+        .fullscreenModal__button{flex: 1; padding: 10px 16px; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; background: #fff; color: #333; text-align: center;}
+        .fullscreenModal__button--delete{border-color: #ffccc7; color: #d4380d;}
+        .fullscreenModal__button--save{background: #333; border-color: #333; color: white;}
+        .fullscreenModal__content{flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;}
+        .fullscreenModal__datetime{display: flex; gap: 12px; flex-shrink: 0;}
+        .fullscreenModal__datetimeInput{flex: 1; padding: 12px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 15px; font-family: inherit; background: #fafafa; text-align: center;}
+        .fullscreenModal__header{padding: 20px 20px 16px 20px; border-bottom: 1px solid #efefef; background: #fff; flex-shrink: 0;}
+        .fullscreenModal__textarea{width: 100%; flex: 1; padding: 14px; border: 1px solid #e0e0e0; border-radius: 12px; font-size: 15px; font-family: inherit; resize: none; background: #fafafa;}
+        .fullscreenModal__textareaWrapper{flex: 1; display: flex; flex-direction: column; min-height: 0;}
+        .fullscreenModal__title{font-size: 20px; font-weight: 600; color: #333; text-align: center; margin-bottom: 20px;}
+
+        .globalSearch{position: relative; margin-bottom: 20px;}
+        .globalSearch__input{width: 100%; padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 12px; font-size: 15px; background: #fff; transition: all 0.2s;}
+        .globalSearch__input:focus{outline: none; border-color: #999; box-shadow: 0 0 0 3px rgba(0,0,0,0.05);}
+        .globalSearch__suggestions{position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e0e0e0; border-radius: 12px; max-height: 400px; overflow-y: auto; z-index: 1000; display: none; margin-top: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
+
+        .globalSuggestionItem{padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 14px; transition: background 0.1s;}
+        .globalSuggestionItem:last-child{border-bottom: none;}
+        .globalSuggestionItem:hover{background: #f9f9f9;}
+
+        .journal{width: 100%;}
+
+        .mention{flex: 1; min-width: 0; word-break: break-word; color: #666; cursor: pointer; text-decoration: none;}
+
+        .modeArrow{font-size: 20px; font-weight: 600; color: #666; user-select: none;}
+
+        .modeSwitchHeader{background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e8e8e8; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: space-between;}
+        .modeSwitchHeader:active{background: #f5f5f5;}
+
+        .modeTitle{font-size: 20px; font-weight: 600; color: #333; letter-spacing: -0.3px; flex: 1; text-align: center;}
+
+        .nameModal{position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 2000;}
+        .nameModal__button{width: 100%; padding: 8px 10px; background: #e0e0e0; border: 1px solid #ccc; border-radius: 6px; cursor: pointer;}
+        .nameModal__content{background: white; padding: 16px; border-radius: 12px; width: 90%; max-width: 400px;}
+        .nameModal__input{width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; margin-bottom: 12px;}
+        .nameModal__title{font-size: 18px; font-weight: 600; margin-bottom: 12px;}
+
+        .parentsList{display: flex; flex-direction: column; gap: 6px; margin: 6px 0; width: 100%;}
+
+        .plus{transform: rotate(45deg); display: inline-block;}
+
+        .searchContainer{display: flex; flex-direction: row; gap: 6px; margin-bottom: 6px; width: 100%; display: none;}
+        .searchContainer.visible{display: flex;}
+
+        .searchInput{flex: 1; padding: 0 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; background: #fff; height: 36px;}
+
+        .suggestionItem{padding: 8px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f0f0f0; min-height: 36px;}
+
+        .suggestionType{display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-right: 8px; font-weight: 500; background: #e3f2fd; color: #1976d2;}
+
+        .suggestions{position: absolute; background: white; border: 1px solid #ddd; border-radius: 6px; width: calc(100% - 24px); max-height: 200px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin-top: 2px; left: 12px;}
+
+        .viewContainer{display: none;}
+        .viewContainer.active{display: block;}
+
+        /* Анимации */
+        @keyframes highlightPulse{0%{background: #fff3bf;} 100%{background: #fff9c4;}}
+
+        @keyframes slideUp{from{transform: translateY(100%);} to{transform: translateY(0);}}
+
+        /* Медиа-запросы */
+        @media (max-width: 600px){
+        body{padding: 12px; padding-bottom: 90px;}
+            .fullscreenModal__actions{flex-wrap: nowrap;}
+            .fullscreenModal__datetime{flex-direction: row;}
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="mode-switch-header" id="modeSwitchHeader">
-            <span class="mode-arrow">←</span>
-            <div class="mode-title" id="modeTitle">Планетаход</div>
-            <span class="mode-arrow">→</span>
+    <div class="appContainer">
+        <div class="modeSwitchHeader" id="modeSwitchHeader">
+            <span class="modeArrow">←</span>
+            <div class="modeTitle" id="modeTitle">Планетаход</div>
+            <span class="modeArrow">→</span>
         </div>
 
-        <div class="global-search">
-            <input type="text" id="globalSearchInput" class="global-search__input" 
+        <div class="globalSearch">
+            <input type="text" id="globalSearchInput" class="globalSearch__input" 
                    placeholder="Поиск по всем записям и карточкам..." autocomplete="off">
-            <div id="globalSuggestions" class="global-search__suggestions"></div>
+            <div id="globalSuggestions" class="globalSearch__suggestions"></div>
         </div>
 
-        <div id="cardsView" class="view-container">
-            <div class="cards-system">
-                <div class="cards-system__controls">
-                    <button class="button button--primary" id="add-card-btn">Создать карточку</button>
-                    <button class="button button--danger" id="delete-all-btn">Уничтожить все</button>
+        <div id="cardsView" class="viewContainer">
+            <div class="cardsSystem">
+                <div class="cardsSystem__controls">
+                    <button class="button button--primary" id="addCardBtn">Создать карточку</button>
+                    <button class="button button--danger" id="deleteAllBtn">Уничтожить все</button>
                 </div>
-                <div class="cards-container" id="cards-container"></div>
+                <div class="cardsContainer" id="cardsContainer"></div>
             </div>
         </div>
 
-        <div id="journalView" class="view-container">
+        <div id="journalView" class="viewContainer">
             <div class="journal">
-                <div class="days-container" id="daysContainer"></div>
+                <div class="daysContainer" id="daysContainer"></div>
             </div>
         </div>
     </div>
 
-    <button class="floating-add-button" id="floatingBtn">+</button>
-    <button class="fixed-name-button" id="fixedNameButton" style="display: none;">
+    <button class="floatingAddButton" id="floatingBtn">+</button>
+    <button class="fixedNameButton" id="fixedNameButton" style="display: none;">
         <span id="userNameDisplay"></span>
     </button>
 
-    <div class="name-modal" id="nameModal" style="display: none;">
-        <div class="name-modal__content">
-            <div class="name-modal__title">Введите ваше имя</div>
-            <input type="text" class="name-modal__input" id="userNameInput" placeholder="Имя" maxlength="50">
-            <button class="name-modal__button" id="saveUserNameBtn">Сохранить</button>
+    <div class="nameModal" id="nameModal" style="display: none;">
+        <div class="nameModal__content">
+            <div class="nameModal__title">Введите ваше имя</div>
+            <input type="text" class="nameModal__input" id="userNameInput" placeholder="Имя" maxlength="50">
+            <button class="nameModal__button" id="saveUserNameBtn">Сохранить</button>
         </div>
     </div>
 
     <script type="text/ejs" id="dayGroupTemplate">
-        <div class="day-group" data-date="<%= date %>">
-            <div class="day-group__header">
-                <div class="day-group__date"><%= formattedDate %></div>
-                <div class="day-group__weekday"><%= weekday %></div>
+        <div class="dayGroup" data-date="<%= date %>">
+            <div class="dayGroup__header">
+                <div class="dayGroup__date"><%= formattedDate %></div>
+                <div class="dayGroup__weekday"><%= weekday %></div>
             </div>
-            <div class="entries-list">
+            <div class="entriesList">
                 <% entries.forEach(function(entry) { %>
-                    <div class="entry-item" data-entry-id="<%= entry.id %>">
-                        <div class="entry-item__content"><%= entry.text %></div>
-                        <div class="entry-item__footer"><%= entry.time %></div>
+                    <div class="entryItem" data-entry-id="<%= entry.id %>">
+                        <div class="entryItem__content"><%= entry.text %></div>
+                        <div class="entryItem__footer"><%= entry.time %></div>
                     </div>
                 <% }); %>
             </div>
@@ -776,31 +206,31 @@
     </script>
 
     <script type="text/ejs" id="emptyTemplate">
-        <div class="empty-state">
-            <div class="empty-state__text">Нет записей</div>
-            <div class="empty-state__text" style="font-size: 13px; margin-top: 8px;">Нажмите + внизу, чтобы добавить</div>
+        <div class="emptyState">
+            <div class="emptyState__text">Нет записей</div>
+            <div class="emptyState__text" style="font-size: 13px; margin-top: 8px;">Нажмите + внизу, чтобы добавить</div>
         </div>
     </script>
 
-    <script type="text/ejs" id="card-template">
+    <script type="text/ejs" id="cardTemplate">
         <div class="card" data-card-id="<%= id %>">
             <div class="card__parents">
-                <div class="card__parents-title">
+                <div class="card__parentsTitle">
                     Родительские карточки:
-                    <button class="add-text-button toggle-parent-search">добавить</button>
+                    <button class="addTextButton toggleParentSearch">добавить</button>
                 </div>
-                <div class="search-container parent-search-container">
-                    <input type="text" class="search-input parent-search-input" placeholder="Поиск родительских карточек..." data-card-id="<%= id %>">
-                    <button class="button button--success parent-search-add"><span class="plus">✕</span></button>
+                <div class="searchContainer parentSearchContainer">
+                    <input type="text" class="searchInput parentSearchInput" placeholder="Поиск родительских карточек..." data-card-id="<%= id %>">
+                    <button class="button button--success parentSearchAdd"><span class="plus">✕</span></button>
                 </div>
-                <div class="suggestions parent-suggestions"></div>
+                <div class="suggestions parentSuggestions"></div>
                 
-                <div class="parents-list">
+                <div class="parentsList">
                     <% parents.forEach(function(parent) { %>
-                        <div class="card__parent-item">
+                        <div class="card__parentItem">
                             <span class="mention" data-card-id="<%= parent.id %>"><%= parent.title %></span>
-                            <button class="action-button remove-parent" data-parent-id="<%= parent.id %>">✕</button>
-                            <button class="action-button action-button--bolder remove-with-card" data-card-id="<%= parent.id %>">✕</button>
+                            <button class="actionButton removeParent" data-parent-id="<%= parent.id %>">✕</button>
+                            <button class="actionButton actionButton--bolder removeWithCard" data-card-id="<%= parent.id %>">✕</button>
                         </div>
                     <% }); %>
                 </div>
@@ -812,9 +242,9 @@
             </div>
             
             <div class="card__content">
-                <div class="card__description-title">
+                <div class="card__descriptionTitle">
                     Описание:
-                    <button class="add-text-button toggle-description">
+                    <button class="addTextButton toggleDescription">
                         <% if (content && content.trim()) { %>скрыть<% } else { %>показать<% } %>
                     </button>
                 </div>
@@ -822,22 +252,22 @@
                 <textarea class="card__textarea <%= (content && content.trim()) ? 'visible' : '' %>" placeholder="Содержание карточки..."><%= content %></textarea>
                 
                 <div class="card__children">
-                    <div class="card__children-title">
+                    <div class="card__childrenTitle">
                         Дочерние карточки:
-                        <button class="add-text-button toggle-child-search">добавить</button>
+                        <button class="addTextButton toggleChildSearch">добавить</button>
                     </div>
-                    <div class="search-container child-search-container">
-                        <input type="text" class="search-input child-search-input" placeholder="Поиск дочерних карточек..." data-card-id="<%= id %>">
-                        <button class="button button--success child-search-add"><span class="plus">✕</span></button>
+                    <div class="searchContainer childSearchContainer">
+                        <input type="text" class="searchInput childSearchInput" placeholder="Поиск дочерних карточек..." data-card-id="<%= id %>">
+                        <button class="button button--success childSearchAdd"><span class="plus">✕</span></button>
                     </div>
-                    <div class="suggestions child-suggestions"></div>
+                    <div class="suggestions childSuggestions"></div>
                     
-                    <div class="children-list">
+                    <div class="childrenList">
                         <% children.forEach(function(child) { %>
-                            <div class="card__child-item">
-                                <span class="child-link" data-card-id="<%= child.id %>"><%= child.title %></span>
-                                <button class="action-button remove-child" data-child-id="<%= child.id %>">✕</button>
-                                <button class="action-button action-button--bolder remove-with-card" data-card-id="<%= child.id %>">✕</button>
+                            <div class="card__childItem">
+                                <span class="childLink" data-card-id="<%= child.id %>"><%= child.title %></span>
+                                <button class="actionButton removeChild" data-child-id="<%= child.id %>">✕</button>
+                                <button class="actionButton actionButton--bolder removeWithCard" data-card-id="<%= child.id %>">✕</button>
                             </div>
                         <% }); %>
                     </div>
@@ -858,7 +288,7 @@
             </div>
             
             <div class="card__footer">
-                <div class="card__footer-content">
+                <div class="card__footerContent">
                     <span>
                         Создано: <%= createdAt %>
                         <% 
@@ -870,7 +300,7 @@
                             <%= bumped.toLocaleTimeString().slice(0,5) %>)
                         <% } %>
                     </span>
-                    <button class="bump-text-button" data-card-id="<%= id %>">мне важнее эта</button>
+                    <button class="bumpTextButton" data-card-id="<%= id %>">мне важнее эта</button>
                 </div>
             </div>
         </div>
@@ -924,8 +354,8 @@
                 groups.forEach(group => { $container.append(ejs.render($('#dayGroupTemplate').text(), group)); });
                 this.bindEvents();
             },
-            bindEvents: function() { $('.entry-item').off('click').on('click', function(e) { e.stopPropagation(); const entryId = $(this).data('entry-id'); if(entryId) JournalController.openEditModal(entryId); }); },
-            highlightEntryById: function(entryId) { const $entry = $(`.entry-item[data-entry-id="${entryId}"]`); if($entry.length) { $entry.addClass('highlight'); setTimeout(() => $entry.removeClass('highlight'),1000); $entry.get(0).scrollIntoView({ behavior: 'auto', block: 'center' }); } },
+            bindEvents: function() { $('.entryItem').off('click').on('click', function(e) { e.stopPropagation(); const entryId = $(this).data('entry-id'); if(entryId) JournalController.openEditModal(entryId); }); },
+            highlightEntryById: function(entryId) { const $entry = $(`.entryItem[data-entry-id="${entryId}"]`); if($entry.length) { $entry.addClass('highlight'); setTimeout(() => $entry.removeClass('highlight'),1000); $entry.get(0).scrollIntoView({ behavior: 'auto', block: 'center' }); } },
             scrollToBottom: function() {
                 setTimeout(() => {
                     window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' });
@@ -939,8 +369,8 @@
             openEditModal: function(entryId) { const entry = JournalModel.getEntryById(entryId); if(!entry) return; const entryTime = new Date(entry.createdAt).toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' }); this.showFullscreenModal({ title:'Редактировать запись', dateValue:entry.date, timeValue:entryTime, textValue:entry.text, showDelete:true, onSave: (date,time,text) => { if(text && text.trim()) { JournalModel.updateEntry(entryId,date,time,text); JournalView.render(); setTimeout(() => JournalView.highlightEntryById(entryId),100); return true; } return false; }, onDelete: () => { if(confirm('Уничтожить эту запись?')) { JournalModel.deleteEntry(entryId); JournalView.render(); return true; } return false; } }); },
             showFullscreenModal: function(options) {
                 const modalId = 'fullscreenModal_' + Date.now();
-                const deleteButtonHtml = options.showDelete ? '<button class="fullscreen-modal__button fullscreen-modal__button--delete" id="deleteBtn">Уничтожить</button>' : '';
-                const modalHtml = `<div class="fullscreen-modal" id="${modalId}"><div class="fullscreen-modal__header"><div class="fullscreen-modal__title">${options.title}</div><div class="fullscreen-modal__actions"><button class="fullscreen-modal__button fullscreen-modal__button--save" id="saveBtn">Сохранить</button>${deleteButtonHtml}<button class="fullscreen-modal__button" id="cancelBtn">Отмена</button></div></div><div class="fullscreen-modal__content"><div class="fullscreen-modal__datetime"><input type="date" id="dateInput" class="fullscreen-modal__datetime-input" value="${options.dateValue}"><input type="time" id="timeInput" class="fullscreen-modal__datetime-input" value="${options.timeValue}"></div><div class="fullscreen-modal__textarea-wrapper"><textarea id="textInput" class="fullscreen-modal__textarea" placeholder="Введите текст...">${this.escapeHtml(options.textValue)}</textarea></div></div></div>`;
+                const deleteButtonHtml = options.showDelete ? '<button class="fullscreenModal__button fullscreenModal__button--delete" id="deleteBtn">Уничтожить</button>' : '';
+                const modalHtml = `<div class="fullscreenModal" id="${modalId}"><div class="fullscreenModal__header"><div class="fullscreenModal__title">${options.title}</div><div class="fullscreenModal__actions"><button class="fullscreenModal__button fullscreenModal__button--save" id="saveBtn">Сохранить</button>${deleteButtonHtml}<button class="fullscreenModal__button" id="cancelBtn">Отмена</button></div></div><div class="fullscreenModal__content"><div class="fullscreenModal__datetime"><input type="date" id="dateInput" class="fullscreenModal__datetimeInput" value="${options.dateValue}"><input type="time" id="timeInput" class="fullscreenModal__datetimeInput" value="${options.timeValue}"></div><div class="fullscreenModal__textareaWrapper"><textarea id="textInput" class="fullscreenModal__textarea" placeholder="Введите текст...">${this.escapeHtml(options.textValue)}</textarea></div></div></div>`;
                 $('body').append(modalHtml); const $modal = $('#'+modalId); const $dateInput=$modal.find('#dateInput'), $timeInput=$modal.find('#timeInput'), $textInput=$modal.find('#textInput');
                 setTimeout(() => $textInput.focus(),100);
                 const closeModal = () => { $modal.remove(); };
@@ -996,8 +426,6 @@
                 if(card && parentCard && cardId!=parentId && !(card.parentIds||[]).some(id=>id==parentId)){ 
                     if(!card.parentIds) card.parentIds=[]; 
                     card.parentIds.push(parentId); 
-                    // НЕ перезаписываем название карточки, даже если она пустая
-                    // Просто снимаем флаг isEmpty, если он был
                     if(card.isEmpty && card.title && card.title.trim() !== "") {
                         card.isEmpty = false;
                     }
@@ -1163,40 +591,40 @@
         // ==================== ПРЕДСТАВЛЕНИЕ КАРТОЧЕК ====================
         const CardsView = { 
             render: () => { 
-                $('#cards-container').empty(); 
+                $('#cardsContainer').empty(); 
                 CardsModel.cards.forEach(card=>{ 
                     const parents=(card.parentIds||[]).map(id=>{ const p=CardsModel.getCard(id); return p?{ id:p.id, title:p.title }:null; }).filter(Boolean); 
-                    const html=ejs.render($('#card-template').text(),{ ...card, parents, children:card.children||[], mentions:card.mentions||[] }); 
-                    $('#cards-container').append(html); 
+                    const html=ejs.render($('#cardTemplate').text(),{ ...card, parents, children:card.children||[], mentions:card.mentions||[] }); 
+                    $('#cardsContainer').append(html); 
                 }); 
                 CardsView.bindEvents(); 
             }, 
             bindEvents: () => { 
                 $(document)
-                    .off('click', '#add-card-btn').on('click', '#add-card-btn', ()=>{ const newCard=CardsModel.addCard(); CardsView.render(); setTimeout(()=>CardsView.highlightCard(newCard.id),100); })
-                    .off('click', '#delete-all-btn').on('click', '#delete-all-btn', ()=>{ if(CardsModel.cards.length && confirm("Уничтожить все карточки?")){ CardsModel.deleteAllCards(); CardsView.render(); } })
+                    .off('click', '#addCardBtn').on('click', '#addCardBtn', ()=>{ const newCard=CardsModel.addCard(); CardsView.render(); setTimeout(()=>CardsView.highlightCard(newCard.id),100); })
+                    .off('click', '#deleteAllBtn').on('click', '#deleteAllBtn', ()=>{ if(CardsModel.cards.length && confirm("Уничтожить все карточки?")){ CardsModel.deleteAllCards(); CardsView.render(); } })
                     .off('click', '.card__header .button--danger').on('click', '.card__header .button--danger', function(e){ e.preventDefault(); const cardId=$(this).closest('.card').data('card-id'); const card=CardsModel.getCard(cardId); if(confirm(`Уничтожить карточку "${card?.title||'без названия'}"?`)){ CardsModel.deleteCard(cardId); $(this).closest('.card').remove(); } })
                     .off('input', '.card__title').on('input', '.card__title', function(){ 
                         const cardId=$(this).closest('.card').data('card-id'); 
                         const newTitle = $(this).val();
                         CardsModel.updateCard(cardId,{ title:newTitle }); 
                     })
-                    .off('click', '.remove-parent').on('click', '.remove-parent', function(e){ e.preventDefault(); const cardId=$(this).closest('.card').data('card-id'); const parentId=$(this).data('parent-id'); if(CardsModel.removeParent(cardId,parentId)){ CardsView.updateCardRelations(cardId); CardsView.updateCardRelations(parentId); } })
-                    .off('click', '.remove-child').on('click', '.remove-child', function(e){ e.preventDefault(); const parentId=$(this).closest('.card').data('card-id'); const childId=$(this).data('child-id'); if(CardsModel.removeChild(parentId,childId)){ CardsView.updateCardRelations(parentId); CardsView.updateCardRelations(childId); } })
-                    .off('click', '.remove-with-card').on('click', '.remove-with-card', function(e){ e.preventDefault(); const cardIdToRemove=$(this).data('card-id'); const currentCardId=$(this).closest('.card').data('card-id'); const cardToRemove=CardsModel.getCard(cardIdToRemove); if(cardToRemove && confirm(`Уничтожить карточку "${cardToRemove.title||'без названия'}"?`)){ CardsModel.deleteCard(cardIdToRemove); $(`[data-card-id="${cardIdToRemove}"]`).remove(); CardsView.updateCardRelations(currentCardId); } })
-                    .off('click', '.bump-text-button').on('click', '.bump-text-button', function(e){ e.preventDefault(); const cardId=$(this).data('card-id'); const card=CardsModel.getCard(cardId); if(card){ let oldestDate=new Date(); CardsModel.cards.forEach(c=>{ if(new Date(c.bumpedAt)<oldestDate) oldestDate=new Date(c.bumpedAt); }); card.bumpedAt=new Date(oldestDate.getTime()-1).toISOString(); CardsModel.saveState(); CardsModel.cards.sort((a,b)=>new Date(a.bumpedAt)-new Date(b.bumpedAt)); CardsView.render(); setTimeout(()=>CardsView.highlightCard(cardId),50); } })
-                    .off('click', '.mention, .child-link').on('click', '.mention, .child-link', function(e){ e.preventDefault(); const cardId=$(this).data('card-id'); CardsView.highlightCard(cardId); })
-                    .off('click', '.toggle-parent-search').on('click', '.toggle-parent-search', function(e){ e.preventDefault(); e.stopPropagation(); const $searchContainer=$(this).closest('.card__parents').find('.parent-search-container'); $searchContainer.toggleClass('visible'); if($searchContainer.hasClass('visible')) $searchContainer.find('.parent-search-input').focus(); })
-                    .off('click', '.toggle-child-search').on('click', '.toggle-child-search', function(e){ e.preventDefault(); e.stopPropagation(); const $searchContainer=$(this).closest('.card__children').find('.child-search-container'); $searchContainer.toggleClass('visible'); if($searchContainer.hasClass('visible')) $searchContainer.find('.child-search-input').focus(); })
-                    .off('click', '.toggle-description').on('click', '.toggle-description', function(e){ e.preventDefault(); e.stopPropagation(); const $textarea=$(this).closest('.card').find('.card__textarea'); $textarea.toggleClass('visible'); $(this).text($textarea.hasClass('visible') ? 'скрыть' : 'показать'); })
-                    .off('input', '.parent-search-input').on('input', '.parent-search-input', function(){ CardsView.handleSearchInput($(this)); })
-                    .off('click', '.parent-suggestion-item').on('click', '.parent-suggestion-item', function(){ const parentId=$(this).data('card-id'); const cardId=$(this).closest('.card').data('card-id'); if(CardsModel.addParent(cardId,parentId)){ $(this).closest('.suggestions').hide(); $(this).closest('.card__parents').find('.parent-search-input').val('').focus(); CardsView.updateCardRelations(cardId); CardsView.updateCardRelations(parentId); } })
-                    .off('click', '.parent-search-add').on('click', '.parent-search-add', function(e){ e.preventDefault(); e.stopPropagation(); const $input=$(this).siblings('.parent-search-input'); const query=$input.val().trim(); const cardId=$input.closest('.card').data('card-id'); if(!query) return; const newCard=CardsModel.addCard(query); if(CardsModel.addParent(cardId,newCard.id)){ $input.val(''); CardsView.render(); CardsView.updateCardRelations(cardId); setTimeout(()=>CardsView.highlightCard(newCard.id),100); $input.focus(); } })
-                    .off('input', '.child-search-input').on('input', '.child-search-input', function(){ CardsView.handleSearchInput($(this)); })
-                    .off('click', '.child-suggestion-item').on('click', '.child-suggestion-item', function(){ const childId=$(this).data('card-id'); const parentId=$(this).closest('.card').data('card-id'); if(CardsModel.addChild(parentId,childId)){ $(this).closest('.suggestions').hide(); $(this).closest('.card__children').find('.child-search-input').val('').focus(); CardsView.updateCardRelations(parentId); CardsView.updateCardRelations(childId); } })
-                    .off('click', '.child-search-add').on('click', '.child-search-add', function(e){ e.preventDefault(); e.stopPropagation(); const $input=$(this).siblings('.child-search-input'); const query=$input.val().trim(); const parentId=$input.closest('.card').data('card-id'); if(!query) return; const newCard=CardsModel.addCard(query); if(CardsModel.addChild(parentId,newCard.id)){ $input.val(''); CardsView.render(); CardsView.updateCardRelations(parentId); setTimeout(()=>CardsView.highlightCard(newCard.id),100); $input.focus(); } });
+                    .off('click', '.removeParent').on('click', '.removeParent', function(e){ e.preventDefault(); const cardId=$(this).closest('.card').data('card-id'); const parentId=$(this).data('parent-id'); if(CardsModel.removeParent(cardId,parentId)){ CardsView.updateCardRelations(cardId); CardsView.updateCardRelations(parentId); } })
+                    .off('click', '.removeChild').on('click', '.removeChild', function(e){ e.preventDefault(); const parentId=$(this).closest('.card').data('card-id'); const childId=$(this).data('child-id'); if(CardsModel.removeChild(parentId,childId)){ CardsView.updateCardRelations(parentId); CardsView.updateCardRelations(childId); } })
+                    .off('click', '.removeWithCard').on('click', '.removeWithCard', function(e){ e.preventDefault(); const cardIdToRemove=$(this).data('card-id'); const currentCardId=$(this).closest('.card').data('card-id'); const cardToRemove=CardsModel.getCard(cardIdToRemove); if(cardToRemove && confirm(`Уничтожить карточку "${cardToRemove.title||'без названия'}"?`)){ CardsModel.deleteCard(cardIdToRemove); $(`[data-card-id="${cardIdToRemove}"]`).remove(); CardsView.updateCardRelations(currentCardId); } })
+                    .off('click', '.bumpTextButton').on('click', '.bumpTextButton', function(e){ e.preventDefault(); const cardId=$(this).data('card-id'); const card=CardsModel.getCard(cardId); if(card){ let oldestDate=new Date(); CardsModel.cards.forEach(c=>{ if(new Date(c.bumpedAt)<oldestDate) oldestDate=new Date(c.bumpedAt); }); card.bumpedAt=new Date(oldestDate.getTime()-1).toISOString(); CardsModel.saveState(); CardsModel.cards.sort((a,b)=>new Date(a.bumpedAt)-new Date(b.bumpedAt)); CardsView.render(); setTimeout(()=>CardsView.highlightCard(cardId),50); } })
+                    .off('click', '.mention, .childLink').on('click', '.mention, .childLink', function(e){ e.preventDefault(); const cardId=$(this).data('card-id'); CardsView.highlightCard(cardId); })
+                    .off('click', '.toggleParentSearch').on('click', '.toggleParentSearch', function(e){ e.preventDefault(); e.stopPropagation(); const $searchContainer=$(this).closest('.card__parents').find('.searchContainer'); $searchContainer.toggleClass('visible'); if($searchContainer.hasClass('visible')) $searchContainer.find('.searchInput').focus(); })
+                    .off('click', '.toggleChildSearch').on('click', '.toggleChildSearch', function(e){ e.preventDefault(); e.stopPropagation(); const $searchContainer=$(this).closest('.card__children').find('.searchContainer'); $searchContainer.toggleClass('visible'); if($searchContainer.hasClass('visible')) $searchContainer.find('.searchInput').focus(); })
+                    .off('click', '.toggleDescription').on('click', '.toggleDescription', function(e){ e.preventDefault(); e.stopPropagation(); const $textarea=$(this).closest('.card').find('.card__textarea'); $textarea.toggleClass('visible'); $(this).text($textarea.hasClass('visible') ? 'скрыть' : 'показать'); })
+                    .off('input', '.parentSearchInput').on('input', '.parentSearchInput', function(){ CardsView.handleSearchInput($(this)); })
+                    .off('click', '.parentSuggestionItem').on('click', '.parentSuggestionItem', function(){ const parentId=$(this).data('card-id'); const cardId=$(this).closest('.card').data('card-id'); if(CardsModel.addParent(cardId,parentId)){ $(this).closest('.suggestions').hide(); $(this).closest('.card__parents').find('.parentSearchInput').val('').focus(); CardsView.updateCardRelations(cardId); CardsView.updateCardRelations(parentId); } })
+                    .off('click', '.parentSearchAdd').on('click', '.parentSearchAdd', function(e){ e.preventDefault(); e.stopPropagation(); const $input=$(this).siblings('.searchInput'); const query=$input.val().trim(); const cardId=$input.closest('.card').data('card-id'); if(!query) return; const newCard=CardsModel.addCard(query); if(CardsModel.addParent(cardId,newCard.id)){ $input.val(''); CardsView.render(); CardsView.updateCardRelations(cardId); setTimeout(()=>CardsView.highlightCard(newCard.id),100); $input.focus(); } })
+                    .off('input', '.childSearchInput').on('input', '.childSearchInput', function(){ CardsView.handleSearchInput($(this)); })
+                    .off('click', '.childSuggestionItem').on('click', '.childSuggestionItem', function(){ const childId=$(this).data('card-id'); const parentId=$(this).closest('.card').data('card-id'); if(CardsModel.addChild(parentId,childId)){ $(this).closest('.suggestions').hide(); $(this).closest('.card__children').find('.childSearchInput').val('').focus(); CardsView.updateCardRelations(parentId); CardsView.updateCardRelations(childId); } })
+                    .off('click', '.childSearchAdd').on('click', '.childSearchAdd', function(e){ e.preventDefault(); e.stopPropagation(); const $input=$(this).siblings('.searchInput'); const query=$input.val().trim(); const parentId=$input.closest('.card').data('card-id'); if(!query) return; const newCard=CardsModel.addCard(query); if(CardsModel.addChild(parentId,newCard.id)){ $input.val(''); CardsView.render(); CardsView.updateCardRelations(parentId); setTimeout(()=>CardsView.highlightCard(newCard.id),100); $input.focus(); } });
             },
-            handleSearchInput: function($input) { const query=$input.val().trim(); const cardId=$input.closest('.card').data('card-id'); const isParent=$input.hasClass('parent-search-input'); const $suggestions=$input.closest(isParent ? '.card__parents' : '.card__children').find(isParent ? '.parent-suggestions' : '.child-suggestions'); if(query.length>0){ const results=CardsModel.searchCards(query,cardId,true); $suggestions.empty(); if(results.length>0){ results.forEach(card=>{ $suggestions.append(`<div class="suggestion-item ${isParent ? 'parent-suggestion-item' : 'child-suggestion-item'}" data-card-id="${card.id}">${CardsView.escapeHtml(card.title) || 'Без названия'}</div>`); }); $suggestions.show(); } else $suggestions.hide(); } else $suggestions.hide(); },
+            handleSearchInput: function($input) { const query=$input.val().trim(); const cardId=$input.closest('.card').data('card-id'); const isParent=$input.hasClass('parentSearchInput'); const $suggestions=$input.closest(isParent ? '.card__parents' : '.card__children').find(isParent ? '.parentSuggestions' : '.childSuggestions'); if(query.length>0){ const results=CardsModel.searchCards(query,cardId,true); $suggestions.empty(); if(results.length>0){ results.forEach(card=>{ $suggestions.append(`<div class="suggestionItem ${isParent ? 'parentSuggestionItem' : 'childSuggestionItem'}" data-card-id="${card.id}">${CardsView.escapeHtml(card.title) || 'Без названия'}</div>`); }); $suggestions.show(); } else $suggestions.hide(); } else $suggestions.hide(); },
             escapeHtml: function(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); },
             highlightCard: (cardId)=>{ const $card=$(`.card[data-card-id="${cardId}"]`); if($card.length){ $card.addClass('highlight'); $card.get(0).scrollIntoView({ behavior: 'auto', block: 'center' }); setTimeout(()=>$card.removeClass('highlight'),1500); } }, 
             updateCardRelations: (cardId)=>{ 
@@ -1205,8 +633,8 @@
                 const $card=$(`.card[data-card-id="${cardId}"]`); 
                 if(!$card.length) return; 
                 const parents=(card.parentIds||[]).map(id=>{ const p=CardsModel.getCard(id); return p?{ id:p.id, title:p.title }:null; }).filter(Boolean); 
-                $card.find('.parents-list').html(parents.map(p=>`<div class="card__parent-item"><span class="mention" data-card-id="${p.id}">${CardsView.escapeHtml(p.title)}</span><button class="action-button remove-parent" data-parent-id="${p.id}">✕</button><button class="action-button action-button--bolder remove-with-card" data-card-id="${p.id}">✕</button></div>`).join('')); 
-                $card.find('.children-list').html((card.children||[]).map(c=>`<div class="card__child-item"><span class="child-link" data-card-id="${c.id}">${CardsView.escapeHtml(c.title)}</span><button class="action-button remove-child" data-child-id="${c.id}">✕</button><button class="action-button action-button--bolder remove-with-card" data-card-id="${c.id}">✕</button></div>`).join('')); 
+                $card.find('.parentsList').html(parents.map(p=>`<div class="card__parentItem"><span class="mention" data-card-id="${p.id}">${CardsView.escapeHtml(p.title)}</span><button class="actionButton removeParent" data-parent-id="${p.id}">✕</button><button class="actionButton actionButton--bolder removeWithCard" data-card-id="${p.id}">✕</button></div>`).join('')); 
+                $card.find('.childrenList').html((card.children||[]).map(c=>`<div class="card__childItem"><span class="childLink" data-card-id="${c.id}">${CardsView.escapeHtml(c.title)}</span><button class="actionButton removeChild" data-child-id="${c.id}">✕</button><button class="actionButton actionButton--bolder removeWithCard" data-card-id="${c.id}">✕</button></div>`).join('')); 
             } 
         };
         
@@ -1251,13 +679,13 @@
                 $('#modeSwitchHeader').on('click',()=>{ this.switchView(this.currentView==='cards'?'journal':'cards'); }); 
                 $('#floatingBtn').on('click',()=>{ JournalController.openAddModal(); }); 
                 $('#globalSearchInput').on('input',(e)=>this.handleGlobalSearch(e.target.value)); 
-                $(document).on('click',(e)=>{ if(!$(e.target).closest('.global-search').length)$('#globalSuggestions').hide(); }); 
+                $(document).on('click',(e)=>{ if(!$(e.target).closest('.globalSearch').length)$('#globalSuggestions').hide(); }); 
             }, 
             switchView: function(view) { 
                 this.currentView=view; 
                 localStorage.setItem('appViewPreference',view); 
                 $('#modeTitle').text(view==='cards'?'Планетаход':'Дневник'); 
-                $('.view-container').removeClass('active'); 
+                $('.viewContainer').removeClass('active'); 
                 $(`#${view}View`).addClass('active'); 
                 if(view==='journal'){ 
                     $('#floatingBtn').show(); 
@@ -1285,14 +713,14 @@
                 const journalResults=JournalModel.searchEntries(query); 
                 const cardResults=CardsModel.searchCards(query,null,false); 
                 const results=[...journalResults,...cardResults]; 
-                if(results.length===0){ $suggestions.html('<div class="global-suggestion-item">Ничего не найдено</div>').show(); return; } 
+                if(results.length===0){ $suggestions.html('<div class="globalSuggestionItem">Ничего не найдено</div>').show(); return; } 
                 $suggestions.empty(); 
                 results.slice(0,10).forEach(item=>{ 
                     const typeLabel=item.type==='journal'?'Запись':'Карточка'; 
-                    $suggestions.append(`<div class="global-suggestion-item" data-id="${item.id}" data-type="${item.type}"><div><span class="suggestion-type">${typeLabel}</span><strong>${this.escapeHtml(item.title)}</strong></div><div style="font-size:11px;color:#888;margin-top:4px;">${item.date || ''}</div></div>`); 
+                    $suggestions.append(`<div class="globalSuggestionItem" data-id="${item.id}" data-type="${item.type}"><div><span class="suggestionType">${typeLabel}</span><strong>${this.escapeHtml(item.title)}</strong></div><div style="font-size:11px;color:#888;margin-top:4px;">${item.date || ''}</div></div>`); 
                 }); 
                 $suggestions.show(); 
-                $('.global-suggestion-item').off('click').on('click',function(){ 
+                $('.globalSuggestionItem').off('click').on('click',function(){ 
                     const id=$(this).data('id'); 
                     const type=$(this).data('type'); 
                     $('#globalSearchInput').val(''); 
