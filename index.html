@@ -519,8 +519,10 @@
                         return;
                     }
                     
+                    // Добавляем timestamp для обхода кеша
+                    const urlWithCacheBust = soundUrl + '?t=' + Date.now();
                     const audio = new Audio();
-                    audio.src = soundUrl;
+                    audio.src = urlWithCacheBust;
                     audio.volume = this.options.soundVolume;
                     
                     let resolved = false;
@@ -549,9 +551,13 @@
                     audio.addEventListener('ended', onEnded);
                     audio.addEventListener('error', onError);
                     
-                    audio.play().catch(() => {
-                        onError();
-                    });
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch((error) => {
+                            this._log('Audio play failed:', error);
+                            onError();
+                        });
+                    }
                     
                     if (this.options.onSoundStart) this.options.onSoundStart(fileName);
                     
@@ -1217,14 +1223,15 @@
         }
         
         // ПРОСТОЕ УДАЛЕНИЕ (без эффектов) - для кнопки рядом с названием
-        async function deleteCardSimple(cardId, cardTitle) {
+        async function deleteCardSimple(cardId, cardTitle, $cardElement) {
             if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}"?`)) return false;
             CardsModel.deleteCard(cardId);
+            if ($cardElement) $cardElement.remove();
             return true;
         }
         
-        // COMBO УДАЛЕНИЕ (со вспышкой и звуком scanner_photo1.wav)
-        async function deleteCardWithCombo(cardId, cardTitle) {
+        // COMBO УДАЛЕНИЕ - карточка исчезает мгновенно, эффекты фоном
+        async function deleteCardWithCombo(cardId, cardTitle, $cardElement) {
             const hasFlashPermission = await PermissionManager.requestFlashPermission();
             const hasSoundPermission = await PermissionManager.requestSoundPermission();
             
@@ -1235,24 +1242,24 @@
             
             if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой и звуком?`)) return false;
             
-            if (hasFlashPermission && hasSoundPermission) {
-                const flash = initFlashModuleWithSound();
-                if (flash) {
-                    await flash.play();
-                }
-            } else if (hasFlashPermission) {
-                const flash = initFlashModule();
-                if (flash) {
-                    await flash.playOnlyFlash();
-                }
-            } else if (hasSoundPermission) {
-                const flash = initFlashModuleWithSound();
-                if (flash) {
-                    await flash.playOnlySound();
-                }
-            }
-            
+            // МГНОВЕННОЕ УДАЛЕНИЕ
             CardsModel.deleteCard(cardId);
+            if ($cardElement) $cardElement.remove();
+            
+            // Эффекты запускаются асинхронно
+            setTimeout(() => {
+                if (hasFlashPermission && hasSoundPermission) {
+                    const flash = initFlashModuleWithSound();
+                    if (flash) flash.play().catch(e => console.warn('Effect error:', e));
+                } else if (hasFlashPermission) {
+                    const flash = initFlashModule();
+                    if (flash) flash.playOnlyFlash().catch(e => console.warn('Flash error:', e));
+                } else if (hasSoundPermission) {
+                    const flash = initFlashModuleWithSound();
+                    if (flash) flash.playOnlySound().catch(e => console.warn('Sound error:', e));
+                }
+            }, 10);
+            
             return true;
         }
         
@@ -1315,25 +1322,22 @@
                     .off('click', '#addCardBtn').on('click', '#addCardBtn', ()=>{ const newCard = CardsModel.addCard(); CardsView.render(); setTimeout(()=>CardsView.highlightCard(newCard.id),100); })
                     .off('click', '#deleteAllBtn').on('click', '#deleteAllBtn', ()=>{ if(CardsModel.cards.length && confirm("Уничтожить все карточки?")){ CardsModel.deleteAllCards(); CardsView.render(); } })
                     
-                    // Верхняя кнопка combo - используем deleteCardWithCombo
+                    // Верхняя кнопка combo
                     .off('click', '.delete-combo').on('click', '.delete-combo', async function(e) { 
                         e.preventDefault(); e.stopPropagation();
                         const $card = $(this).closest('.card'); 
                         const cardId = $card.data('card-id'); 
                         const card = CardsModel.getCard(cardId); 
-                        const success = await deleteCardWithCombo(cardId, card?.title);
-                        if (success) { $card.remove(); }
+                        await deleteCardWithCombo(cardId, card?.title, $card);
                     })
                     
-                    // Кнопка удаления рядом с названием - используем deleteCardSimple (как во втором скрипте)
+                    // Кнопка удаления рядом с названием
                     .off('click', '.card__header .button--danger').on('click', '.card__header .button--danger', async function(e){ 
                         e.preventDefault(); 
-                        const cardId = $(this).closest('.card').data('card-id'); 
+                        const $card = $(this).closest('.card'); 
+                        const cardId = $card.data('card-id'); 
                         const card = CardsModel.getCard(cardId); 
-                        const success = await deleteCardSimple(cardId, card?.title);
-                        if (success) { 
-                            $(this).closest('.card').remove(); 
-                        } 
+                        await deleteCardSimple(cardId, card?.title, $card);
                     })
                     
                     .off('input', '.card__title').on('input', '.card__title', function(){ 
@@ -1479,6 +1483,24 @@
                 this.bindEvents(); 
                 initFlashModule();
                 initFlashModuleWithSound();
+                
+                // Активация аудио при первом касании (для мобильных)
+                const activateAudio = () => {
+                    const flash = initFlashModuleWithSound();
+                    if (flash && flash.audioCtx && flash.audioCtx.state === 'suspended') {
+                        flash.audioCtx.resume().catch(e => console.warn('AudioContext activation failed:', e));
+                    }
+                    // Создаём "тихий" Audio элемент для активации
+                    const silentAudio = new Audio();
+                    silentAudio.volume = 0;
+                    silentAudio.play().catch(() => {});
+                    
+                    document.removeEventListener('touchstart', activateAudio);
+                    document.removeEventListener('click', activateAudio);
+                };
+                
+                document.addEventListener('touchstart', activateAudio);
+                document.addEventListener('click', activateAudio);
             }, 
             bindEvents: function() { 
                 $('#modeSwitchHeader').on('click',()=>{ this.switchView(this.currentView==='cards'?'journal':'cards'); }); 
