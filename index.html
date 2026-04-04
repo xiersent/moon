@@ -116,6 +116,15 @@
             .fullscreenModal__actions{flex-wrap:nowrap;}
             .fullscreenModal__datetime{flex-direction:row;}
         }
+        .delete-buttons-group {
+            display: flex;
+            gap: 4px;
+        }
+        .delete-buttons-group .button {
+            min-width: 36px;
+            width: 36px;
+            padding: 8px 0;
+        }
     </style>
 </head>
 <body>
@@ -212,8 +221,12 @@
             
             <div class="card__header">
                 <input type="text" class="card__title" value="<%= title %>" placeholder="<%= placeholder %>">
-                <button class="button button--danger">✕</button>
-                <button class="button button--danger-flash">✕</button>
+                <div class="delete-buttons-group">
+                    <button class="button button--danger-simple" data-delete-type="simple" title="Обычное удаление">✕</button>
+                    <button class="button button--danger-flash" data-delete-type="flash" title="Удаление со вспышкой">✕</button>
+                    <button class="button button--danger-sound" data-delete-type="sound" title="Удаление со звуком">✕</button>
+                    <button class="button button--danger-combo" data-delete-type="combo" title="Удаление со вспышкой и звуком">✕</button>
+                </div>
             </div>
             
 			<div class="card__description">
@@ -391,7 +404,6 @@
             migrateCard: function(card) {
                 let changed = false;
                 
-                // 1. Конвертируем createdAt в ISO
                 if (card.createdAt && typeof card.createdAt === 'string') {
                     if (!card.createdAt.includes('T') || !card.createdAt.includes('Z')) {
                         card.createdAt = DateUtils.localToISO(card.createdAt);
@@ -402,7 +414,6 @@
                     changed = true;
                 }
                 
-                // 2. Конвертируем bumpedAt в ISO (если есть)
                 if (card.bumpedAt && typeof card.bumpedAt === 'string') {
                     if (!card.bumpedAt.includes('T') || !card.bumpedAt.includes('Z')) {
                         card.bumpedAt = DateUtils.localToISO(card.bumpedAt);
@@ -410,7 +421,6 @@
                     }
                 }
                 
-                // 3. Очищаем bumpedAt, если он равен createdAt
                 if (card.bumpedAt && card.bumpedAt === card.createdAt) {
                     card.bumpedAt = null;
                     changed = true;
@@ -428,9 +438,7 @@
                     card.placeholder = `Карточка от ${date.toLocaleDateString()} ${date.toLocaleTimeString().slice(0,5)}`;
                     changed = true;
                 }
-                // Добавляем поле isDescriptionVisible, если его нет
                 if (card.isDescriptionVisible === undefined) {
-                    // По умолчанию видимо, если есть контент
                     card.isDescriptionVisible = card.content && card.content.trim().length > 0;
                     changed = true;
                 }
@@ -438,26 +446,20 @@
                 return changed;
             },
             
-            // === НОВАЯ СОРТИРОВКА ===
-            // Бампнутые сверху (по убыванию даты бампа — свежие выше)
-            // Обычные снизу (по возрастанию даты создания — старые выше, новые ниже)
             sortCards: function() {
                 if (!this.cards || this.cards.length === 0) return;
                 this.cards.sort((a, b) => {
                     const aHasBump = a.bumpedAt !== null && a.bumpedAt !== undefined;
                     const bHasBump = b.bumpedAt !== null && b.bumpedAt !== undefined;
                     
-                    // Бампнутые всегда выше обычных
                     if (aHasBump !== bHasBump) {
                         return aHasBump ? -1 : 1;
                     }
                     
-                    // Обе бампнутые: сортировка по убыванию (свежий бамп выше)
                     if (aHasBump) {
                         return new Date(b.bumpedAt) - new Date(a.bumpedAt);
                     }
                     
-                    // Обе обычные: сортировка по возрастанию (старые выше, новые ниже)
                     return new Date(a.createdAt) - new Date(b.createdAt);
                 });
             },
@@ -484,7 +486,7 @@
                     createdAt: nowISO,
                     bumpedAt: null,
                     isEmpty: !hasTitle,
-                    isDescriptionVisible: false // По умолчанию скрыто для новой карточки
+                    isDescriptionVisible: false
                 }; 
                 this.cards.push(newCard); 
                 this.saveState(); 
@@ -648,9 +650,6 @@
                 })); 
             },
             
-            // === НОВЫЙ БАМП ===
-            // Устанавливает bumpedAt = текущее время
-            // При сортировке бампнутые идут сверху по убыванию → свежий бамп будет наверху
             bumpCard: function(cardId) {
                 const card = this.getCard(cardId);
                 if (!card) return false;
@@ -724,7 +723,43 @@
             }
         };
         
-        // ==================== FLASH МОДУЛЬ ====================
+        // ==================== СИСТЕМА РАЗРЕШЕНИЙ ДЛЯ ЭФФЕКТОВ ====================
+        const PermissionManager = {
+            FLASH_KEY: 'effect_permission_flash',
+            SOUND_KEY: 'effect_permission_sound',
+            
+            requestFlashPermission: async function() {
+                const saved = localStorage.getItem(this.FLASH_KEY);
+                if (saved === 'granted') return true;
+                if (saved === 'denied') return false;
+                
+                const result = confirm('⚠️ Для использования эффекта ВСПЫШКИ требуется ваше разрешение.\n\nРазрешить?');
+                if (result) {
+                    localStorage.setItem(this.FLASH_KEY, 'granted');
+                    return true;
+                } else {
+                    localStorage.setItem(this.FLASH_KEY, 'denied');
+                    return false;
+                }
+            },
+            
+            requestSoundPermission: async function() {
+                const saved = localStorage.getItem(this.SOUND_KEY);
+                if (saved === 'granted') return true;
+                if (saved === 'denied') return false;
+                
+                const result = confirm('🔊 Для использования эффекта ЗВУКА требуется ваше разрешение.\n\nРазрешить?');
+                if (result) {
+                    localStorage.setItem(this.SOUND_KEY, 'granted');
+                    return true;
+                } else {
+                    localStorage.setItem(this.SOUND_KEY, 'denied');
+                    return false;
+                }
+            }
+        };
+        
+        // ==================== ЭФФЕКТЫ УДАЛЕНИЯ ====================
         let flashModule = null;
         
         function initFlashModule() {
@@ -740,20 +775,107 @@
             return flashModule;
         }
         
-        async function deleteCardWithFlash(cardId, cardTitle) {
-            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}"?`)) return;
-            
+        // Простой звук через Web Audio API
+        function playBeepSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 880;
+                gainNode.gain.value = 0.3;
+                
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+                oscillator.stop(audioContext.currentTime + 0.5);
+                
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            } catch(e) {
+                console.warn('Audio error:', e);
+            }
+        }
+        
+        // Вспышка (только через FlashModule, без fallback)
+        async function playFlash() {
             const flash = initFlashModule();
             if (flash) {
-                try {
-                    await flash.play();
-                } catch(e) {
-                    console.warn('Flash error:', e);
-                }
+                await flash.play();
+            } else {
+                // Если FlashModule не доступен — ничего не делаем
+                console.warn('FlashModule not available');
+            }
+        }
+        
+        // 1. Простое удаление (всегда работает)
+        async function deleteCardSimple(cardId, cardTitle) {
+            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}"?`)) return false;
+            CardsModel.deleteCard(cardId);
+            return true;
+        }
+        
+        // 2. Удаление ТОЛЬКО со вспышкой
+        async function deleteCardWithFlash(cardId, cardTitle) {
+            const hasPermission = await PermissionManager.requestFlashPermission();
+            if (!hasPermission) {
+                alert('❌ Вы запретили использование вспышки. Удаление отменено.');
+                return false;
+            }
+            
+            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой?`)) return false;
+            
+            await playFlash();
+            CardsModel.deleteCard(cardId);
+            return true;
+        }
+        
+        // 3. Удаление ТОЛЬКО со звуком
+        async function deleteCardWithSound(cardId, cardTitle) {
+            const hasPermission = await PermissionManager.requestSoundPermission();
+            if (!hasPermission) {
+                alert('❌ Вы запретили использование звука. Удаление отменено.');
+                return false;
+            }
+            
+            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со звуком?`)) return false;
+            
+            playBeepSound();
+            CardsModel.deleteCard(cardId);
+            return true;
+        }
+        
+        // 4. Комбинированное удаление (звук + вспышка)
+        async function deleteCardWithCombo(cardId, cardTitle) {
+            const hasFlashPermission = await PermissionManager.requestFlashPermission();
+            const hasSoundPermission = await PermissionManager.requestSoundPermission();
+            
+            if (!hasFlashPermission && !hasSoundPermission) {
+                alert('❌ Вы запретили использование и вспышки, и звука. Удаление отменено.');
+                return false;
+            }
+            
+            if (!hasFlashPermission) {
+                alert('⚠️ Вы запретили вспышку. Будет использован только звук.');
+            }
+            if (!hasSoundPermission) {
+                alert('⚠️ Вы запретили звук. Будет использована только вспышка.');
+            }
+            
+            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой и звуком?`)) return false;
+            
+            if (hasFlashPermission) {
+                await playFlash();
+            }
+            if (hasSoundPermission) {
+                playBeepSound();
             }
             
             CardsModel.deleteCard(cardId);
-            $(`.card[data-card-id="${cardId}"]`).remove();
+            return true;
         }
         
         // ==================== ПРЕДСТАВЛЕНИЕ КАРТОЧЕК ====================
@@ -765,11 +887,9 @@
                     const createdAtFormatted = DateUtils.formatForDisplay(card.createdAt);
                     const bumpedAtFormatted = card.bumpedAt ? DateUtils.formatForDisplay(card.bumpedAt) : null;
                     
-                    // Определяем, должно ли описание быть видимым
                     const hasContent = card.content && card.content.trim().length > 0;
                     let isDescriptionVisible = card.isDescriptionVisible;
                     
-                    // Если описания нет, то оно не может быть видимым
                     if (!hasContent) {
                         isDescriptionVisible = false;
                         if (card.isDescriptionVisible !== false) {
@@ -778,7 +898,6 @@
                         }
                     }
                     
-                    // Если есть описание, но isDescriptionVisible не установлен, показываем его
                     if (hasContent && isDescriptionVisible === undefined) {
                         isDescriptionVisible = true;
                         card.isDescriptionVisible = true;
@@ -798,7 +917,6 @@
                 }); 
                 CardsView.bindEvents(); 
                 
-                // Применяем стиль жирности к кнопкам после рендеринга
                 $('.toggleDescription').each(function() {
                     const $btn = $(this);
                     const $card = $btn.closest('.card');
@@ -818,15 +936,52 @@
                 $(document)
                     .off('click', '#addCardBtn').on('click', '#addCardBtn', ()=>{ const newCard = CardsModel.addCard(); CardsView.render(); setTimeout(()=>CardsView.highlightCard(newCard.id),100); })
                     .off('click', '#deleteAllBtn').on('click', '#deleteAllBtn', ()=>{ if(CardsModel.cards.length && confirm("Уничтожить все карточки?")){ CardsModel.deleteAllCards(); CardsView.render(); } })
-                    .off('click', '.card__header .button--danger').on('click', '.card__header .button--danger', function(e){ e.preventDefault(); const cardId=$(this).closest('.card').data('card-id'); const card=CardsModel.getCard(cardId); if(confirm(`Уничтожить карточку "${card?.title||'без названия'}"?`)){ CardsModel.deleteCard(cardId); $(this).closest('.card').remove(); } })
-                    .off('click', '.button--danger-flash').on('click', '.button--danger-flash', function(e) { 
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const $card = $(this).closest('.card');
-                        const cardId = $card.data('card-id');
-                        const card = CardsModel.getCard(cardId);
-                        deleteCardWithFlash(cardId, card?.title);
+                    
+                    // Четыре кнопки удаления (все с крестиком)
+                    .off('click', '.button--danger-simple').on('click', '.button--danger-simple', async function(e) { 
+                        e.preventDefault(); 
+                        const $card = $(this).closest('.card'); 
+                        const cardId = $card.data('card-id'); 
+                        const card = CardsModel.getCard(cardId); 
+                        const success = await deleteCardSimple(cardId, card?.title);
+                        if (success) { 
+                            $card.remove(); 
+                        }
                     })
+                    .off('click', '.button--danger-flash').on('click', '.button--danger-flash', async function(e) { 
+                        e.preventDefault(); 
+                        e.stopPropagation();
+                        const $card = $(this).closest('.card'); 
+                        const cardId = $card.data('card-id'); 
+                        const card = CardsModel.getCard(cardId); 
+                        const success = await deleteCardWithFlash(cardId, card?.title);
+                        if (success) { 
+                            $card.remove(); 
+                        }
+                    })
+                    .off('click', '.button--danger-sound').on('click', '.button--danger-sound', async function(e) { 
+                        e.preventDefault(); 
+                        e.stopPropagation();
+                        const $card = $(this).closest('.card'); 
+                        const cardId = $card.data('card-id'); 
+                        const card = CardsModel.getCard(cardId); 
+                        const success = await deleteCardWithSound(cardId, card?.title);
+                        if (success) { 
+                            $card.remove(); 
+                        }
+                    })
+                    .off('click', '.button--danger-combo').on('click', '.button--danger-combo', async function(e) { 
+                        e.preventDefault(); 
+                        e.stopPropagation();
+                        const $card = $(this).closest('.card'); 
+                        const cardId = $card.data('card-id'); 
+                        const card = CardsModel.getCard(cardId); 
+                        const success = await deleteCardWithCombo(cardId, card?.title);
+                        if (success) { 
+                            $card.remove(); 
+                        }
+                    })
+                    
                     .off('input', '.card__title').on('input', '.card__title', function(){ 
                         const cardId=$(this).closest('.card').data('card-id'); 
                         const newTitle = $(this).val();
@@ -837,7 +992,6 @@
                         const newContent = $(this).val();
                         CardsModel.updateCard(cardId, { content: newContent }); 
                         
-                        // Обновляем стиль кнопки показа/скрытия
                         const $card = $(this).closest('.card');
                         const $toggleBtn = $card.find('.toggleDescription');
                         const hasContent = newContent && newContent.trim().length > 0;
@@ -883,13 +1037,10 @@
                         $textarea.toggleClass('visible');
                         const isNowVisible = $textarea.hasClass('visible');
                         
-                        // Сохраняем состояние видимости в модель
                         CardsModel.updateDescriptionVisibility(cardId, isNowVisible);
                         
-                        // Обновляем текст кнопки
                         $btn.text(isNowVisible ? 'скрыть' : 'показать');
                         
-                        // Делаем кнопку жирной, если есть описание, но оно скрыто
                         if (hasContent && !isNowVisible) {
                             $btn.addClass('addTextButton--bold');
                         } else {
