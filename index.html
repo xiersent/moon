@@ -9,7 +9,6 @@
     <title>Заразка</title>
     <script src="vendor/js/jquery-3.6.0.min.js"></script>
     <script src="vendor/js/ejs.min.js"></script>
-    <script src="vendor/js/flash.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#f5f5f5;min-height:100vh;padding:16px;padding-bottom:90px;line-height:1.5;overflow-y:scroll;}
@@ -21,7 +20,6 @@
         .button{padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:14px;font-weight:400;cursor:pointer;background:#e0e0e0;color:#333;height:36px;line-height:1;display:inline-flex;align-items:center;justify-content:center;}
         .bumpTextButton{background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0;margin-left:8px;}
         
-        /* Карточка с относительным позиционированием для абсолютных кнопок */
         .card {
             background:#fff;
             padding:12px;
@@ -32,35 +30,35 @@
             position: relative;
         }
         
-		/* Абсолютный блок с кнопками удаления — сверху по центру, выступает над карточкой */
-		.card__delete-buttons-absolute {
-			position: absolute;
-			top: -12px;
-			left: 50%;
-			transform: translateX(-50%);
-			display: flex;
-			flex-direction: row;
-			justify-content: center;
-			gap: 4px;
-			z-index: 10;
-		}
+        .card__delete-buttons-absolute {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 6px;
+            z-index: 10;
+        }
         
         .card__delete-buttons-absolute .delete-btn {
-            width: 28px;
-            height: 28px;
-            min-width: 28px;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
             padding: 0;
-            border-radius: 14px;
+            border-radius: 16px;
             background: #e0e0e0;
             border: 1px solid #ccc;
             color: #333;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.1s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         
         .card__delete-buttons-absolute .delete-btn:active {
@@ -68,24 +66,23 @@
             background: #ccc;
         }
         
-        /* Для мобильных устройств кнопки чуть меньше */
         @media (max-width: 600px) {
             .card__delete-buttons-absolute .delete-btn {
-                width: 24px;
-                height: 24px;
-                min-width: 24px;
-                font-size: 12px;
+                width: 28px;
+                height: 28px;
+                min-width: 28px;
+                font-size: 14px;
             }
             .card__delete-buttons-absolute {
-                right: -6px;
+                gap: 4px;
             }
         }
         
         .card__childItem{display:flex;align-items:center;background:#f8f8f8;border-radius:6px;font-size:13px;border:1px solid #ddd;gap:3px;padding:3px;padding-left:8px;}
         .card__children{margin-bottom:10px;display:flex;flex-direction:column;gap:10px;}
-		.card__childrenTitle{font-weight:500;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+        .card__childrenTitle{font-weight:500;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
         .card__content{width:100%;display:flex;flex-direction:column;gap:12px;}
-		.card__description{margin-bottom:10px;display:flex;flex-direction:column;gap:10px;}
+        .card__description{margin-bottom:10px;display:flex;flex-direction:column;gap:10px;}
         .card__descriptionTitle{font-weight:500;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
         .card__footer{font-size:11px;color:#999;padding-top:6px;border-top:1px solid #eee;}
         .card__footerContent{display:flex;justify-content:space-between;align-items:center;width:100%;}
@@ -157,16 +154,7 @@
         .searchInput{flex:1;padding:0 8px;border:1px solid #ddd;border-radius:6px;font-size:14px;background:#fff;height:36px;}
         .suggestionItem{padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f0f0f0;min-height:36px;}
         .suggestionType{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;margin-right:8px;font-weight:500;background:#e3f2fd;color:#1976d2;}
-        .suggestions{position: absolute;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  max-height: 200px;
-  overflow-y: auto;
-  z-index: 1000;
-  left: 0;
-  right: 0;
-  top: 100%;}
+        .suggestions{position: absolute;background: white;border: 1px solid #ddd;border-radius: 6px;max-height: 200px;overflow-y: auto;z-index: 1000;left: 0;right: 0;top: 100%;}
         .viewContainer{display:none;}
         .viewContainer.active{display:block;}
         @keyframes highlightPulse{0%{background:#fff3bf;}100%{background:#fff9c4;}}
@@ -248,12 +236,11 @@
 
     <script type="text/ejs" id="cardTemplate">
         <div class="card" data-card-id="<%= id %>">
-            <!-- Абсолютный блок с 4 кнопками удаления (справа, по центру карточки) -->
             <div class="card__delete-buttons-absolute">
-                <button class="delete-btn delete-simple" data-delete-type="simple" title="Обычное удаление">✕</button>
-                <button class="delete-btn delete-flash" data-delete-type="flash" title="Удаление со вспышкой">✕</button>
-                <button class="delete-btn delete-sound" data-delete-type="sound" title="Удаление с длинным звуком">✕</button>
-                <button class="delete-btn delete-combo" data-delete-type="combo" title="Удаление со вспышкой и длинным звуком">✕</button>
+                <button class="delete-btn delete-simple" data-delete-type="simple">✕</button>
+                <button class="delete-btn delete-flash" data-delete-type="flash">✕</button>
+                <button class="delete-btn delete-sound" data-delete-type="sound">✕</button>
+                <button class="delete-btn delete-combo" data-delete-type="combo">✕</button>
             </div>
             
             <div class="card__parents">
@@ -282,51 +269,51 @@
                 <input type="text" class="card__title" value="<%= title %>" placeholder="<%= placeholder %>">
             </div>
             
-			<div class="card__description">
-				<div class="card__descriptionTitle">
-					Описание:
-					<button class="addTextButton toggleDescription" data-is-visible="<%= isDescriptionVisible %>" data-has-content="<%= content && content.trim() ? 'true' : 'false' %>">
-						<% if (isDescriptionVisible === 'true') { %>скрыть<% } else { %>показать<% } %>
-					</button>
-				</div>
-				
-				<textarea class="card__textarea <%= isDescriptionVisible === 'true' ? 'visible' : '' %>" placeholder="Содержание карточки..."><%= content %></textarea>
-			</div>
+            <div class="card__description">
+                <div class="card__descriptionTitle">
+                    Описание:
+                    <button class="addTextButton toggleDescription" data-is-visible="<%= isDescriptionVisible %>">
+                        <% if (isDescriptionVisible === 'true') { %>скрыть<% } else { %>показать<% } %>
+                    </button>
+                </div>
+                
+                <textarea class="card__textarea <%= isDescriptionVisible === 'true' ? 'visible' : '' %>" placeholder="Содержание карточки..."><%= content %></textarea>
+            </div>
 
-			<div class="card__children">
-				<div class="card__childrenTitle">
-					Дочерние карточки:
-					<button class="addTextButton toggleChildSearch">добавить</button>
-				</div>
-				<div class="searchContainer childSearchContainer">
-					<input type="text" class="searchInput childSearchInput" placeholder="Поиск дочерних карточек..." data-card-id="<%= id %>">
-					<button class="button button--success childSearchAdd"><span class="plus">✕</span></button>
-				</div>
-				<div class="suggestions childSuggestions"></div>
-				
-				<div class="childrenList">
-					<% children.forEach(function(child) { %>
-						<div class="card__childItem">
-							<span class="childLink" data-card-id="<%= child.id %>"><%= child.title %></span>
-							<button class="actionButton removeChild" data-child-id="<%= child.id %>">✕</button>
-							<button class="actionButton actionButton--bolder removeWithCard" data-card-id="<%= child.id %>">✕</button>
-						</div>
-					<% }); %>
-				</div>
-			</div>
-			
-			<% if (mentions.length > 0) { %>
-				<div class="card__mentions">
-					<div class="card__mentions-title">Упоминается в:</div>
-					<% mentions.forEach(function(mention) { %>
-						<div class="card__mention-item">
-							<span class="mention" data-card-id="<%= mention.sourceCard.id %>">
-								<%= mention.sourceCard.title %>
-							</span>
-						</div>
-					<% }); %>
-				</div>
-			<% } %>
+            <div class="card__children">
+                <div class="card__childrenTitle">
+                    Дочерние карточки:
+                    <button class="addTextButton toggleChildSearch">добавить</button>
+                </div>
+                <div class="searchContainer childSearchContainer">
+                    <input type="text" class="searchInput childSearchInput" placeholder="Поиск дочерних карточек..." data-card-id="<%= id %>">
+                    <button class="button button--success childSearchAdd"><span class="plus">✕</span></button>
+                </div>
+                <div class="suggestions childSuggestions"></div>
+                
+                <div class="childrenList">
+                    <% children.forEach(function(child) { %>
+                        <div class="card__childItem">
+                            <span class="childLink" data-card-id="<%= child.id %>"><%= child.title %></span>
+                            <button class="actionButton removeChild" data-child-id="<%= child.id %>">✕</button>
+                            <button class="actionButton actionButton--bolder removeWithCard" data-card-id="<%= child.id %>">✕</button>
+                        </div>
+                    <% }); %>
+                </div>
+            </div>
+            
+            <% if (mentions.length > 0) { %>
+                <div class="card__mentions">
+                    <div class="card__mentions-title">Упоминается в:</div>
+                    <% mentions.forEach(function(mention) { %>
+                        <div class="card__mention-item">
+                            <span class="mention" data-card-id="<%= mention.sourceCard.id %>">
+                                <%= mention.sourceCard.title %>
+                            </span>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } %>
 
             <div class="card__footer">
                 <div class="card__footerContent">
@@ -340,13 +327,430 @@
     </script>
 
     <script>
+        // ==================== FLASH MODULE ====================
+        class FlashModule {
+            constructor(options = {}) {
+                this.options = {
+                    soundPath: '/sounds/',
+                    soundFile: null,
+                    flashDuration: 200,
+                    soundVolume: 0.8,
+                    useBuiltinSound: true,
+                    builtinSoundDuration: 3000,
+                    builtinSoundFrequency: 880,
+                    soundEnabled: true,
+                    onReady: null,
+                    onError: null,
+                    onSoundStart: null,
+                    onSoundEnd: null,
+                    onFlashStart: null,
+                    onFlashEnd: null,
+                    debug: false,
+                    ...options
+                };
 
+                this.videoTrack = null;
+                this.mediaStream = null;
+                this.torchReady = false;
+                this.isFlashing = false;
+                this.isPlaying = false;
+                this.audioElement = null;
+                this.audioCtx = null;
+                this.useBuiltin = !this.options.soundFile;
+                
+                this.initCamera = this.initCamera.bind(this);
+                this.play = this.play.bind(this);
+                this.playOnlyFlash = this.playOnlyFlash.bind(this);
+                this.playOnlySound = this.playOnlySound.bind(this);
+                this.blink = this.blink.bind(this);
+                this.playSound = this.playSound.bind(this);
+                this.setSound = this.setSound.bind(this);
+                this.releaseCamera = this.releaseCamera.bind(this);
+                
+                if (options.autoInit) {
+                    this.initCamera();
+                }
+            }
+            
+            async setSound(fileName) {
+                if (!fileName) {
+                    this.useBuiltin = true;
+                    this.options.soundFile = null;
+                    this._log("Переключено на встроенный длинный звук");
+                    return true;
+                }
+                
+                this.options.soundFile = fileName;
+                const exists = await this._checkSoundFile(fileName);
+                
+                if (exists) {
+                    this.useBuiltin = false;
+                    this._log(`Звук установлен: ${fileName}`);
+                    return true;
+                } else {
+                    this._log(`Файл ${fileName} не найден, используем встроенный длинный звук`);
+                    this.useBuiltin = true;
+                    return false;
+                }
+            }
+            
+            async _checkSoundFile(fileName) {
+                const url = this.getSoundUrl(fileName);
+                if (!url) return false;
+                try {
+                    const response = await fetch(url, { method: 'HEAD' });
+                    return response.ok;
+                } catch(e) {
+                    return false;
+                }
+            }
+            
+            getSoundUrl(fileName = null) {
+                const file = fileName || this.options.soundFile;
+                if (!file) return null;
+                const basePath = this.options.soundPath.replace(/\/$/, '');
+                return `${basePath}/${file}`;
+            }
+            
+            async initCamera() {
+                if (this.videoTrack && this.torchReady && this.videoTrack.readyState === 'live') {
+                    return true;
+                }
+                
+                if (this.videoTrack || this.mediaStream) {
+                    await this.releaseCamera();
+                }
+                
+                this._log("Инициализация камеры...");
+                
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: { exact: "environment" } }
+                    });
+                    
+                    this.mediaStream = stream;
+                    const tracks = stream.getVideoTracks();
+                    
+                    if (!tracks.length) {
+                        throw new Error("Нет видеодорожек");
+                    }
+                    
+                    this.videoTrack = tracks[0];
+                    
+                    let torchSupported = false;
+                    try {
+                        const caps = this.videoTrack.getCapabilities();
+                        torchSupported = caps && caps.torch === true;
+                        this._log(`Torch поддержка: ${torchSupported}`);
+                    } catch(e) {
+                        this._log("Не удалось получить capabilities");
+                    }
+                    
+                    if (!torchSupported) {
+                        throw new Error("Torch API не поддерживается (нужен Android Chrome)");
+                    }
+                    
+                    await this.videoTrack.applyConstraints({ advanced: [{ torch: false }] });
+                    this.torchReady = true;
+                    
+                    this._log("Камера готова");
+                    if (this.options.onReady) this.options.onReady();
+                    return true;
+                    
+                } catch (err) {
+                    this._logError("Ошибка:", err);
+                    if (this.options.onError) this.options.onError(err);
+                    return false;
+                }
+            }
+            
+            async _setTorch(state) {
+                if (!this.torchReady || !this.videoTrack) {
+                    throw new Error("Камера не готова");
+                }
+                await this.videoTrack.applyConstraints({
+                    advanced: [{ torch: state }]
+                });
+            }
+            
+            async blink(durationMs = null) {
+                const flashTime = durationMs !== null ? durationMs : this.options.flashDuration;
+                
+                if (this.isFlashing) return false;
+                
+                if (!this.torchReady) {
+                    const success = await this.initCamera();
+                    if (!success) return false;
+                }
+                
+                this.isFlashing = true;
+                if (this.options.onFlashStart) this.options.onFlashStart(flashTime);
+                
+                try {
+                    await this._setTorch(true);
+                    await new Promise(r => setTimeout(r, flashTime));
+                    await this._setTorch(false);
+                    if (this.options.onFlashEnd) this.options.onFlashEnd(flashTime);
+                    return true;
+                } catch (err) {
+                    this._logError("Ошибка вспышки:", err);
+                    try { await this._setTorch(false); } catch(e) {}
+                    return false;
+                } finally {
+                    this.isFlashing = false;
+                }
+            }
+            
+            async playSound(fileName = null) {
+                const targetFile = fileName || this.options.soundFile;
+                
+                if (targetFile && !this.useBuiltin) {
+                    const success = await this._playFileSound(targetFile);
+                    if (success) return;
+                    this.useBuiltin = true;
+                }
+                
+                return this._playBuiltinSound();
+            }
+            
+            async _playFileSound(fileName) {
+                return new Promise((resolve) => {
+                    const soundUrl = this.getSoundUrl(fileName);
+                    if (!soundUrl) {
+                        resolve(false);
+                        return;
+                    }
+                    
+                    const audio = new Audio();
+                    audio.src = soundUrl;
+                    audio.volume = this.options.soundVolume;
+                    
+                    let resolved = false;
+                    
+                    const onEnded = () => {
+                        if (resolved) return;
+                        resolved = true;
+                        cleanup();
+                        if (this.options.onSoundEnd) this.options.onSoundEnd();
+                        resolve(true);
+                    };
+                    
+                    const onError = () => {
+                        if (resolved) return;
+                        resolved = true;
+                        cleanup();
+                        this._log(`Файл ${fileName} не воспроизвёлся`);
+                        resolve(false);
+                    };
+                    
+                    const cleanup = () => {
+                        audio.removeEventListener('ended', onEnded);
+                        audio.removeEventListener('error', onError);
+                    };
+                    
+                    audio.addEventListener('ended', onEnded);
+                    audio.addEventListener('error', onError);
+                    
+                    audio.play().catch(() => {
+                        onError();
+                    });
+                    
+                    if (this.options.onSoundStart) this.options.onSoundStart(fileName);
+                    
+                    setTimeout(() => {
+                        if (!resolved) {
+                            resolved = true;
+                            cleanup();
+                            if (!audio.paused) audio.pause();
+                            resolve(false);
+                        }
+                    }, 10000);
+                });
+            }
+            
+            async _playBuiltinSound() {
+                const duration = 3000;
+                const frequency = this.options.builtinSoundFrequency;
+                
+                if (!window.AudioContext && !window.webkitAudioContext) {
+                    this._log("Web Audio не поддерживается");
+                    return false;
+                }
+                
+                if (!this.audioCtx) {
+                    try {
+                        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    } catch(e) {
+                        this._logError("Не удалось создать AudioContext");
+                        return false;
+                    }
+                }
+                
+                if (this.audioCtx.state === 'suspended') {
+                    await this.audioCtx.resume();
+                }
+                
+                return new Promise((resolve) => {
+                    const now = this.audioCtx.currentTime;
+                    const durationSec = duration / 1000;
+                    
+                    const gainNode = this.audioCtx.createGain();
+                    gainNode.gain.setValueAtTime(this.options.soundVolume, now);
+                    
+                    const fadeStart = Math.max(0, durationSec - 0.3);
+                    if (fadeStart > 0) {
+                        gainNode.gain.setValueAtTime(this.options.soundVolume, now + fadeStart);
+                        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+                    } else {
+                        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+                    }
+                    
+                    const oscillator = this.audioCtx.createOscillator();
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = frequency;
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioCtx.destination);
+                    oscillator.start();
+                    oscillator.stop(now + durationSec);
+                    
+                    if (this.options.onSoundStart) this.options.onSoundStart('[встроенный ДЛИННЫЙ звук]');
+                    
+                    setTimeout(() => {
+                        if (this.options.onSoundEnd) this.options.onSoundEnd();
+                        resolve(true);
+                    }, duration + 20);
+                });
+            }
+            
+            async play() {
+                if (this.isPlaying) {
+                    this._log("Уже выполняется");
+                    return false;
+                }
+                
+                this.isPlaying = true;
+                
+                const cameraPromise = this.initCamera();
+                
+                if (this.options.soundEnabled) {
+                    await this.playSound();
+                }
+                
+                await cameraPromise;
+                await new Promise(r => setTimeout(r, 40));
+                const result = await this.blink();
+                
+                this.isPlaying = false;
+                return result;
+            }
+            
+            async playOnlyFlash() {
+                if (this.isPlaying) {
+                    this._log("Уже выполняется");
+                    return false;
+                }
+                
+                this.isPlaying = true;
+                
+                const cameraPromise = this.initCamera();
+                
+                await cameraPromise;
+                await new Promise(r => setTimeout(r, 40));
+                const result = await this.blink();
+                
+                this.isPlaying = false;
+                return result;
+            }
+            
+            async playOnlySound() {
+                if (this.isPlaying) {
+                    this._log("Уже выполняется");
+                    return false;
+                }
+                
+                this.isPlaying = true;
+                
+                if (this.options.soundEnabled) {
+                    await this.playSound();
+                }
+                
+                this.isPlaying = false;
+                return true;
+            }
+            
+            async releaseCamera() {
+                if (this.videoTrack) {
+                    try {
+                        await this._setTorch(false);
+                        this.videoTrack.stop();
+                    } catch(e) {}
+                    this.videoTrack = null;
+                }
+                if (this.mediaStream) {
+                    this.mediaStream.getTracks().forEach(track => track.stop());
+                    this.mediaStream = null;
+                }
+                this.torchReady = false;
+            }
+            
+            destroy() {
+                this.releaseCamera();
+                if (this.audioCtx) {
+                    this.audioCtx.close().catch(()=>{});
+                    this.audioCtx = null;
+                }
+                this.isPlaying = false;
+                this.isFlashing = false;
+            }
+            
+            setFlashDuration(ms) {
+                this.options.flashDuration = ms;
+            }
+            
+            getFlashDuration() {
+                return this.options.flashDuration;
+            }
+            
+            setVolume(vol) {
+                this.options.soundVolume = Math.min(1, Math.max(0, vol));
+            }
+            
+            setSoundEnabled(enabled) {
+                this.options.soundEnabled = enabled;
+                this._log(`Звук ${enabled ? 'включён' : 'выключен'}`);
+            }
+            
+            isSoundEnabled() {
+                return this.options.soundEnabled;
+            }
+            
+            setBuiltinSoundDuration(ms) {
+                this._log("Предупреждение: встроенный звук всегда длится 3000 мс");
+                this.options.builtinSoundDuration = 3000;
+            }
+            
+            setBuiltinSoundFrequency(freq) {
+                this.options.builtinSoundFrequency = freq;
+            }
+            
+            isTorchSupported() {
+                return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+            }
+            
+            _log(...args) {
+                if (this.options.debug) console.log("[FlashModule]", ...args);
+            }
+            
+            _logError(...args) {
+                console.error("[FlashModule]", ...args);
+            }
+        }
+        
         // ==================== УТИЛИТЫ ДЛЯ ДАТ ====================
         const DateUtils = {
             localToISO: function(localDateStr) {
                 if (!localDateStr) return new Date().toISOString();
                 if (localDateStr.includes('T') && localDateStr.includes('Z')) return localDateStr;
-                
                 try {
                     const match = localDateStr.match(/(\d{1,2})\.(\d{1,2})\.(\d{4}),\s*(\d{1,2}):(\d{2}):(\d{2})/);
                     if (match) {
@@ -355,7 +759,6 @@
                         return date.toISOString();
                     }
                 } catch(e) {}
-                
                 return new Date().toISOString();
             },
             
@@ -423,11 +826,7 @@
             },
             bindEvents: function() { $('.entryItem').off('click').on('click', function(e) { e.stopPropagation(); const entryId = $(this).data('entry-id'); if(entryId) JournalController.openEditModal(entryId); }); },
             highlightEntryById: function(entryId) { const $entry = $(`.entryItem[data-entry-id="${entryId}"]`); if($entry.length) { $entry.addClass('highlight'); setTimeout(() => $entry.removeClass('highlight'),1000); $entry.get(0).scrollIntoView({ behavior: 'auto', block: 'center' }); } },
-            scrollToBottom: function() {
-                setTimeout(() => {
-                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' });
-                }, 50);
-            }
+            scrollToBottom: function() { setTimeout(() => { window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' }); }, 50); }
         };
         
         // ==================== КОНТРОЛЛЕР ДНЕВНИКА ====================
@@ -456,7 +855,6 @@
             
             migrateCard: function(card) {
                 let changed = false;
-                
                 if (card.createdAt && typeof card.createdAt === 'string') {
                     if (!card.createdAt.includes('T') || !card.createdAt.includes('Z')) {
                         card.createdAt = DateUtils.localToISO(card.createdAt);
@@ -466,19 +864,16 @@
                     card.createdAt = DateUtils.nowISO();
                     changed = true;
                 }
-                
                 if (card.bumpedAt && typeof card.bumpedAt === 'string') {
                     if (!card.bumpedAt.includes('T') || !card.bumpedAt.includes('Z')) {
                         card.bumpedAt = DateUtils.localToISO(card.bumpedAt);
                         changed = true;
                     }
                 }
-                
                 if (card.bumpedAt && card.bumpedAt === card.createdAt) {
                     card.bumpedAt = null;
                     changed = true;
                 }
-                
                 if (!card.parentIds) { card.parentIds = []; changed = true; }
                 if (!card.children) { card.children = []; changed = true; }
                 if (!card.mentions) { card.mentions = []; changed = true; }
@@ -495,7 +890,6 @@
                     card.isDescriptionVisible = card.content && card.content.trim().length > 0;
                     changed = true;
                 }
-                
                 return changed;
             },
             
@@ -504,15 +898,8 @@
                 this.cards.sort((a, b) => {
                     const aHasBump = a.bumpedAt !== null && a.bumpedAt !== undefined;
                     const bHasBump = b.bumpedAt !== null && b.bumpedAt !== undefined;
-                    
-                    if (aHasBump !== bHasBump) {
-                        return aHasBump ? -1 : 1;
-                    }
-                    
-                    if (aHasBump) {
-                        return new Date(b.bumpedAt) - new Date(a.bumpedAt);
-                    }
-                    
+                    if (aHasBump !== bHasBump) return aHasBump ? -1 : 1;
+                    if (aHasBump) return new Date(b.bumpedAt) - new Date(a.bumpedAt);
                     return new Date(a.createdAt) - new Date(b.createdAt);
                 });
             },
@@ -576,9 +963,6 @@
                 if(card && parentCard && cardId != parentId && !(card.parentIds || []).some(id => id == parentId)) { 
                     if(!card.parentIds) card.parentIds = []; 
                     card.parentIds.push(parentId); 
-                    if(card.isEmpty && card.title && card.title.trim() !== "") {
-                        card.isEmpty = false;
-                    }
                     this.saveState(); 
                     this.updateAllRelations(); 
                     return true; 
@@ -627,10 +1011,8 @@
             
             updateAllRelations: function() { 
                 if (!this.cards) return;
-                
                 this.cards.forEach(card => { card.mentions = []; });
                 this.cards.forEach(card => { card.children = []; });
-                
                 this.cards.forEach(sourceCard => { 
                     const matches = sourceCard.content.match(/\[\[(\d+)\]\]/g) || []; 
                     matches.forEach(match => { 
@@ -639,7 +1021,6 @@
                         if(targetCard) targetCard.mentions.push({ sourceCard:{ id:sourceCard.id, title:sourceCard.title }, context:sourceCard.content }); 
                     }); 
                 }); 
-                
                 this.cards.forEach(card => { 
                     if(card.parentIds) card.parentIds.forEach(parentId => { 
                         const parentCard = this.getCard(parentId); 
@@ -706,9 +1087,7 @@
             bumpCard: function(cardId) {
                 const card = this.getCard(cardId);
                 if (!card) return false;
-                
                 card.bumpedAt = DateUtils.nowISO();
-                
                 this.saveState();
                 this.updateAllRelations();
                 return true;
@@ -717,7 +1096,6 @@
             loadState: function() { 
                 const saved = localStorage.getItem('cardsSystem'); 
                 let needsSave = false;
-                
                 if(saved) { 
                     try { 
                         this.cards = JSON.parse(saved); 
@@ -737,7 +1115,6 @@
                     this.cards = [];
                     needsSave = true;
                 }
-                
                 if (this.cards.length === 0) {
                     const id1 = this.generateId(), id2 = this.generateId(); 
                     const nowISO = DateUtils.nowISO();
@@ -769,7 +1146,6 @@
                     }); 
                     needsSave = true;
                 }
-                
                 if (needsSave) this.saveState();
                 this.sortCards();
                 this.updateAllRelations(); 
@@ -785,7 +1161,6 @@
                 const saved = localStorage.getItem(this.FLASH_KEY);
                 if (saved === 'granted') return true;
                 if (saved === 'denied') return false;
-                
                 const result = confirm('⚠️ Для использования эффекта ВСПЫШКИ требуется ваше разрешение.\n\nРазрешить?');
                 if (result) {
                     localStorage.setItem(this.FLASH_KEY, 'granted');
@@ -800,7 +1175,6 @@
                 const saved = localStorage.getItem(this.SOUND_KEY);
                 if (saved === 'granted') return true;
                 if (saved === 'denied') return false;
-                
                 const result = confirm('🔊 Для использования эффекта ДЛИННОГО ЗВУКА требуется ваше разрешение.\n\nРазрешить?');
                 if (result) {
                     localStorage.setItem(this.SOUND_KEY, 'granted');
@@ -814,118 +1188,110 @@
         
         // ==================== ЭФФЕКТЫ УДАЛЕНИЯ ====================
         let flashModule = null;
-        let currentSoundContext = null;
-        let currentSoundOscillator = null;
-        let currentSoundGain = null;
+        let flashModuleWithSound = null;
         
         function initFlashModule() {
-            if (!flashModule && window.FlashModule) {
+            if (!flashModule && typeof FlashModule !== 'undefined') {
                 flashModule = new FlashModule({
                     soundPath: '/sounds/',
                     soundFile: null,
                     flashDuration: 200,
                     soundVolume: 0.8,
+                    soundEnabled: false,
                     debug: false
                 });
             }
             return flashModule;
         }
         
-        // Длинный звук (2 секунды, затухающий)
+        function initFlashModuleWithSound() {
+            if (!flashModuleWithSound && typeof FlashModule !== 'undefined') {
+                flashModuleWithSound = new FlashModule({
+                    soundPath: '/sounds/',
+                    soundFile: null,
+                    flashDuration: 200,
+                    soundVolume: 0.8,
+                    soundEnabled: true,
+                    debug: false
+                });
+            }
+            return flashModuleWithSound;
+        }
+        
         function playLongBeepSound() {
             try {
-                // Останавливаем предыдущий звук, если он ещё играет
-                if (currentSoundOscillator) {
-                    try {
-                        currentSoundOscillator.stop();
-                    } catch(e) {}
-                    currentSoundOscillator = null;
-                }
-                
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                currentSoundContext = audioContext;
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-                currentSoundOscillator = oscillator;
-                currentSoundGain = gainNode;
                 
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
                 
-                oscillator.frequency.value = 440; // 440 Hz (нота Ля)
+                oscillator.frequency.value = 440;
                 gainNode.gain.value = 0.3;
                 
                 oscillator.start();
-                
-                // Длинное затухание в течение 2 секунд
                 gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 2);
                 oscillator.stop(audioContext.currentTime + 2);
                 
                 if (audioContext.state === 'suspended') {
                     audioContext.resume();
                 }
-                
-                // Очищаем ссылки после окончания
-                setTimeout(() => {
-                    if (currentSoundOscillator === oscillator) {
-                        currentSoundOscillator = null;
-                        currentSoundGain = null;
-                        currentSoundContext = null;
-                    }
-                }, 2100);
             } catch(e) {
                 console.warn('Audio error:', e);
             }
         }
         
-        // Вспышка
         async function playFlash() {
             const flash = initFlashModule();
             if (flash) {
-                await flash.play();
-            } else {
-                console.warn('FlashModule not available');
+                await flash.playOnlyFlash();
             }
         }
         
-        // 1. Простое удаление (всегда работает)
+        async function playFlashWithSound() {
+            const flash = initFlashModuleWithSound();
+            if (flash) {
+                await flash.play();
+            }
+        }
+        
         async function deleteCardSimple(cardId, cardTitle) {
             if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}"?`)) return false;
             CardsModel.deleteCard(cardId);
             return true;
         }
         
-        // 2. Удаление только со вспышкой (без звука)
         async function deleteCardWithFlash(cardId, cardTitle) {
             const hasPermission = await PermissionManager.requestFlashPermission();
             if (!hasPermission) {
                 alert('❌ Вы запретили использование вспышки. Удаление отменено.');
                 return false;
             }
-            
             if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой?`)) return false;
-            
             await playFlash();
             CardsModel.deleteCard(cardId);
             return true;
         }
         
-        // 3. Удаление только с длинным звуком (без вспышки)
-        async function deleteCardWithSound(cardId, cardTitle) {
-            const hasPermission = await PermissionManager.requestSoundPermission();
-            if (!hasPermission) {
-                alert('❌ Вы запретили использование звука. Удаление отменено.');
-                return false;
-            }
-            
-            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" с длинным звуком?`)) return false;
-            
-            playLongBeepSound();
-            CardsModel.deleteCard(cardId);
-            return true;
-        }
+		async function deleteCardWithSound(cardId, cardTitle) {
+			const hasPermission = await PermissionManager.requestSoundPermission();
+			if (!hasPermission) {
+				alert('❌ Вы запретили использование звука. Удаление отменено.');
+				return false;
+			}
+			if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" с длинным звуком?`)) return false;
+			
+			// Вместо playLongBeepSound() используем flash модуль
+			const flash = initFlashModuleWithSound();
+			if (flash) {
+				await flash.playOnlySound(); // или flash._playBuiltinSound()
+			}
+			
+			CardsModel.deleteCard(cardId);
+			return true;
+		}
         
-        // 4. Комбинированное удаление (длинный звук + вспышка)
         async function deleteCardWithCombo(cardId, cardTitle) {
             const hasFlashPermission = await PermissionManager.requestFlashPermission();
             const hasSoundPermission = await PermissionManager.requestSoundPermission();
@@ -935,19 +1301,13 @@
                 return false;
             }
             
-            if (!hasFlashPermission) {
-                alert('⚠️ Вы запретили вспышку. Будет использован только звук.');
-            }
-            if (!hasSoundPermission) {
-                alert('⚠️ Вы запретили звук. Будет использована только вспышка.');
-            }
-            
             if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой и длинным звуком?`)) return false;
             
-            if (hasFlashPermission) {
+            if (hasFlashPermission && hasSoundPermission) {
+                await playFlashWithSound();
+            } else if (hasFlashPermission) {
                 await playFlash();
-            }
-            if (hasSoundPermission) {
+            } else if (hasSoundPermission) {
                 playLongBeepSound();
             }
             
@@ -1014,50 +1374,37 @@
                     .off('click', '#addCardBtn').on('click', '#addCardBtn', ()=>{ const newCard = CardsModel.addCard(); CardsView.render(); setTimeout(()=>CardsView.highlightCard(newCard.id),100); })
                     .off('click', '#deleteAllBtn').on('click', '#deleteAllBtn', ()=>{ if(CardsModel.cards.length && confirm("Уничтожить все карточки?")){ CardsModel.deleteAllCards(); CardsView.render(); } })
                     
-                    // Четыре кнопки удаления (абсолютные, вверху справа)
                     .off('click', '.delete-simple').on('click', '.delete-simple', async function(e) { 
-                        e.preventDefault(); 
-                        e.stopPropagation();
+                        e.preventDefault(); e.stopPropagation();
                         const $card = $(this).closest('.card'); 
                         const cardId = $card.data('card-id'); 
                         const card = CardsModel.getCard(cardId); 
                         const success = await deleteCardSimple(cardId, card?.title);
-                        if (success) { 
-                            $card.remove(); 
-                        }
+                        if (success) { $card.remove(); }
                     })
                     .off('click', '.delete-flash').on('click', '.delete-flash', async function(e) { 
-                        e.preventDefault(); 
-                        e.stopPropagation();
+                        e.preventDefault(); e.stopPropagation();
                         const $card = $(this).closest('.card'); 
                         const cardId = $card.data('card-id'); 
                         const card = CardsModel.getCard(cardId); 
                         const success = await deleteCardWithFlash(cardId, card?.title);
-                        if (success) { 
-                            $card.remove(); 
-                        }
+                        if (success) { $card.remove(); }
                     })
                     .off('click', '.delete-sound').on('click', '.delete-sound', async function(e) { 
-                        e.preventDefault(); 
-                        e.stopPropagation();
+                        e.preventDefault(); e.stopPropagation();
                         const $card = $(this).closest('.card'); 
                         const cardId = $card.data('card-id'); 
                         const card = CardsModel.getCard(cardId); 
                         const success = await deleteCardWithSound(cardId, card?.title);
-                        if (success) { 
-                            $card.remove(); 
-                        }
+                        if (success) { $card.remove(); }
                     })
                     .off('click', '.delete-combo').on('click', '.delete-combo', async function(e) { 
-                        e.preventDefault(); 
-                        e.stopPropagation();
+                        e.preventDefault(); e.stopPropagation();
                         const $card = $(this).closest('.card'); 
                         const cardId = $card.data('card-id'); 
                         const card = CardsModel.getCard(cardId); 
                         const success = await deleteCardWithCombo(cardId, card?.title);
-                        if (success) { 
-                            $card.remove(); 
-                        }
+                        if (success) { $card.remove(); }
                     })
                     
                     .off('input', '.card__title').on('input', '.card__title', function(){ 
@@ -1069,12 +1416,10 @@
                         const cardId = $(this).closest('.card').data('card-id'); 
                         const newContent = $(this).val();
                         CardsModel.updateCard(cardId, { content: newContent }); 
-                        
                         const $card = $(this).closest('.card');
                         const $toggleBtn = $card.find('.toggleDescription');
                         const hasContent = newContent && newContent.trim().length > 0;
                         const isVisible = $(this).hasClass('visible');
-                        
                         if (hasContent && !isVisible) {
                             $toggleBtn.addClass('addTextButton--bold');
                         } else if (!hasContent || isVisible) {
@@ -1104,21 +1449,16 @@
                     .off('click', '.toggleParentSearch').on('click', '.toggleParentSearch', function(e){ e.preventDefault(); e.stopPropagation(); const $searchContainer=$(this).closest('.card__parents').find('.searchContainer'); $searchContainer.toggleClass('visible'); if($searchContainer.hasClass('visible')) $searchContainer.find('.searchInput').focus(); })
                     .off('click', '.toggleChildSearch').on('click', '.toggleChildSearch', function(e){ e.preventDefault(); e.stopPropagation(); const $searchContainer=$(this).closest('.card__children').find('.searchContainer'); $searchContainer.toggleClass('visible'); if($searchContainer.hasClass('visible')) $searchContainer.find('.searchInput').focus(); })
                     .off('click', '.toggleDescription').on('click', '.toggleDescription', function(e){ 
-                        e.preventDefault(); 
-                        e.stopPropagation(); 
+                        e.preventDefault(); e.stopPropagation(); 
                         const $btn = $(this);
                         const $card = $btn.closest('.card');
                         const $textarea = $card.find('.card__textarea');
                         const cardId = $card.data('card-id');
                         const hasContent = $textarea.val() && $textarea.val().trim().length > 0;
-                        
                         $textarea.toggleClass('visible');
                         const isNowVisible = $textarea.hasClass('visible');
-                        
                         CardsModel.updateDescriptionVisibility(cardId, isNowVisible);
-                        
                         $btn.text(isNowVisible ? 'скрыть' : 'показать');
-                        
                         if (hasContent && !isNowVisible) {
                             $btn.addClass('addTextButton--bold');
                         } else {
@@ -1209,6 +1549,7 @@
                 this.loadViewPreference(); 
                 this.bindEvents(); 
                 initFlashModule();
+                initFlashModuleWithSound();
             }, 
             bindEvents: function() { 
                 $('#modeSwitchHeader').on('click',()=>{ this.switchView(this.currentView==='cards'?'journal':'cards'); }); 
