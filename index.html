@@ -237,9 +237,6 @@
     <script type="text/ejs" id="cardTemplate">
         <div class="card" data-card-id="<%= id %>">
             <div class="card__delete-buttons-absolute">
-                <button class="delete-btn delete-simple" data-delete-type="simple">✕</button>
-                <button class="delete-btn delete-flash" data-delete-type="flash">✕</button>
-                <button class="delete-btn delete-sound" data-delete-type="sound">✕</button>
                 <button class="delete-btn delete-combo" data-delete-type="combo">✕</button>
             </div>
             
@@ -267,6 +264,7 @@
             
             <div class="card__header">
                 <input type="text" class="card__title" value="<%= title %>" placeholder="<%= placeholder %>">
+                <button class="button button--danger">✕</button>
             </div>
             
             <div class="card__description">
@@ -1256,42 +1254,6 @@
             }
         }
         
-        async function deleteCardSimple(cardId, cardTitle) {
-            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}"?`)) return false;
-            CardsModel.deleteCard(cardId);
-            return true;
-        }
-        
-        async function deleteCardWithFlash(cardId, cardTitle) {
-            const hasPermission = await PermissionManager.requestFlashPermission();
-            if (!hasPermission) {
-                alert('❌ Вы запретили использование вспышки. Удаление отменено.');
-                return false;
-            }
-            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой?`)) return false;
-            await playFlash();
-            CardsModel.deleteCard(cardId);
-            return true;
-        }
-        
-		async function deleteCardWithSound(cardId, cardTitle) {
-			const hasPermission = await PermissionManager.requestSoundPermission();
-			if (!hasPermission) {
-				alert('❌ Вы запретили использование звука. Удаление отменено.');
-				return false;
-			}
-			if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" с длинным звуком?`)) return false;
-			
-			// Вместо playLongBeepSound() используем flash модуль
-			const flash = initFlashModuleWithSound();
-			if (flash) {
-				await flash.playOnlySound(); // или flash._playBuiltinSound()
-			}
-			
-			CardsModel.deleteCard(cardId);
-			return true;
-		}
-        
         async function deleteCardWithCombo(cardId, cardTitle) {
             const hasFlashPermission = await PermissionManager.requestFlashPermission();
             const hasSoundPermission = await PermissionManager.requestSoundPermission();
@@ -1374,30 +1336,7 @@
                     .off('click', '#addCardBtn').on('click', '#addCardBtn', ()=>{ const newCard = CardsModel.addCard(); CardsView.render(); setTimeout(()=>CardsView.highlightCard(newCard.id),100); })
                     .off('click', '#deleteAllBtn').on('click', '#deleteAllBtn', ()=>{ if(CardsModel.cards.length && confirm("Уничтожить все карточки?")){ CardsModel.deleteAllCards(); CardsView.render(); } })
                     
-                    .off('click', '.delete-simple').on('click', '.delete-simple', async function(e) { 
-                        e.preventDefault(); e.stopPropagation();
-                        const $card = $(this).closest('.card'); 
-                        const cardId = $card.data('card-id'); 
-                        const card = CardsModel.getCard(cardId); 
-                        const success = await deleteCardSimple(cardId, card?.title);
-                        if (success) { $card.remove(); }
-                    })
-                    .off('click', '.delete-flash').on('click', '.delete-flash', async function(e) { 
-                        e.preventDefault(); e.stopPropagation();
-                        const $card = $(this).closest('.card'); 
-                        const cardId = $card.data('card-id'); 
-                        const card = CardsModel.getCard(cardId); 
-                        const success = await deleteCardWithFlash(cardId, card?.title);
-                        if (success) { $card.remove(); }
-                    })
-                    .off('click', '.delete-sound').on('click', '.delete-sound', async function(e) { 
-                        e.preventDefault(); e.stopPropagation();
-                        const $card = $(this).closest('.card'); 
-                        const cardId = $card.data('card-id'); 
-                        const card = CardsModel.getCard(cardId); 
-                        const success = await deleteCardWithSound(cardId, card?.title);
-                        if (success) { $card.remove(); }
-                    })
+                    // Верхняя кнопка combo
                     .off('click', '.delete-combo').on('click', '.delete-combo', async function(e) { 
                         e.preventDefault(); e.stopPropagation();
                         const $card = $(this).closest('.card'); 
@@ -1405,6 +1344,17 @@
                         const card = CardsModel.getCard(cardId); 
                         const success = await deleteCardWithCombo(cardId, card?.title);
                         if (success) { $card.remove(); }
+                    })
+                    
+                    // Кнопка удаления рядом с названием
+                    .off('click', '.card__header .button--danger').on('click', '.card__header .button--danger', async function(e){ 
+                        e.preventDefault(); 
+                        const cardId = $(this).closest('.card').data('card-id'); 
+                        const card = CardsModel.getCard(cardId); 
+                        const success = await deleteCardWithCombo(cardId, card?.title);
+                        if (success) { 
+                            $(this).closest('.card').remove(); 
+                        } 
                     })
                     
                     .off('input', '.card__title').on('input', '.card__title', function(){ 
@@ -1611,7 +1561,6 @@
         $(document).ready(()=>{ 
             AppController.init(); 
         });
-    
     </script>
 </body>
 </html>
