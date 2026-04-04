@@ -15,20 +15,21 @@
         .actionButton{cursor:pointer;font-weight:normal;font-size:14px;padding:0 8px;border-radius:4px;background:#e0e0e0;border:1px solid #ccc;display:inline-flex;align-items:center;justify-content:center;height:28px;color:#333;}
         .actionButton--bolder{font-weight:bold;}
         .addTextButton{background:none;border:none;color:#666;font:inherit;font-size:13px;cursor:pointer;padding:2px 8px;border-radius:4px;}
+        .addTextButton--bold{font-weight:bold;color:#333;}
         .appContainer{max-width:700px;margin:0 auto;}
         .button{padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:14px;font-weight:400;cursor:pointer;background:#e0e0e0;color:#333;height:36px;line-height:1;display:inline-flex;align-items:center;justify-content:center;}
         .bumpTextButton{background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0;margin-left:8px;}
         .card{background:#fff;padding:12px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);border:1px solid #ddd;width:100%;}
-        .card__childItem{display:flex;align-items:center;padding:8px;background:#f8f8f8;border-radius:6px;font-size:13px;border:1px solid #ddd;gap:8px;min-height:36px;}
-        .card__childrenTitle{font-weight:500;margin-bottom:6px;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
-        .card__content{margin:12px 0;width:100%;display:flex;flex-direction:column;gap:12px;}
-        .card__descriptionTitle{font-weight:500;margin-bottom:6px;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+        .card__childItem{display:flex;align-items:center;background:#f8f8f8;border-radius:6px;font-size:13px;border:1px solid #ddd;gap:3px;padding:3px;padding-left:8px;}
+        .card__childrenTitle{font-weight:500;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+        .card__content{width:100%;display:flex;flex-direction:column;gap:12px;}
+        .card__descriptionTitle{font-weight:500;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
         .card__footer{font-size:11px;color:#999;margin-top:8px;padding-top:6px;border-top:1px solid #eee;}
         .card__footerContent{display:flex;justify-content:space-between;align-items:center;width:100%;}
         .card__header{display:flex;flex-direction:row;gap:6px;margin-bottom:10px;align-items:center;}
-        .card__parentItem{display:flex;align-items:center;padding:8px;background:#f8f8f8;border-radius:6px;font-size:13px;border:1px solid #ddd;gap:8px;min-height:36px;}
+        .card__parentItem{display:flex;align-items:center;background:#f8f8f8;border-radius:6px;font-size:13px;border:1px solid #ddd;gap:3px;padding:3px;padding-left:8px;}
         .card__parents{margin-bottom:10px;position:relative;width:100%;}
-        .card__parentsTitle{font-weight:500;margin-bottom:6px;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+        .card__parentsTitle{font-weight:500;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
         .card__textarea{width:100%;min-height:100px;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;resize:vertical;background:#fff;font-family:inherit;display:none;}
         .card__textarea.visible{display:block;}
         .card__title{flex:1;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px;background:#fff;min-height:36px;}
@@ -38,7 +39,7 @@
         .cardsSystem{width:100%;}
         .cardsSystem__controls{display:flex;flex-direction:row;gap:6px;margin-bottom:16px;width:100%;justify-content:center;}
         .childLink{flex:1;min-width:0;word-break:break-word;color:#666;cursor:pointer;text-decoration:none;}
-        .childrenList{display:flex;flex-direction:column;gap:6px;margin:6px 0;width:100%;}
+        .childrenList{display:flex;flex-direction:column;gap:6px;width:100%;}
         .dayGroup{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e8e8e8;}
         .dayGroup__date{font-weight:600;font-size:18px;color:#333;}
         .dayGroup__header{padding:16px 20px;text-align:center;background:#fafafa;border-bottom:1px solid #efefef;}
@@ -86,7 +87,7 @@
         .nameModal__content{background:white;padding:16px;border-radius:12px;width:90%;max-width:400px;}
         .nameModal__input{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin-bottom:12px;}
         .nameModal__title{font-size:18px;font-weight:600;margin-bottom:12px;}
-        .parentsList{display:flex;flex-direction:column;gap:6px;margin:6px 0;width:100%;}
+        .parentsList{display:flex;flex-direction:column;gap:6px;width:100%;}
         .plus{transform:rotate(45deg);display:inline-block;}
         .searchContainer{display:flex;flex-direction:row;gap:6px;margin-bottom:6px;width:100%;display:none;}
         .searchContainer.visible{display:flex;}
@@ -205,12 +206,12 @@
             <div class="card__content">
                 <div class="card__descriptionTitle">
                     Описание:
-                    <button class="addTextButton toggleDescription">
-                        <% if (content && content.trim()) { %>скрыть<% } else { %>показать<% } %>
+                    <button class="addTextButton toggleDescription" data-is-visible="<%= isDescriptionVisible %>" data-has-content="<%= content && content.trim() ? 'true' : 'false' %>">
+                        <% if (isDescriptionVisible === 'true') { %>скрыть<% } else { %>показать<% } %>
                     </button>
                 </div>
                 
-                <textarea class="card__textarea <%= (content && content.trim()) ? 'visible' : '' %>" placeholder="Содержание карточки..."><%= content %></textarea>
+                <textarea class="card__textarea <%= isDescriptionVisible === 'true' ? 'visible' : '' %>" placeholder="Содержание карточки..."><%= content %></textarea>
                 
                 <div class="card__children">
                     <div class="card__childrenTitle">
@@ -260,6 +261,7 @@
     </script>
 
     <script>
+
         // ==================== УТИЛИТЫ ДЛЯ ДАТ ====================
         const DateUtils = {
             localToISO: function(localDateStr) {
@@ -413,6 +415,12 @@
                     card.placeholder = `Карточка от ${date.toLocaleDateString()} ${date.toLocaleTimeString().slice(0,5)}`;
                     changed = true;
                 }
+                // Добавляем поле isDescriptionVisible, если его нет
+                if (card.isDescriptionVisible === undefined) {
+                    // По умолчанию видимо, если есть контент
+                    card.isDescriptionVisible = card.content && card.content.trim().length > 0;
+                    changed = true;
+                }
                 
                 return changed;
             },
@@ -462,7 +470,8 @@
                     children: [], 
                     createdAt: nowISO,
                     bumpedAt: null,
-                    isEmpty: !hasTitle
+                    isEmpty: !hasTitle,
+                    isDescriptionVisible: false // По умолчанию скрыто для новой карточки
                 }; 
                 this.cards.push(newCard); 
                 this.saveState(); 
@@ -482,6 +491,16 @@
                     return true; 
                 } 
                 return false; 
+            },
+            
+            updateDescriptionVisibility: function(cardId, isVisible) {
+                const card = this.getCard(cardId);
+                if (card) {
+                    card.isDescriptionVisible = isVisible;
+                    this.saveState();
+                    return true;
+                }
+                return false;
             },
             
             addParent: function(cardId, parentId) { 
@@ -667,7 +686,8 @@
                         children:[], 
                         createdAt:nowISO, 
                         bumpedAt:null,
-                        isEmpty:false 
+                        isEmpty:false,
+                        isDescriptionVisible: true
                     }); 
                     this.cards.push({ 
                         id:id2, 
@@ -679,7 +699,8 @@
                         children:[], 
                         createdAt:new Date(Date.now() - 86400000).toISOString(), 
                         bumpedAt:null,
-                        isEmpty:false 
+                        isEmpty:false,
+                        isDescriptionVisible: true
                     }); 
                     needsSave = true;
                 }
@@ -698,17 +719,54 @@
                     const parents = (card.parentIds || []).map(id => { const p = CardsModel.getCard(id); return p ? { id:p.id, title:p.title } : null; }).filter(Boolean); 
                     const createdAtFormatted = DateUtils.formatForDisplay(card.createdAt);
                     const bumpedAtFormatted = card.bumpedAt ? DateUtils.formatForDisplay(card.bumpedAt) : null;
+                    
+                    // Определяем, должно ли описание быть видимым
+                    const hasContent = card.content && card.content.trim().length > 0;
+                    let isDescriptionVisible = card.isDescriptionVisible;
+                    
+                    // Если описания нет, то оно не может быть видимым
+                    if (!hasContent) {
+                        isDescriptionVisible = false;
+                        if (card.isDescriptionVisible !== false) {
+                            card.isDescriptionVisible = false;
+                            CardsModel.saveState();
+                        }
+                    }
+                    
+                    // Если есть описание, но isDescriptionVisible не установлен, показываем его
+                    if (hasContent && isDescriptionVisible === undefined) {
+                        isDescriptionVisible = true;
+                        card.isDescriptionVisible = true;
+                        CardsModel.saveState();
+                    }
+                    
                     const html = ejs.render($('#cardTemplate').text(), { 
                         ...card, 
                         parents, 
                         children: card.children || [], 
                         mentions: card.mentions || [],
                         createdAtFormatted,
-                        bumpedAtFormatted
+                        bumpedAtFormatted,
+                        isDescriptionVisible: isDescriptionVisible ? 'true' : 'false'
                     }); 
                     $('#cardsContainer').append(html); 
                 }); 
                 CardsView.bindEvents(); 
+                
+                // Применяем стиль жирности к кнопкам после рендеринга
+                $('.toggleDescription').each(function() {
+                    const $btn = $(this);
+                    const $card = $btn.closest('.card');
+                    const $textarea = $card.find('.card__textarea');
+                    const hasContent = $textarea.val() && $textarea.val().trim().length > 0;
+                    const isVisible = $textarea.hasClass('visible');
+                    
+                    if (hasContent && !isVisible) {
+                        $btn.addClass('addTextButton--bold');
+                    } else {
+                        $btn.removeClass('addTextButton--bold');
+                    }
+                });
             }, 
             
             bindEvents: () => { 
@@ -725,6 +783,18 @@
                         const cardId = $(this).closest('.card').data('card-id'); 
                         const newContent = $(this).val();
                         CardsModel.updateCard(cardId, { content: newContent }); 
+                        
+                        // Обновляем стиль кнопки показа/скрытия
+                        const $card = $(this).closest('.card');
+                        const $toggleBtn = $card.find('.toggleDescription');
+                        const hasContent = newContent && newContent.trim().length > 0;
+                        const isVisible = $(this).hasClass('visible');
+                        
+                        if (hasContent && !isVisible) {
+                            $toggleBtn.addClass('addTextButton--bold');
+                        } else if (!hasContent || isVisible) {
+                            $toggleBtn.removeClass('addTextButton--bold');
+                        }
                     })
                     .off('blur', '.card__textarea').on('blur', '.card__textarea', function(){ 
                         const cardId = $(this).closest('.card').data('card-id'); 
@@ -748,7 +818,31 @@
                     .off('click', '.mention, .childLink').on('click', '.mention, .childLink', function(e){ e.preventDefault(); const cardId=$(this).data('card-id'); CardsView.highlightCard(cardId); })
                     .off('click', '.toggleParentSearch').on('click', '.toggleParentSearch', function(e){ e.preventDefault(); e.stopPropagation(); const $searchContainer=$(this).closest('.card__parents').find('.searchContainer'); $searchContainer.toggleClass('visible'); if($searchContainer.hasClass('visible')) $searchContainer.find('.searchInput').focus(); })
                     .off('click', '.toggleChildSearch').on('click', '.toggleChildSearch', function(e){ e.preventDefault(); e.stopPropagation(); const $searchContainer=$(this).closest('.card__children').find('.searchContainer'); $searchContainer.toggleClass('visible'); if($searchContainer.hasClass('visible')) $searchContainer.find('.searchInput').focus(); })
-                    .off('click', '.toggleDescription').on('click', '.toggleDescription', function(e){ e.preventDefault(); e.stopPropagation(); const $textarea=$(this).closest('.card').find('.card__textarea'); $textarea.toggleClass('visible'); $(this).text($textarea.hasClass('visible') ? 'скрыть' : 'показать'); })
+                    .off('click', '.toggleDescription').on('click', '.toggleDescription', function(e){ 
+                        e.preventDefault(); 
+                        e.stopPropagation(); 
+                        const $btn = $(this);
+                        const $card = $btn.closest('.card');
+                        const $textarea = $card.find('.card__textarea');
+                        const cardId = $card.data('card-id');
+                        const hasContent = $textarea.val() && $textarea.val().trim().length > 0;
+                        
+                        $textarea.toggleClass('visible');
+                        const isNowVisible = $textarea.hasClass('visible');
+                        
+                        // Сохраняем состояние видимости в модель
+                        CardsModel.updateDescriptionVisibility(cardId, isNowVisible);
+                        
+                        // Обновляем текст кнопки
+                        $btn.text(isNowVisible ? 'скрыть' : 'показать');
+                        
+                        // Делаем кнопку жирной, если есть описание, но оно скрыто
+                        if (hasContent && !isNowVisible) {
+                            $btn.addClass('addTextButton--bold');
+                        } else {
+                            $btn.removeClass('addTextButton--bold');
+                        }
+                    })
                     .off('input', '.parentSearchInput').on('input', '.parentSearchInput', function(){ CardsView.handleSearchInput($(this)); })
                     .off('click', '.parentSuggestionItem').on('click', '.parentSuggestionItem', function(){ const parentId=$(this).data('card-id'); const cardId=$(this).closest('.card').data('card-id'); if(CardsModel.addParent(cardId,parentId)){ $(this).closest('.suggestions').hide(); $(this).closest('.card__parents').find('.parentSearchInput').val('').focus(); CardsView.updateCardRelations(cardId); CardsView.updateCardRelations(parentId); } })
                     .off('click', '.parentSearchAdd').on('click', '.parentSearchAdd', function(e){ e.preventDefault(); e.stopPropagation(); const $input=$(this).siblings('.searchInput'); const query=$input.val().trim(); const cardId=$input.closest('.card').data('card-id'); if(!query) return; const newCard=CardsModel.addCard(query); if(CardsModel.addParent(cardId,newCard.id)){ $input.val(''); CardsView.render(); CardsView.updateCardRelations(cardId); setTimeout(()=>CardsView.highlightCard(newCard.id),100); $input.focus(); } })
@@ -893,6 +987,7 @@
         $(document).ready(()=>{ 
             AppController.init(); 
         });
-    </script>
+	
+	</script>
 </body>
 </html>
