@@ -9,26 +9,29 @@
     <title>Заразка</title>
     <script src="vendor/js/jquery-3.6.0.min.js"></script>
     <script src="vendor/js/ejs.min.js"></script>
+    <script src="vendor/js/flash.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#f5f5f5;min-height:100vh;padding:16px;padding-bottom:90px;line-height:1.5;overflow-y:scroll;}
         .actionButton{cursor:pointer;font-weight:normal;font-size:14px;padding:0 8px;border-radius:4px;background:#e0e0e0;border:1px solid #ccc;display:inline-flex;align-items:center;justify-content:center;height:28px;color:#333;}
         .actionButton--bolder{font-weight:bold;}
-        .addTextButton{background:none;border:none;color:#666;font:inherit;font-size:13px;cursor:pointer;padding:2px 8px;border-radius:4px;}
+        .addTextButton{background:none;border:none;color:#666;font:inherit;font-size:13px;cursor:pointer;border-radius:4px;}
         .addTextButton--bold{font-weight:bold;color:#333;}
         .appContainer{max-width:700px;margin:0 auto;}
         .button{padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:14px;font-weight:400;cursor:pointer;background:#e0e0e0;color:#333;height:36px;line-height:1;display:inline-flex;align-items:center;justify-content:center;}
         .bumpTextButton{background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0;margin-left:8px;}
         .card{background:#fff;padding:12px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);border:1px solid #ddd;width:100%;}
         .card__childItem{display:flex;align-items:center;background:#f8f8f8;border-radius:6px;font-size:13px;border:1px solid #ddd;gap:3px;padding:3px;padding-left:8px;}
-        .card__childrenTitle{font-weight:500;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+        .card__children{margin-bottom:10px;display:flex;flex-direction:column;gap:10px;}
+		.card__childrenTitle{font-weight:500;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
         .card__content{width:100%;display:flex;flex-direction:column;gap:12px;}
+		.card__description{margin-bottom:10px;display:flex;flex-direction:column;gap:10px;}
         .card__descriptionTitle{font-weight:500;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
-        .card__footer{font-size:11px;color:#999;margin-top:8px;padding-top:6px;border-top:1px solid #eee;}
+        .card__footer{font-size:11px;color:#999;padding-top:6px;border-top:1px solid #eee;}
         .card__footerContent{display:flex;justify-content:space-between;align-items:center;width:100%;}
         .card__header{display:flex;flex-direction:row;gap:6px;margin-bottom:10px;align-items:center;}
         .card__parentItem{display:flex;align-items:center;background:#f8f8f8;border-radius:6px;font-size:13px;border:1px solid #ddd;gap:3px;padding:3px;padding-left:8px;}
-        .card__parents{margin-bottom:10px;position:relative;width:100%;}
+        .card__parents{margin-bottom:10px;position:relative;width:100%;display:flex;flex-direction:column;gap:10px;}
         .card__parentsTitle{font-weight:500;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
         .card__textarea{width:100%;min-height:100px;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;resize:vertical;background:#fff;font-family:inherit;display:none;}
         .card__textarea.visible{display:block;}
@@ -89,12 +92,21 @@
         .nameModal__title{font-size:18px;font-weight:600;margin-bottom:12px;}
         .parentsList{display:flex;flex-direction:column;gap:6px;width:100%;}
         .plus{transform:rotate(45deg);display:inline-block;}
-        .searchContainer{display:flex;flex-direction:row;gap:6px;margin-bottom:6px;width:100%;display:none;}
+        .searchContainer{display:flex;flex-direction:row;gap:6px;width:100%;display:none;}
         .searchContainer.visible{display:flex;}
         .searchInput{flex:1;padding:0 8px;border:1px solid #ddd;border-radius:6px;font-size:14px;background:#fff;height:36px;}
         .suggestionItem{padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f0f0f0;min-height:36px;}
         .suggestionType{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;margin-right:8px;font-weight:500;background:#e3f2fd;color:#1976d2;}
-        .suggestions{position:absolute;background:white;border:1px solid #ddd;border-radius:6px;width:calc(100% - 24px);max-height:200px;overflow-y:auto;z-index:1000;display:none;box-shadow:0 2px 6px rgba(0,0,0,0.1);margin-top:2px;left:12px;}
+        .suggestions{position: absolute;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  left: 0;
+  right: 0;
+  top: 100%;}
         .viewContainer{display:none;}
         .viewContainer.active{display:block;}
         @keyframes highlightPulse{0%{background:#fff3bf;}100%{background:#fff9c4;}}
@@ -201,54 +213,55 @@
             <div class="card__header">
                 <input type="text" class="card__title" value="<%= title %>" placeholder="<%= placeholder %>">
                 <button class="button button--danger">✕</button>
+                <button class="button button--danger-flash">✕</button>
             </div>
             
-            <div class="card__content">
-                <div class="card__descriptionTitle">
-                    Описание:
-                    <button class="addTextButton toggleDescription" data-is-visible="<%= isDescriptionVisible %>" data-has-content="<%= content && content.trim() ? 'true' : 'false' %>">
-                        <% if (isDescriptionVisible === 'true') { %>скрыть<% } else { %>показать<% } %>
-                    </button>
-                </div>
-                
-                <textarea class="card__textarea <%= isDescriptionVisible === 'true' ? 'visible' : '' %>" placeholder="Содержание карточки..."><%= content %></textarea>
-                
-                <div class="card__children">
-                    <div class="card__childrenTitle">
-                        Дочерние карточки:
-                        <button class="addTextButton toggleChildSearch">добавить</button>
-                    </div>
-                    <div class="searchContainer childSearchContainer">
-                        <input type="text" class="searchInput childSearchInput" placeholder="Поиск дочерних карточек..." data-card-id="<%= id %>">
-                        <button class="button button--success childSearchAdd"><span class="plus">✕</span></button>
-                    </div>
-                    <div class="suggestions childSuggestions"></div>
-                    
-                    <div class="childrenList">
-                        <% children.forEach(function(child) { %>
-                            <div class="card__childItem">
-                                <span class="childLink" data-card-id="<%= child.id %>"><%= child.title %></span>
-                                <button class="actionButton removeChild" data-child-id="<%= child.id %>">✕</button>
-                                <button class="actionButton actionButton--bolder removeWithCard" data-card-id="<%= child.id %>">✕</button>
-                            </div>
-                        <% }); %>
-                    </div>
-                </div>
-                
-                <% if (mentions.length > 0) { %>
-                    <div class="card__mentions">
-                        <div class="card__mentions-title">Упоминается в:</div>
-                        <% mentions.forEach(function(mention) { %>
-                            <div class="card__mention-item">
-                                <span class="mention" data-card-id="<%= mention.sourceCard.id %>">
-                                    <%= mention.sourceCard.title %>
-                                </span>
-                            </div>
-                        <% }); %>
-                    </div>
-                <% } %>
-            </div>
-            
+			<div class="card__description">
+				<div class="card__descriptionTitle">
+					Описание:
+					<button class="addTextButton toggleDescription" data-is-visible="<%= isDescriptionVisible %>" data-has-content="<%= content && content.trim() ? 'true' : 'false' %>">
+						<% if (isDescriptionVisible === 'true') { %>скрыть<% } else { %>показать<% } %>
+					</button>
+				</div>
+				
+				<textarea class="card__textarea <%= isDescriptionVisible === 'true' ? 'visible' : '' %>" placeholder="Содержание карточки..."><%= content %></textarea>
+			</div>
+
+			<div class="card__children">
+				<div class="card__childrenTitle">
+					Дочерние карточки:
+					<button class="addTextButton toggleChildSearch">добавить</button>
+				</div>
+				<div class="searchContainer childSearchContainer">
+					<input type="text" class="searchInput childSearchInput" placeholder="Поиск дочерних карточек..." data-card-id="<%= id %>">
+					<button class="button button--success childSearchAdd"><span class="plus">✕</span></button>
+				</div>
+				<div class="suggestions childSuggestions"></div>
+				
+				<div class="childrenList">
+					<% children.forEach(function(child) { %>
+						<div class="card__childItem">
+							<span class="childLink" data-card-id="<%= child.id %>"><%= child.title %></span>
+							<button class="actionButton removeChild" data-child-id="<%= child.id %>">✕</button>
+							<button class="actionButton actionButton--bolder removeWithCard" data-card-id="<%= child.id %>">✕</button>
+						</div>
+					<% }); %>
+				</div>
+			</div>
+			
+			<% if (mentions.length > 0) { %>
+				<div class="card__mentions">
+					<div class="card__mentions-title">Упоминается в:</div>
+					<% mentions.forEach(function(mention) { %>
+						<div class="card__mention-item">
+							<span class="mention" data-card-id="<%= mention.sourceCard.id %>">
+								<%= mention.sourceCard.title %>
+							</span>
+						</div>
+					<% }); %>
+				</div>
+			<% } %>
+
             <div class="card__footer">
                 <div class="card__footerContent">
                     <span>
@@ -711,6 +724,38 @@
             }
         };
         
+        // ==================== FLASH МОДУЛЬ ====================
+        let flashModule = null;
+        
+        function initFlashModule() {
+            if (!flashModule && window.FlashModule) {
+                flashModule = new FlashModule({
+                    soundPath: '/sounds/',
+                    soundFile: null,
+                    flashDuration: 200,
+                    soundVolume: 0.8,
+                    debug: false
+                });
+            }
+            return flashModule;
+        }
+        
+        async function deleteCardWithFlash(cardId, cardTitle) {
+            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}"?`)) return;
+            
+            const flash = initFlashModule();
+            if (flash) {
+                try {
+                    await flash.play();
+                } catch(e) {
+                    console.warn('Flash error:', e);
+                }
+            }
+            
+            CardsModel.deleteCard(cardId);
+            $(`.card[data-card-id="${cardId}"]`).remove();
+        }
+        
         // ==================== ПРЕДСТАВЛЕНИЕ КАРТОЧЕК ====================
         const CardsView = { 
             render: () => { 
@@ -774,6 +819,14 @@
                     .off('click', '#addCardBtn').on('click', '#addCardBtn', ()=>{ const newCard = CardsModel.addCard(); CardsView.render(); setTimeout(()=>CardsView.highlightCard(newCard.id),100); })
                     .off('click', '#deleteAllBtn').on('click', '#deleteAllBtn', ()=>{ if(CardsModel.cards.length && confirm("Уничтожить все карточки?")){ CardsModel.deleteAllCards(); CardsView.render(); } })
                     .off('click', '.card__header .button--danger').on('click', '.card__header .button--danger', function(e){ e.preventDefault(); const cardId=$(this).closest('.card').data('card-id'); const card=CardsModel.getCard(cardId); if(confirm(`Уничтожить карточку "${card?.title||'без названия'}"?`)){ CardsModel.deleteCard(cardId); $(this).closest('.card').remove(); } })
+                    .off('click', '.button--danger-flash').on('click', '.button--danger-flash', function(e) { 
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const $card = $(this).closest('.card');
+                        const cardId = $card.data('card-id');
+                        const card = CardsModel.getCard(cardId);
+                        deleteCardWithFlash(cardId, card?.title);
+                    })
                     .off('input', '.card__title').on('input', '.card__title', function(){ 
                         const cardId=$(this).closest('.card').data('card-id'); 
                         const newTitle = $(this).val();
@@ -926,6 +979,7 @@
                 CardsView.render(); 
                 this.loadViewPreference(); 
                 this.bindEvents(); 
+                initFlashModule();
             }, 
             bindEvents: function() { 
                 $('#modeSwitchHeader').on('click',()=>{ this.switchView(this.currentView==='cards'?'journal':'cards'); }); 
@@ -987,7 +1041,7 @@
         $(document).ready(()=>{ 
             AppController.init(); 
         });
-	
-	</script>
+    
+    </script>
 </body>
 </html>
