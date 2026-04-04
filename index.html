@@ -20,7 +20,67 @@
         .appContainer{max-width:700px;margin:0 auto;}
         .button{padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:14px;font-weight:400;cursor:pointer;background:#e0e0e0;color:#333;height:36px;line-height:1;display:inline-flex;align-items:center;justify-content:center;}
         .bumpTextButton{background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0;margin-left:8px;}
-        .card{background:#fff;padding:12px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.1);border:1px solid #ddd;width:100%;}
+        
+        /* Карточка с относительным позиционированием для абсолютных кнопок */
+        .card {
+            background:#fff;
+            padding:12px;
+            border-radius:8px;
+            box-shadow:0 1px 3px rgba(0,0,0,0.1);
+            border:1px solid #ddd;
+            width:100%;
+            position: relative;
+        }
+        
+		/* Абсолютный блок с кнопками удаления — сверху по центру, выступает над карточкой */
+		.card__delete-buttons-absolute {
+			position: absolute;
+			top: -12px;
+			left: 50%;
+			transform: translateX(-50%);
+			display: flex;
+			flex-direction: row;
+			justify-content: center;
+			gap: 4px;
+			z-index: 10;
+		}
+        
+        .card__delete-buttons-absolute .delete-btn {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            padding: 0;
+            border-radius: 14px;
+            background: #e0e0e0;
+            border: 1px solid #ccc;
+            color: #333;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s ease;
+        }
+        
+        .card__delete-buttons-absolute .delete-btn:active {
+            transform: scale(0.92);
+            background: #ccc;
+        }
+        
+        /* Для мобильных устройств кнопки чуть меньше */
+        @media (max-width: 600px) {
+            .card__delete-buttons-absolute .delete-btn {
+                width: 24px;
+                height: 24px;
+                min-width: 24px;
+                font-size: 12px;
+            }
+            .card__delete-buttons-absolute {
+                right: -6px;
+            }
+        }
+        
         .card__childItem{display:flex;align-items:center;background:#f8f8f8;border-radius:6px;font-size:13px;border:1px solid #ddd;gap:3px;padding:3px;padding-left:8px;}
         .card__children{margin-bottom:10px;display:flex;flex-direction:column;gap:10px;}
 		.card__childrenTitle{font-weight:500;color:#666;font-size:13px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
@@ -38,9 +98,9 @@
         .card__title{flex:1;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px;background:#fff;min-height:36px;}
         .card__title:focus{outline:none;border-color:#999;}
         .card.highlight{background:#fff9c4;}
-        .cardsContainer{display:grid;grid-template-columns:1fr;gap:10px;padding:0;width:100%;}
+        .cardsContainer{display:grid;grid-template-columns:1fr;gap:20px;padding:0;width:100%;}
         .cardsSystem{width:100%;}
-        .cardsSystem__controls{display:flex;flex-direction:row;gap:6px;margin-bottom:16px;width:100%;justify-content:center;}
+        .cardsSystem__controls{display:flex;flex-direction:row;gap:6px;margin-bottom:30px;width:100%;justify-content:center;}
         .childLink{flex:1;min-width:0;word-break:break-word;color:#666;cursor:pointer;text-decoration:none;}
         .childrenList{display:flex;flex-direction:column;gap:6px;width:100%;}
         .dayGroup{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e8e8e8;}
@@ -72,7 +132,7 @@
         .fullscreenModal__textarea{width:100%;flex:1;padding:14px;border:1px solid #e0e0e0;border-radius:12px;font-size:15px;font-family:inherit;resize:none;background:#fafafa;}
         .fullscreenModal__textareaWrapper{flex:1;display:flex;flex-direction:column;min-height:0;}
         .fullscreenModal__title{font-size:20px;font-weight:600;color:#333;text-align:center;margin-bottom:20px;}
-        .globalSearch{position:relative;margin-bottom:20px;}
+        .globalSearch{position:relative;margin-bottom:10px;}
         .globalSearch__input{width:100%;padding:12px 16px;border:1px solid #e0e0e0;border-radius:12px;font-size:15px;background:#fff;transition:all 0.2s;}
         .globalSearch__input:focus{outline:none;border-color:#999;box-shadow:0 0 0 3px rgba(0,0,0,0.05);}
         .globalSearch__suggestions{position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e0e0e0;border-radius:12px;max-height:400px;overflow-y:auto;z-index:1000;display:none;margin-top:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);}
@@ -115,15 +175,6 @@
             body{padding:12px;padding-bottom:90px;}
             .fullscreenModal__actions{flex-wrap:nowrap;}
             .fullscreenModal__datetime{flex-direction:row;}
-        }
-        .delete-buttons-group {
-            display: flex;
-            gap: 4px;
-        }
-        .delete-buttons-group .button {
-            min-width: 36px;
-            width: 36px;
-            padding: 8px 0;
         }
     </style>
 </head>
@@ -197,6 +248,14 @@
 
     <script type="text/ejs" id="cardTemplate">
         <div class="card" data-card-id="<%= id %>">
+            <!-- Абсолютный блок с 4 кнопками удаления (справа, по центру карточки) -->
+            <div class="card__delete-buttons-absolute">
+                <button class="delete-btn delete-simple" data-delete-type="simple" title="Обычное удаление">✕</button>
+                <button class="delete-btn delete-flash" data-delete-type="flash" title="Удаление со вспышкой">✕</button>
+                <button class="delete-btn delete-sound" data-delete-type="sound" title="Удаление с длинным звуком">✕</button>
+                <button class="delete-btn delete-combo" data-delete-type="combo" title="Удаление со вспышкой и длинным звуком">✕</button>
+            </div>
+            
             <div class="card__parents">
                 <div class="card__parentsTitle">
                     Родительские карточки:
@@ -221,12 +280,6 @@
             
             <div class="card__header">
                 <input type="text" class="card__title" value="<%= title %>" placeholder="<%= placeholder %>">
-                <div class="delete-buttons-group">
-                    <button class="button button--danger-simple" data-delete-type="simple" title="Обычное удаление">✕</button>
-                    <button class="button button--danger-flash" data-delete-type="flash" title="Удаление со вспышкой">✕</button>
-                    <button class="button button--danger-sound" data-delete-type="sound" title="Удаление со звуком">✕</button>
-                    <button class="button button--danger-combo" data-delete-type="combo" title="Удаление со вспышкой и звуком">✕</button>
-                </div>
             </div>
             
 			<div class="card__description">
@@ -748,7 +801,7 @@
                 if (saved === 'granted') return true;
                 if (saved === 'denied') return false;
                 
-                const result = confirm('🔊 Для использования эффекта ЗВУКА требуется ваше разрешение.\n\nРазрешить?');
+                const result = confirm('🔊 Для использования эффекта ДЛИННОГО ЗВУКА требуется ваше разрешение.\n\nРазрешить?');
                 if (result) {
                     localStorage.setItem(this.SOUND_KEY, 'granted');
                     return true;
@@ -761,6 +814,9 @@
         
         // ==================== ЭФФЕКТЫ УДАЛЕНИЯ ====================
         let flashModule = null;
+        let currentSoundContext = null;
+        let currentSoundOscillator = null;
+        let currentSoundGain = null;
         
         function initFlashModule() {
             if (!flashModule && window.FlashModule) {
@@ -775,38 +831,59 @@
             return flashModule;
         }
         
-        // Простой звук через Web Audio API
-        function playBeepSound() {
+        // Длинный звук (2 секунды, затухающий)
+        function playLongBeepSound() {
             try {
+                // Останавливаем предыдущий звук, если он ещё играет
+                if (currentSoundOscillator) {
+                    try {
+                        currentSoundOscillator.stop();
+                    } catch(e) {}
+                    currentSoundOscillator = null;
+                }
+                
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                currentSoundContext = audioContext;
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
+                currentSoundOscillator = oscillator;
+                currentSoundGain = gainNode;
                 
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
                 
-                oscillator.frequency.value = 880;
+                oscillator.frequency.value = 440; // 440 Hz (нота Ля)
                 gainNode.gain.value = 0.3;
                 
                 oscillator.start();
-                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
-                oscillator.stop(audioContext.currentTime + 0.5);
+                
+                // Длинное затухание в течение 2 секунд
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 2);
+                oscillator.stop(audioContext.currentTime + 2);
                 
                 if (audioContext.state === 'suspended') {
                     audioContext.resume();
                 }
+                
+                // Очищаем ссылки после окончания
+                setTimeout(() => {
+                    if (currentSoundOscillator === oscillator) {
+                        currentSoundOscillator = null;
+                        currentSoundGain = null;
+                        currentSoundContext = null;
+                    }
+                }, 2100);
             } catch(e) {
                 console.warn('Audio error:', e);
             }
         }
         
-        // Вспышка (только через FlashModule, без fallback)
+        // Вспышка
         async function playFlash() {
             const flash = initFlashModule();
             if (flash) {
                 await flash.play();
             } else {
-                // Если FlashModule не доступен — ничего не делаем
                 console.warn('FlashModule not available');
             }
         }
@@ -818,7 +895,7 @@
             return true;
         }
         
-        // 2. Удаление ТОЛЬКО со вспышкой
+        // 2. Удаление только со вспышкой (без звука)
         async function deleteCardWithFlash(cardId, cardTitle) {
             const hasPermission = await PermissionManager.requestFlashPermission();
             if (!hasPermission) {
@@ -833,7 +910,7 @@
             return true;
         }
         
-        // 3. Удаление ТОЛЬКО со звуком
+        // 3. Удаление только с длинным звуком (без вспышки)
         async function deleteCardWithSound(cardId, cardTitle) {
             const hasPermission = await PermissionManager.requestSoundPermission();
             if (!hasPermission) {
@@ -841,14 +918,14 @@
                 return false;
             }
             
-            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со звуком?`)) return false;
+            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" с длинным звуком?`)) return false;
             
-            playBeepSound();
+            playLongBeepSound();
             CardsModel.deleteCard(cardId);
             return true;
         }
         
-        // 4. Комбинированное удаление (звук + вспышка)
+        // 4. Комбинированное удаление (длинный звук + вспышка)
         async function deleteCardWithCombo(cardId, cardTitle) {
             const hasFlashPermission = await PermissionManager.requestFlashPermission();
             const hasSoundPermission = await PermissionManager.requestSoundPermission();
@@ -865,13 +942,13 @@
                 alert('⚠️ Вы запретили звук. Будет использована только вспышка.');
             }
             
-            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой и звуком?`)) return false;
+            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой и длинным звуком?`)) return false;
             
             if (hasFlashPermission) {
                 await playFlash();
             }
             if (hasSoundPermission) {
-                playBeepSound();
+                playLongBeepSound();
             }
             
             CardsModel.deleteCard(cardId);
@@ -937,9 +1014,10 @@
                     .off('click', '#addCardBtn').on('click', '#addCardBtn', ()=>{ const newCard = CardsModel.addCard(); CardsView.render(); setTimeout(()=>CardsView.highlightCard(newCard.id),100); })
                     .off('click', '#deleteAllBtn').on('click', '#deleteAllBtn', ()=>{ if(CardsModel.cards.length && confirm("Уничтожить все карточки?")){ CardsModel.deleteAllCards(); CardsView.render(); } })
                     
-                    // Четыре кнопки удаления (все с крестиком)
-                    .off('click', '.button--danger-simple').on('click', '.button--danger-simple', async function(e) { 
+                    // Четыре кнопки удаления (абсолютные, вверху справа)
+                    .off('click', '.delete-simple').on('click', '.delete-simple', async function(e) { 
                         e.preventDefault(); 
+                        e.stopPropagation();
                         const $card = $(this).closest('.card'); 
                         const cardId = $card.data('card-id'); 
                         const card = CardsModel.getCard(cardId); 
@@ -948,7 +1026,7 @@
                             $card.remove(); 
                         }
                     })
-                    .off('click', '.button--danger-flash').on('click', '.button--danger-flash', async function(e) { 
+                    .off('click', '.delete-flash').on('click', '.delete-flash', async function(e) { 
                         e.preventDefault(); 
                         e.stopPropagation();
                         const $card = $(this).closest('.card'); 
@@ -959,7 +1037,7 @@
                             $card.remove(); 
                         }
                     })
-                    .off('click', '.button--danger-sound').on('click', '.button--danger-sound', async function(e) { 
+                    .off('click', '.delete-sound').on('click', '.delete-sound', async function(e) { 
                         e.preventDefault(); 
                         e.stopPropagation();
                         const $card = $(this).closest('.card'); 
@@ -970,7 +1048,7 @@
                             $card.remove(); 
                         }
                     })
-                    .off('click', '.button--danger-combo').on('click', '.button--danger-combo', async function(e) { 
+                    .off('click', '.delete-combo').on('click', '.delete-combo', async function(e) { 
                         e.preventDefault(); 
                         e.stopPropagation();
                         const $card = $(this).closest('.card'); 
