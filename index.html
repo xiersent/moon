@@ -1243,7 +1243,7 @@
             return true;
         }
         
-		// COMBO УДАЛЕНИЕ - длинный звук, удаление, вспышка + файл
+		// COMBO УДАЛЕНИЕ - длинный звук, удаление+вспышка, файловый звук
 		async function deleteCardWithCombo(cardId, cardTitle, $cardElement) {
 			const hasFlashPermission = await PermissionManager.requestFlashPermission();
 			const hasSoundPermission = await PermissionManager.requestSoundPermission();
@@ -1255,7 +1255,7 @@
 			
 			if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой и звуком?`)) return false;
 			
-			// ========== 1. ПРОИГРЫВАЕМ ДЛИННЫЙ ВСТРОЕННЫЙ ЗВУК ==========
+			// ========== 1. ЗАПУСКАЕМ ДЛИННЫЙ ЗВУК (не ждём окончания) ==========
 			if (hasSoundPermission) {
 				const flash = initFlashModuleWithSound();
 				if (flash) {
@@ -1267,44 +1267,41 @@
 				}
 			}
 			
-			// ========== 2. ЖДЁМ ОКОНЧАНИЕ ДЛИННОГО ЗВУКА (3 секунды) ==========
-			await new Promise(r => setTimeout(r, 3000));
+			// ========== 2. НЕБОЛЬШАЯ ПАУЗА (чтобы звук начался) ==========
+			await new Promise(r => setTimeout(r, 200));
 			
-			// ========== 3. УДАЛЯЕМ КАРТОЧКУ ==========
+			// ========== 3. УДАЛЕНИЕ КАРТОЧКИ + ВСПЫШКА (ОДНОВРЕМЕННО) ==========
+			// Мгновенное удаление карточки
 			CardsModel.deleteCard(cardId);
 			if ($cardElement) $cardElement.remove();
 			
-			// ========== 4. ЗАПУСКАЕМ ВСПЫШКУ + КОРОТКИЙ ФАЙЛОВЫЙ ЗВУК ==========
+			// Запускаем вспышку (без звука)
+			if (hasFlashPermission) {
+				const flash = initFlashModule();
+				if (flash) {
+					flash.playOnlyFlash().catch(e => console.warn('Flash error:', e));
+				}
+			}
+			
+			// ========== 4. КОРОТКИЙ ФАЙЛОВЫЙ ЗВУК ПОСЛЕ ВСПЫШКИ ==========
 			setTimeout(() => {
-				if (hasFlashPermission && hasSoundPermission) {
+				if (hasSoundPermission) {
 					const flash = initFlashModuleWithSound();
 					if (flash) {
 						// Переключаем на файловый звук
 						flash.options.soundFile = 'scanner_photo1.wav';
 						flash.useBuiltin = false;
 						flash.options.soundEnabled = true;
-						// Запускаем полный эффект (звук + вспышка)
-						flash.play().catch(e => console.warn('Flash + file sound error:', e));
-					}
-				} else if (hasFlashPermission) {
-					// Только вспышка
-					const flash = initFlashModule();
-					if (flash) flash.playOnlyFlash().catch(e => console.warn('Flash error:', e));
-				} else if (hasSoundPermission) {
-					// Только короткий звук
-					const flash = initFlashModuleWithSound();
-					if (flash) {
-						flash.options.soundFile = 'scanner_photo1.wav';
-						flash.useBuiltin = false;
-						flash.playOnlySound().catch(e => console.warn('Sound error:', e));
+						// Только звук без вспышки
+						flash.playOnlySound().catch(e => console.warn('File sound error:', e));
 					}
 				}
-			}, 100);
+			}, 250); // Немного после вспышки (200мс вспышка + 50мс)
 			
 			return true;
 		}
 		
-        // ==================== ПРЕДСТАВЛЕНИЕ КАРТОЧЕК ====================
+		// ==================== ПРЕДСТАВЛЕНИЕ КАРТОЧЕК ====================
         const CardsView = { 
             render: () => { 
                 $('#cardsContainer').empty(); 

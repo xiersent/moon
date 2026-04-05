@@ -398,24 +398,24 @@ class FlashModule {
         return result;
     }
     
-    // Только вспышка
-    async playOnlyFlash() {
-        if (this.isPlaying) {
-            this._log("Уже выполняется");
-            return false;
-        }
-        
-        this.isPlaying = true;
-        
-        const cameraPromise = this.initCamera();
-        
-        await cameraPromise;
-        await new Promise(r => setTimeout(r, 40));
-        const result = await this.blink();
-        
-        this.isPlaying = false;
-        return result;
-    }
+	// Только вспышка
+	async playOnlyFlash() {
+		if (this.isPlaying) {
+			this._log("Уже выполняется");
+			return false;
+		}
+		
+		this.isPlaying = true;
+		
+		const cameraPromise = this.initCamera();
+		
+		await cameraPromise;
+		await new Promise(r => setTimeout(r, 40));
+		const result = await this.blink();
+		
+		this.isPlaying = false;
+		return result;
+	}
     
     // Только звук
     async playOnlySound() {
