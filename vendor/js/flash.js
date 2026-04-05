@@ -1,4 +1,4 @@
-// flash-module.js
+// vendor/js/flash.js
 class FlashModule {
     constructor(options = {}) {
         this.options = {
@@ -89,6 +89,8 @@ class FlashModule {
             await this.releaseCamera();
         }
         
+        if (this.options.debug) console.log("[FlashModule] Инициализация камеры...");
+        
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: { exact: "environment" } }
@@ -105,8 +107,8 @@ class FlashModule {
             
             let torchSupported = false;
             try {
-                const caps = this.videoTrack.getCapabilities ? this.videoTrack.getCapabilities() : null;
-                if (caps && caps.torch === true) torchSupported = true;
+                const caps = this.videoTrack.getCapabilities();
+                torchSupported = caps && caps.torch === true;
             } catch(e) {}
             
             if (!torchSupported) {
@@ -117,16 +119,18 @@ class FlashModule {
             }
             
             if (!torchSupported) {
-                throw new Error("Torch API не поддерживается");
+                throw new Error("Torch API не поддерживается (нужен Android Chrome)");
             }
             
             await this.videoTrack.applyConstraints({ advanced: [{ torch: false }] });
             this.torchReady = true;
             
+            if (this.options.debug) console.log("[FlashModule] Камера готова");
             if (this.options.onReady) this.options.onReady();
             return true;
             
         } catch (err) {
+            console.error("[FlashModule] Ошибка:", err);
             if (this.options.onError) this.options.onError(err);
             return false;
         }
@@ -295,7 +299,7 @@ class FlashModule {
         });
     }
     
-    // НОВЫЙ МЕТОД: вспышка горит всё время проигрывания звука
+    // Вспышка горит всё время проигрывания звука
     async playFlashWithSound(soundFile = null) {
         if (this.isPlaying) {
             return false;
@@ -303,30 +307,36 @@ class FlashModule {
         
         this.isPlaying = true;
         
-        // Инициализируем камеру
-        await this.initCamera();
-        
-        // ВКЛЮЧАЕМ ВСПЫШКУ
-        await this._setTorch(true);
-        if (this.options.onFlashStart) this.options.onFlashStart();
-        
-        // Настраиваем звук
-        if (soundFile) {
-            this.options.soundFile = soundFile;
-            this.useBuiltin = false;
+        try {
+            await this.initCamera();
+            
+            // Включаем вспышку
+            await this._setTorch(true);
+            if (this.options.onFlashStart) this.options.onFlashStart();
+            
+            // Настраиваем звук
+            if (soundFile) {
+                this.options.soundFile = soundFile;
+                this.useBuiltin = false;
+            }
+            
+            // Воспроизводим звук и ждём окончания
+            if (this.options.soundEnabled) {
+                await this.playSound();
+            }
+            
+            // Выключаем вспышку после звука
+            await this._setTorch(false);
+            if (this.options.onFlashEnd) this.options.onFlashEnd();
+            
+            return true;
+        } catch (err) {
+            console.error("[FlashModule] playFlashWithSound error:", err);
+            try { await this._setTorch(false); } catch(e) {}
+            return false;
+        } finally {
+            this.isPlaying = false;
         }
-        
-        // ВОСПРОИЗВОДИМ ЗВУК И ЖДЁМ ОКОНЧАНИЯ
-        if (this.options.soundEnabled) {
-            await this.playSound();
-        }
-        
-        // ВЫКЛЮЧАЕМ ВСПЫШКУ ПОСЛЕ ЗВУКА
-        await this._setTorch(false);
-        if (this.options.onFlashEnd) this.options.onFlashEnd();
-        
-        this.isPlaying = false;
-        return true;
     }
     
     async play() {
@@ -335,7 +345,6 @@ class FlashModule {
         this.isPlaying = true;
         
         await this.initCamera();
-        
         await this._setTorch(true);
         if (this.options.onFlashStart) this.options.onFlashStart();
         
@@ -408,12 +417,8 @@ class FlashModule {
         this.options.soundEnabled = enabled;
     }
     
-    _log(...args) {
-        if (this.options.debug) console.log("[FlashModule]", ...args);
-    }
-    
-    _logError(...args) {
-        console.error("[FlashModule]", ...args);
+    isTorchSupported() {
+        return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
     }
 }
 
