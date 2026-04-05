@@ -73,11 +73,57 @@
         .entryActionBtn:active{background:#ccc;}
         
         /* ========== ПЛАВАЮЩИЕ КНОПКИ ========== */
-        .fixedNameButton{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#e0e0e0;color:#333;border:1px solid #ccc;border-radius:30px;padding:8px 20px;font-size:14px;cursor:pointer;z-index:1000;text-align:center;height:40px;white-space:nowrap;min-width:160px;transition:all 0.2s;}
+        /* Кнопка планетахода (с именем) */
+        .fixedNameButton {
+            position:fixed;
+            bottom:24px;
+            left:50%;
+            transform:translateX(-50%);
+            background:#e0e0e0;
+            color:#333;
+            border:1px solid #ccc;
+            border-radius:30px;
+            padding:8px 20px;
+            font-size:14px;
+            cursor:pointer;
+            z-index:1000;
+            text-align:center;
+            height:40px;
+            white-space:nowrap;
+            min-width:160px;
+            transition:all 0.2s;
+            display: none;
+        }
         .fixedNameButton:active{transform:translateX(-50%) scale(0.96);}
         
-        .floatingWrapper{position:fixed;bottom:24px;left:0;right:0;display:flex;justify-content:center;z-index:1000;}
-        .floatingBtn{width:56px;height:56px;background:#333;border:none;border-radius:30px;box-shadow:0 4px 12px rgba(0,0,0,0.2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;font-size:28px;font-weight:400;color:white;line-height:1;}
+        /* Кнопка дневника (круглый плюс) */
+        .floatingWrapper {
+            position:fixed;
+            bottom:24px;
+            left:0;
+            right:0;
+            display:flex;
+            justify-content:center;
+            z-index:1000;
+            display: none;
+        }
+        .floatingBtn{
+            width:56px;
+            height:56px;
+            background:#333;
+            border:none;
+            border-radius:30px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.2);
+            cursor:pointer;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            transition:all 0.2s ease;
+            font-size:28px;
+            font-weight:400;
+            color:white;
+            line-height:1;
+        }
         .floatingBtn:active{transform:scale(0.94);}
         .floatingBtn.active{transform:scale(1.05);}
         
@@ -236,7 +282,7 @@
             <div id="globalSuggestions" class="globalSearch__suggestions"></div>
         </div>
 
-        <div id="cardsView" class="viewContainer active">
+        <div id="cardsView" class="viewContainer">
             <div class="cardsSystem">
                 <div class="cardsSystem__controls">
                     <button class="button" id="addCardBtn">Создать карточку</button>
@@ -252,21 +298,22 @@
         </div>
     </div>
 
-    <!-- Обертка для плавающих кнопок (видна только в дневнике) -->
-    <div class="floatingWrapper" id="floatingWrapper" style="display: none;">
+    <!-- Кнопка планетахода (с именем) -->
+    <button class="fixedNameButton" id="fixedNameButton">
+        <span id="userNameDisplay"></span>
+    </button>
+    
+    <!-- Кнопка дневника (круглый плюс) -->
+    <div class="floatingWrapper" id="floatingWrapper">
         <button class="floatingBtn" id="floatingBtn">+</button>
     </div>
     
-    <!-- Контейнер для всплывающих кнопок (появляются при двойном нажатии на плюс) -->
+    <!-- Контейнер для всплывающих кнопок дневника -->
     <div class="popupButtonsContainer" id="popupButtonsContainer">
         <button class="popupBtn" id="floatingCalendarPopupBtn">📅</button>
         <button class="popupBtn" id="floatingUpPopupBtn">↑</button>
         <button class="popupBtn" id="floatingMicPopupBtn">🎙️</button>
     </div>
-    
-    <button class="fixedNameButton" id="fixedNameButton" style="display: none;">
-        <span id="userNameDisplay"></span>
-    </button>
 
     <div class="nameModal" id="nameModal" style="display: none;">
         <div class="nameModal__content">
@@ -1300,207 +1347,235 @@
             } 
         };
         
-        // ==================== ИМЯ ПОЛЬЗОВАТЕЛЯ ====================
-        const UserName = { 
-            init: function() {
-                if (AgreementManager.isAgreementValid()) {
-                    const savedName = AgreementManager.getUserName();
-                    if (savedName) {
-                        $('#userNameDisplay').text(savedName);
-                        $('#fixedNameButton').show();
-                    } else {
-                        this.showAgreementModal();
-                    }
-                } else {
-                    this.showAgreementModal();
-                }
-                $('#saveUserNameBtn').off('click').on('click', () => {
-                    const name = $('#userNameInput').val().trim();
-                    if (name) {
-                        AgreementManager.saveAgreement(name);
-                        $('#nameModal').hide();
-                        $('#userNameDisplay').text(name);
-                        $('#fixedNameButton').show();
-                    } else {
-                        alert('Пожалуйста, укажите ваше имя');
-                    }
-                });
-                $('#userNameInput').off('keypress').on('keypress', function(e) {
-                    if (e.which === 13) $('#saveUserNameBtn').click();
-                });
-                $('#fixedNameButton').off('click').on('click', function() { 
-                    const isAtBottom = (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 50;
-                    if (isAtBottom) {
-                        window.scrollTo({ top: 0, behavior: 'auto' });
-                    } else {
-                        window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' });
-                    }
-                });
-            },
-            showAgreementModal: function() {
-                const savedName = AgreementManager.getUserName();
-                if (savedName) {
-                    $('#userNameInput').val(savedName);
-                } else {
-                    $('#userNameInput').val('');
-                }
-                $('#nameModal').show();
-            }
-        };
-        
-        // ==================== ГЛАВНЫЙ КОНТРОЛЛЕР ====================
-        const AppController = { 
-            currentView: 'cards', 
-            init: function() { 
-                JournalModel.load(); 
-                CardsModel.loadState(); 
-                JournalView.render(); 
-                CardsView.render(); 
-                this.loadViewPreference(); 
-                this.bindEvents(); 
-                this.initMenu();
-                initFlashModule();
-                initFlashModuleWithSound();
-                UserName.init();
-                
-                let plusClickTimer = null;
-                const $floatingBtn = $('#floatingBtn');
-                const $popupContainer = $('#popupButtonsContainer');
-                const $popupBtns = $('.popupBtn');
-                
-                $floatingBtn.on('click', function() {
-                    if (pendingPlusClick) {
-                        clearTimeout(plusClickTimer);
-                        pendingPlusClick = false;
-                        $floatingBtn.removeClass('active');
-                        $popupBtns.removeClass('visible');
-                        JournalController.openAddModal();
-                    } else {
-                        pendingPlusClick = true;
-                        $floatingBtn.addClass('active');
-                        $popupBtns.addClass('visible');
-                        plusClickTimer = setTimeout(() => {
-                            pendingPlusClick = false;
-                            $floatingBtn.removeClass('active');
-                            $popupBtns.removeClass('visible');
-                        }, 2000);
-                    }
-                });
-                
-                $('#floatingUpPopupBtn').on('click', function() {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    pendingPlusClick = false;
-                    $floatingBtn.removeClass('active');
-                    $popupBtns.removeClass('visible');
-                    if (plusClickTimer) clearTimeout(plusClickTimer);
-                });
-                
-                $('#floatingMicPopupBtn').on('click', function() {
-                    pendingPlusClick = false;
-                    $floatingBtn.removeClass('active');
-                    $popupBtns.removeClass('visible');
-                    if (plusClickTimer) clearTimeout(plusClickTimer);
-                    JournalController.openVoiceModal();
-                });
-                
-                $('#floatingCalendarPopupBtn').on('click', function() {
-                    pendingPlusClick = false;
-                    $floatingBtn.removeClass('active');
-                    $popupBtns.removeClass('visible');
-                    if (plusClickTimer) clearTimeout(plusClickTimer);
-                    JournalController.openCalendar();
-                });
-                
-                const activateAudio = () => {
-                    const flash = initFlashModuleWithSound();
-                    if (flash && flash.audioCtx && flash.audioCtx.state === 'suspended') {
-                        flash.audioCtx.resume().catch(e => console.warn('AudioContext activation failed:', e));
-                    }
-                    const silentAudio = new Audio();
-                    silentAudio.volume = 0;
-                    silentAudio.play().catch(() => {});
-                    document.removeEventListener('touchstart', activateAudio);
-                    document.removeEventListener('click', activateAudio);
-                };
-                document.addEventListener('touchstart', activateAudio);
-                document.addEventListener('click', activateAudio);
-            }, 
-            initMenu: function() {
-                const $menuTrigger = $('#menuTriggerBtn');
-                const $menuDropdown = $('#menuDropdown');
-                $menuTrigger.off('click').on('click', function(e) {
-                    e.stopPropagation();
-                    $menuDropdown.toggleClass('open');
-                    $menuTrigger.toggleClass('open');
-                });
-                $(document).off('click.menu').on('click.menu', function(e) {
-                    if (!$(e.target).closest('.actionsMenu').length) {
-                        $menuDropdown.removeClass('open');
-                        $menuTrigger.removeClass('open');
-                    }
-                });
-                $('#menuDeleteAllDataBtn').off('click').on('click', () => { DataManager.destroyAllData(); $menuDropdown.removeClass('open'); $menuTrigger.removeClass('open'); });
-                $('#menuDeleteCardsDataBtn').off('click').on('click', () => { DataManager.destroyCardsData(); $menuDropdown.removeClass('open'); $menuTrigger.removeClass('open'); });
-                $('#menuDeleteJournalDataBtn').off('click').on('click', () => { DataManager.destroyJournalData(); $menuDropdown.removeClass('open'); $menuTrigger.removeClass('open'); });
-                $('#menuExportDataBtn').off('click').on('click', () => { DataManager.exportData(); $menuDropdown.removeClass('open'); $menuTrigger.removeClass('open'); });
-                $('#menuRevokeAgreementBtn').off('click').on('click', () => { DataManager.revokeAgreement(); $menuDropdown.removeClass('open'); $menuTrigger.removeClass('open'); });
-                $('#menuAboutBtn').off('click').on('click', () => { VersionManager.showAbout(); $menuDropdown.removeClass('open'); $menuTrigger.removeClass('open'); });
-            },
-            bindEvents: function() { 
-                $('#modeSwitchHeader').on('click',()=>{ this.switchView(this.currentView==='cards'?'journal':'cards'); }); 
-                $('#globalSearchInput').on('input',(e)=>this.handleGlobalSearch(e.target.value)); 
-                $(document).on('click',(e)=>{ if(!$(e.target).closest('.globalSearch').length)$('#globalSuggestions').hide(); }); 
-            }, 
-            switchView: function(view) { 
-                this.currentView=view; 
-                localStorage.setItem('appViewPreference',view); 
-                $('#modeTitle').text(view==='cards'?'Планетаход':'Дневник'); 
-                $('.viewContainer').removeClass('active'); 
-                $(`#${view}View`).addClass('active'); 
-                const $wrapper = $('#floatingWrapper');
-                const $fixedName = $('#fixedNameButton');
-                if(view==='journal'){ 
-                    $wrapper.show();
-                    $fixedName.hide();
-                    setTimeout(() => { window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' }); }, 50);
-                } else { 
-                    $wrapper.hide();
-                    $fixedName.show();
-                } 
-            }, 
-            loadViewPreference: function() { 
-                const saved=localStorage.getItem('appViewPreference'); 
-                if(saved && (saved==='cards'||saved==='journal')) {
-                    this.switchView(saved);
-                } else {
-                    this.switchView('cards');
-                }
-            }, 
-            handleGlobalSearch: function(query) { 
-                const $suggestions=$('#globalSuggestions'); 
-                if(!query.trim()){ $suggestions.hide(); return; } 
-                const journalResults=JournalModel.searchEntries(query); 
-                const cardResults=CardsModel.searchCards(query,null,false); 
-                const results=[...journalResults,...cardResults]; 
-                if(results.length===0){ $suggestions.html('<div class="globalSuggestionItem">Ничего не найдено</div>').show(); return; } 
-                $suggestions.empty(); 
-                results.slice(0,10).forEach(item=>{ 
-                    const typeLabel=item.type==='journal'?'Запись':'Карточка'; 
-                    $suggestions.append(`<div class="globalSuggestionItem" data-id="${item.id}" data-type="${item.type}"><div><span class="suggestionType">${typeLabel}</span><strong>${this.escapeHtml(item.title)}</strong></div><div style="font-size:11px;color:#888;margin-top:4px;">${item.date || ''}</div></div>`); 
-                }); 
-                $suggestions.show(); 
-                $('.globalSuggestionItem').off('click').on('click',function(){ 
-                    const id=$(this).data('id'); 
-                    const type=$(this).data('type'); 
-                    $('#globalSearchInput').val(''); 
-                    $('#globalSuggestions').hide(); 
-                    if(type==='journal'){ AppController.switchView('journal'); setTimeout(()=>JournalView.highlightEntryById(id),100); } 
-                    else { AppController.switchView('cards'); setTimeout(()=>CardsView.highlightCard(id),100); } 
-                }); 
-            }, 
-            escapeHtml: function(str) { if(!str) return ''; return str.replace(/[&<>]/g,m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); } 
-        };
-        
+
+		// ==================== ИМЯ ПОЛЬЗОВАТЕЛЯ И УПРАВЛЕНИЕ РЕЖИМАМИ ====================
+		const UserName = { 
+			init: function() {
+				if (AgreementManager.isAgreementValid()) {
+					const savedName = AgreementManager.getUserName();
+					if (savedName) {
+						$('#userNameDisplay').text(savedName);
+						this.forceCardsMode();
+					} else {
+						this.showAgreementModal();
+					}
+				} else {
+					this.showAgreementModal();
+				}
+				$('#saveUserNameBtn').off('click').on('click', () => {
+					const name = $('#userNameInput').val().trim();
+					if (name) {
+						AgreementManager.saveAgreement(name);
+						$('#nameModal').hide();
+						$('#userNameDisplay').text(name);
+						this.forceCardsMode();
+					} else {
+						alert('Пожалуйста, укажите ваше имя');
+					}
+				});
+				$('#userNameInput').off('keypress').on('keypress', function(e) {
+					if (e.which === 13) $('#saveUserNameBtn').click();
+				});
+				$('#fixedNameButton').off('click').on('click', function() { 
+					const isAtBottom = (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 50;
+					if (isAtBottom) {
+						window.scrollTo({ top: 0, behavior: 'auto' });
+					} else {
+						window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' });
+					}
+				});
+			},
+			forceCardsMode: function() {
+				AppController.currentView = 'cards';
+				localStorage.setItem('appViewPreference', 'cards');
+				$('#modeTitle').text('Планетаход');
+				$('.viewContainer').removeClass('active');
+				$('#cardsView').addClass('active');
+				$('#journalView').removeClass('active');
+				
+				$('#fixedNameButton').show();
+				$('#floatingWrapper').css('display', 'none');
+				$('#popupButtonsContainer .popupBtn').removeClass('visible');
+				pendingPlusClick = false;
+				$('#floatingBtn').removeClass('active');
+			},
+			showAgreementModal: function() {
+				const savedName = AgreementManager.getUserName();
+				if (savedName) {
+					$('#userNameInput').val(savedName);
+				} else {
+					$('#userNameInput').val('');
+				}
+				$('#nameModal').show();
+			}
+		};
+
+		// ==================== ГЛАВНЫЙ КОНТРОЛЛЕР ====================
+		const AppController = { 
+			currentView: 'cards', 
+			init: function() { 
+				$('#fixedNameButton').hide();
+				$('#floatingWrapper').css('display', 'none');
+				$('#popupButtonsContainer .popupBtn').removeClass('visible');
+				
+				JournalModel.load(); 
+				CardsModel.loadState(); 
+				JournalView.render(); 
+				CardsView.render(); 
+				this.loadViewPreference(); 
+				this.bindEvents(); 
+				this.initMenu();
+				initFlashModule();
+				initFlashModuleWithSound();
+				UserName.init();
+				
+				let plusClickTimer = null;
+				const $floatingBtn = $('#floatingBtn');
+				const $popupContainer = $('#popupButtonsContainer');
+				const $popupBtns = $('.popupBtn');
+				
+				$floatingBtn.off('click').on('click', function() {
+					if (pendingPlusClick) {
+						clearTimeout(plusClickTimer);
+						pendingPlusClick = false;
+						$floatingBtn.removeClass('active');
+						$popupBtns.removeClass('visible');
+						JournalController.openAddModal();
+					} else {
+						pendingPlusClick = true;
+						$floatingBtn.addClass('active');
+						$popupBtns.addClass('visible');
+						plusClickTimer = setTimeout(() => {
+							pendingPlusClick = false;
+							$floatingBtn.removeClass('active');
+							$popupBtns.removeClass('visible');
+						}, 2000);
+					}
+				});
+				
+				$('#floatingUpPopupBtn').off('click').on('click', function() {
+					window.scrollTo({ top: 0, behavior: 'smooth' });
+					pendingPlusClick = false;
+					$floatingBtn.removeClass('active');
+					$popupBtns.removeClass('visible');
+					if (plusClickTimer) clearTimeout(plusClickTimer);
+				});
+				
+				$('#floatingMicPopupBtn').off('click').on('click', function() {
+					pendingPlusClick = false;
+					$floatingBtn.removeClass('active');
+					$popupBtns.removeClass('visible');
+					if (plusClickTimer) clearTimeout(plusClickTimer);
+					JournalController.openVoiceModal();
+				});
+				
+				$('#floatingCalendarPopupBtn').off('click').on('click', function() {
+					pendingPlusClick = false;
+					$floatingBtn.removeClass('active');
+					$popupBtns.removeClass('visible');
+					if (plusClickTimer) clearTimeout(plusClickTimer);
+					JournalController.openCalendar();
+				});
+				
+				const activateAudio = () => {
+					const flash = initFlashModuleWithSound();
+					if (flash && flash.audioCtx && flash.audioCtx.state === 'suspended') {
+						flash.audioCtx.resume().catch(e => console.warn('AudioContext activation failed:', e));
+					}
+					const silentAudio = new Audio();
+					silentAudio.volume = 0;
+					silentAudio.play().catch(() => {});
+					document.removeEventListener('touchstart', activateAudio);
+					document.removeEventListener('click', activateAudio);
+				};
+				document.addEventListener('touchstart', activateAudio);
+				document.addEventListener('click', activateAudio);
+			}, 
+			initMenu: function() {
+				const $menuTrigger = $('#menuTriggerBtn');
+				const $menuDropdown = $('#menuDropdown');
+				$menuTrigger.off('click').on('click', function(e) {
+					e.stopPropagation();
+					$menuDropdown.toggleClass('open');
+					$menuTrigger.toggleClass('open');
+				});
+				$(document).off('click.menu').on('click.menu', function(e) {
+					if (!$(e.target).closest('.actionsMenu').length) {
+						$menuDropdown.removeClass('open');
+						$menuTrigger.removeClass('open');
+					}
+				});
+				$('#menuDeleteAllDataBtn').off('click').on('click', () => { DataManager.destroyAllData(); $menuDropdown.removeClass('open'); $menuTrigger.removeClass('open'); });
+				$('#menuDeleteCardsDataBtn').off('click').on('click', () => { DataManager.destroyCardsData(); $menuDropdown.removeClass('open'); $menuTrigger.removeClass('open'); });
+				$('#menuDeleteJournalDataBtn').off('click').on('click', () => { DataManager.destroyJournalData(); $menuDropdown.removeClass('open'); $menuTrigger.removeClass('open'); });
+				$('#menuExportDataBtn').off('click').on('click', () => { DataManager.exportData(); $menuDropdown.removeClass('open'); $menuTrigger.removeClass('open'); });
+				$('#menuRevokeAgreementBtn').off('click').on('click', () => { DataManager.revokeAgreement(); $menuDropdown.removeClass('open'); $menuTrigger.removeClass('open'); });
+				$('#menuAboutBtn').off('click').on('click', () => { VersionManager.showAbout(); $menuDropdown.removeClass('open'); $menuTrigger.removeClass('open'); });
+			},
+			bindEvents: function() { 
+				$('#modeSwitchHeader').off('click').on('click',()=>{ this.switchView(this.currentView==='cards'?'journal':'cards'); }); 
+				$('#globalSearchInput').off('input').on('input',(e)=>this.handleGlobalSearch(e.target.value)); 
+				$(document).off('click.globalSearch').on('click.globalSearch',(e)=>{ if(!$(e.target).closest('.globalSearch').length)$('#globalSuggestions').hide(); }); 
+			}, 
+			switchView: function(view) { 
+				if (!AgreementManager.isAgreementValid()) return;
+				
+				this.currentView = view; 
+				localStorage.setItem('appViewPreference', view); 
+				$('#modeTitle').text(view === 'cards' ? 'Планетаход' : 'Дневник'); 
+				$('.viewContainer').removeClass('active'); 
+				$(`#${view}View`).addClass('active'); 
+				
+				if (view === 'journal') { 
+					$('#fixedNameButton').hide();
+					$('#floatingWrapper').css('display', 'flex');
+					setTimeout(() => { 
+						window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' }); 
+					}, 50);
+				} else { 
+					$('#floatingWrapper').css('display', 'none');
+					$('#popupButtonsContainer .popupBtn').removeClass('visible');
+					pendingPlusClick = false;
+					$('#floatingBtn').removeClass('active');
+					$('#fixedNameButton').show();
+				} 
+			}, 
+			loadViewPreference: function() { 
+				const saved = localStorage.getItem('appViewPreference'); 
+				if (!AgreementManager.isAgreementValid()) return;
+				
+				if (saved && (saved === 'cards' || saved === 'journal')) {
+					this.switchView(saved);
+				} else {
+					this.switchView('cards');
+				}
+			}, 
+			handleGlobalSearch: function(query) { 
+				const $suggestions=$('#globalSuggestions'); 
+				if(!query.trim()){ $suggestions.hide(); return; } 
+				const journalResults=JournalModel.searchEntries(query); 
+				const cardResults=CardsModel.searchCards(query,null,false); 
+				const results=[...journalResults,...cardResults]; 
+				if(results.length===0){ $suggestions.html('<div class="globalSuggestionItem">Ничего не найдено</div>').show(); return; } 
+				$suggestions.empty(); 
+				results.slice(0,10).forEach(item=>{ 
+					const typeLabel=item.type==='journal'?'Запись':'Карточка'; 
+					$suggestions.append(`<div class="globalSuggestionItem" data-id="${item.id}" data-type="${item.type}"><div><span class="suggestionType">${typeLabel}</span><strong>${this.escapeHtml(item.title)}</strong></div><div style="font-size:11px;color:#888;margin-top:4px;">${item.date || ''}</div></div>`); 
+				}); 
+				$suggestions.show(); 
+				$('.globalSuggestionItem').off('click').on('click',function(){ 
+					const id=$(this).data('id'); 
+					const type=$(this).data('type'); 
+					$('#globalSearchInput').val(''); 
+					$('#globalSuggestions').hide(); 
+					if(type==='journal'){ AppController.switchView('journal'); setTimeout(()=>JournalView.highlightEntryById(id),100); } 
+					else { AppController.switchView('cards'); setTimeout(()=>CardsView.highlightCard(id),100); } 
+				}); 
+			}, 
+			escapeHtml: function(str) { if(!str) return ''; return str.replace(/[&<>]/g,m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); } 
+		};
+
+
         $(document).ready(()=>{ AppController.init(); });
     </script>
 </body>
