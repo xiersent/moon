@@ -1193,35 +1193,48 @@
         // ==================== ЭФФЕКТЫ УДАЛЕНИЯ ====================
         let flashModule = null;
         let flashModuleWithSound = null;
-        
-        function initFlashModule() {
-            if (!flashModule && typeof FlashModule !== 'undefined') {
-                flashModule = new FlashModule({
-                    soundPath: '/sounds/',
-                    soundFile: null,
-                    flashDuration: 200,
-                    soundVolume: 0.8,
-                    soundEnabled: false,
-                    debug: false
-                });
-            }
-            return flashModule;
-        }
-        
-        function initFlashModuleWithSound() {
-            if (!flashModuleWithSound && typeof FlashModule !== 'undefined') {
-                flashModuleWithSound = new FlashModule({
-                    soundPath: '/sounds/',
-                    soundFile: 'scanner_photo1.wav',
-                    flashDuration: 200,
-                    soundVolume: 0.8,
-                    soundEnabled: true,
-                    debug: false
-                });
-            }
-            return flashModuleWithSound;
-        }
-        
+
+
+		function initFlashModule() {
+			if (!flashModule && typeof FlashModule !== 'undefined') {
+				flashModule = new FlashModule({
+					soundPath: './sounds/',
+					soundFile: null,
+					flashDuration: 200,
+					soundVolume: 0.8,
+					soundEnabled: false,
+					debug: true  // Включите debug для диагностики
+				});
+			}
+			return flashModule;
+		}
+
+		function initFlashModuleWithSound() {
+			if (!flashModuleWithSound && typeof FlashModule !== 'undefined') {
+				flashModuleWithSound = new FlashModule({
+					soundPath: './sounds/',
+					soundFile: 'scanner_photo1.wav',
+					flashDuration: 200,
+					soundVolume: 0.8,
+					soundEnabled: true,
+					debug: true  // Включите debug для диагностики
+				});
+				
+				// Принудительно проверяем файл при инициализации
+				flashModuleWithSound.setSound('scanner_photo1.wav').then(success => {
+					console.log('Sound file check result:', success);
+					if (success) {
+						flashModuleWithSound.useBuiltin = false;
+						console.log('✅ Будет использоваться ФАЙЛОВЫЙ звук: scanner_photo1.wav');
+					} else {
+						console.log('⚠️ Файл не найден, будет использоваться встроенный звук');
+					}
+				});
+			}
+			return flashModuleWithSound;
+		}
+
+
         // ПРОСТОЕ УДАЛЕНИЕ (без эффектов) - для кнопки рядом с названием
         async function deleteCardSimple(cardId, cardTitle, $cardElement) {
             if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}"?`)) return false;

@@ -1,11 +1,11 @@
 // flash-module.js
-// Модуль вспышки со звуками из каталога /sounds/ (или встроенный звук, если файлов нет)
+// Модуль вспышки со звуками из каталога ./sounds/
 
 class FlashModule {
     constructor(options = {}) {
         // Настройки
         this.options = {
-            soundPath: './sounds/',           // ИСПРАВЛЕНО: относительный путь
+            soundPath: './sounds/',           // относительный путь
             soundFile: null,                 // если null — используем встроенный звук
             flashDuration: 200,              // длительность вспышки (мс)
             soundVolume: 0.8,                // громкость 0-1
@@ -32,6 +32,7 @@ class FlashModule {
         this.audioElement = null;
         this.audioCtx = null;
         this.useBuiltin = !this.options.soundFile;
+        this.fileExists = false; // флаг существования файла
         
         // Привязка методов
         this.initCamera = this.initCamera.bind(this);
@@ -64,11 +65,13 @@ class FlashModule {
         
         if (exists) {
             this.useBuiltin = false;
-            this._log(`Звук установлен: ${fileName}`);
+            this.fileExists = true;
+            this._log(`Звук установлен: ${fileName} (файл найден)`);
             return true;
         } else {
             this._log(`Файл ${fileName} не найден, используем встроенный звук`);
             this.useBuiltin = true;
+            this.fileExists = false;
             return false;
         }
     }
@@ -78,10 +81,16 @@ class FlashModule {
         const url = this.getSoundUrl(fileName);
         if (!url) return false;
         try {
-            // Добавляем timestamp для обхода кеша
-            const response = await fetch(url + '?t=' + Date.now(), { method: 'HEAD' });
-            return response.ok;
+            // Пробуем получить файл с обходом кеша
+            const response = await fetch(url + '?check=' + Date.now(), { 
+                method: 'HEAD',
+                cache: 'no-cache'
+            });
+            const exists = response.ok;
+            this._log(`Проверка файла ${fileName}: ${exists ? 'найден' : 'не найден'} (статус: ${response.status})`);
+            return exists;
         } catch(e) {
+            this._log(`Ошибка проверки файла: ${e.message}`);
             return false;
         }
     }
@@ -92,6 +101,13 @@ class FlashModule {
         if (!file) return null;
         const basePath = this.options.soundPath.replace(/\/$/, '');
         return `${basePath}/${file}`;
+    }
+    
+    // Принудительно установить использование файлового звука
+    forceFileSound(fileName) {
+        this.options.soundFile = fileName;
+        this.useBuiltin = false;
+        this._log(`Принудительно установлен файловый звук: ${fileName}`);
     }
     
     // Инициализация камеры
@@ -192,13 +208,23 @@ class FlashModule {
     async playSound(fileName = null) {
         const targetFile = fileName || this.options.soundFile;
         
+        this._log(`playSound вызван, targetFile: ${targetFile}, useBuiltin: ${this.useBuiltin}, soundEnabled: ${this.options.soundEnabled}`);
+        
+        // Если файл указан и НЕ используем встроенный - пробуем файл
         if (targetFile && !this.useBuiltin && this.options.soundEnabled) {
+            this._log(`Пробуем воспроизвести файл: ${targetFile}`);
             const success = await this._playFileSound(targetFile);
-            if (success) return true;
+            if (success) {
+                this._log(`Файл успешно воспроизведён!`);
+                return true;
+            }
+            this._log(`Файл не воспроизвёлся, переключаемся на встроенный`);
             this.useBuiltin = true;
         }
         
+        // Если звук включён - пробуем встроенный
         if (this.options.soundEnabled) {
+            this._log(`Воспроизводим встроенный звук`);
             return this._playBuiltinSound();
         }
         
@@ -210,13 +236,14 @@ class FlashModule {
         return new Promise((resolve) => {
             const soundUrl = this.getSoundUrl(fileName);
             if (!soundUrl) {
+                this._log(`Нет URL для файла ${fileName}`);
                 resolve(false);
                 return;
             }
             
             // Добавляем timestamp для обхода кеша
             const urlWithCacheBust = soundUrl + '?t=' + Date.now();
-            this._log(`Попытка воспроизвести: ${urlWithCacheBust}`);
+            this._log(`Попытка воспроизвести файл: ${urlWithCacheBust}`);
             
             const audio = new Audio();
             audio.src = urlWithCacheBust;
@@ -226,27 +253,43 @@ class FlashModule {
             let resolved = false;
             
             const onCanPlay = () => {
-                this._log(`Аудио загружено, воспроизводим...`);
+                this._log(`Аудио загружено, пробуем воспроизвести...`);
                 const playPromise = audio.play();
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
+                        this._log(`✅ Файл успешно воспроизводится!`);
                         if (!resolved) {
                             resolved = true;
                             if (this.options.onSoundStart) this.options.onSoundStart(fileName);
                             resolve(true);
                         }
                     }).catch((err) => {
-                        this._log(`Ошибка play(): ${err.message}`);
+                        this._log(`❌ Ошибка play(): ${err.message}`);
                         if (!resolved) {
                             resolved = true;
                             resolve(false);
                         }
                     });
+                } else {
+                    // Для старых браузеров
+                    if (!resolved) {
+                        resolved = true;
+                        if (this.options.onSoundStart) this.options.onSoundStart(fileName);
+                        resolve(true);
+                    }
                 }
             };
             
             const onError = (e) => {
-                this._log(`Ошибка загрузки: ${audio.error ? audio.error.code : 'unknown'}`);
+                this._log(`❌ Ошибка загрузки аудио: ${audio.error ? audio.error.code : 'unknown'}`);
+                if (audio.error) {
+                    switch(audio.error.code) {
+                        case 1: this._log(`  MEDIA_ERR_ABORTED`); break;
+                        case 2: this._log(`  MEDIA_ERR_NETWORK`); break;
+                        case 3: this._log(`  MEDIA_ERR_DECODE`); break;
+                        case 4: this._log(`  MEDIA_ERR_SRC_NOT_SUPPORTED`); break;
+                    }
+                }
                 if (!resolved) {
                     resolved = true;
                     resolve(false);
@@ -254,6 +297,7 @@ class FlashModule {
             };
             
             const onEnded = () => {
+                this._log(`Аудио воспроизведение завершено`);
                 if (this.options.onSoundEnd) this.options.onSoundEnd();
             };
             
@@ -261,13 +305,14 @@ class FlashModule {
             audio.addEventListener('error', onError);
             audio.addEventListener('ended', onEnded);
             
+            // Начинаем загрузку
             audio.load();
             
             // Таймер-защита
             setTimeout(() => {
                 if (!resolved) {
                     resolved = true;
-                    this._log(`Таймаут загрузки аудио`);
+                    this._log(`❌ Таймаут загрузки аудио (5 сек)`);
                     resolve(false);
                 }
             }, 5000);
@@ -278,6 +323,8 @@ class FlashModule {
     async _playBuiltinSound() {
         const duration = this.options.builtinSoundDuration;
         const frequency = this.options.builtinSoundFrequency;
+        
+        this._log(`Воспроизведение встроенного звука (${duration}ms, ${frequency}Hz)`);
         
         if (!window.AudioContext && !window.webkitAudioContext) {
             this._log("Web Audio не поддерживается");
@@ -304,8 +351,12 @@ class FlashModule {
             const gainNode = this.audioCtx.createGain();
             gainNode.gain.setValueAtTime(this.options.soundVolume, now);
             const fadeStart = Math.max(0, durationSec - 0.3);
-            gainNode.gain.setValueAtTime(this.options.soundVolume, now + fadeStart);
-            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+            if (fadeStart > 0) {
+                gainNode.gain.setValueAtTime(this.options.soundVolume, now + fadeStart);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+            } else {
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+            }
             
             const oscillator = this.audioCtx.createOscillator();
             oscillator.type = 'sine';
