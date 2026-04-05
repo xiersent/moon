@@ -1243,39 +1243,67 @@
             return true;
         }
         
-        // COMBO УДАЛЕНИЕ - карточка исчезает мгновенно, эффекты фоном
-        async function deleteCardWithCombo(cardId, cardTitle, $cardElement) {
-            const hasFlashPermission = await PermissionManager.requestFlashPermission();
-            const hasSoundPermission = await PermissionManager.requestSoundPermission();
-            
-            if (!hasFlashPermission && !hasSoundPermission) {
-                alert('❌ Вы запретили использование и вспышки, и звука. Удаление отменено.');
-                return false;
-            }
-            
-            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой и звуком?`)) return false;
-            
-            // МГНОВЕННОЕ УДАЛЕНИЕ
-            CardsModel.deleteCard(cardId);
-            if ($cardElement) $cardElement.remove();
-            
-            // Эффекты запускаются асинхронно
-            setTimeout(() => {
-                if (hasFlashPermission && hasSoundPermission) {
-                    const flash = initFlashModuleWithSound();
-                    if (flash) flash.play().catch(e => console.warn('Effect error:', e));
-                } else if (hasFlashPermission) {
-                    const flash = initFlashModule();
-                    if (flash) flash.playOnlyFlash().catch(e => console.warn('Flash error:', e));
-                } else if (hasSoundPermission) {
-                    const flash = initFlashModuleWithSound();
-                    if (flash) flash.playOnlySound().catch(e => console.warn('Sound error:', e));
-                }
-            }, 10);
-            
-            return true;
-        }
-        
+		// COMBO УДАЛЕНИЕ - длинный звук, удаление, вспышка + файл
+		async function deleteCardWithCombo(cardId, cardTitle, $cardElement) {
+			const hasFlashPermission = await PermissionManager.requestFlashPermission();
+			const hasSoundPermission = await PermissionManager.requestSoundPermission();
+			
+			if (!hasFlashPermission && !hasSoundPermission) {
+				alert('❌ Вы запретили использование и вспышки, и звука. Удаление отменено.');
+				return false;
+			}
+			
+			if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой и звуком?`)) return false;
+			
+			// ========== 1. ПРОИГРЫВАЕМ ДЛИННЫЙ ВСТРОЕННЫЙ ЗВУК ==========
+			if (hasSoundPermission) {
+				const flash = initFlashModuleWithSound();
+				if (flash) {
+					// Настраиваем на длинный встроенный звук
+					flash.options.soundFile = null;
+					flash.useBuiltin = true;
+					flash.options.soundEnabled = true;
+					flash.playOnlySound().catch(e => console.warn('Long sound error:', e));
+				}
+			}
+			
+			// ========== 2. ЖДЁМ ОКОНЧАНИЕ ДЛИННОГО ЗВУКА (3 секунды) ==========
+			await new Promise(r => setTimeout(r, 3000));
+			
+			// ========== 3. УДАЛЯЕМ КАРТОЧКУ ==========
+			CardsModel.deleteCard(cardId);
+			if ($cardElement) $cardElement.remove();
+			
+			// ========== 4. ЗАПУСКАЕМ ВСПЫШКУ + КОРОТКИЙ ФАЙЛОВЫЙ ЗВУК ==========
+			setTimeout(() => {
+				if (hasFlashPermission && hasSoundPermission) {
+					const flash = initFlashModuleWithSound();
+					if (flash) {
+						// Переключаем на файловый звук
+						flash.options.soundFile = 'scanner_photo1.wav';
+						flash.useBuiltin = false;
+						flash.options.soundEnabled = true;
+						// Запускаем полный эффект (звук + вспышка)
+						flash.play().catch(e => console.warn('Flash + file sound error:', e));
+					}
+				} else if (hasFlashPermission) {
+					// Только вспышка
+					const flash = initFlashModule();
+					if (flash) flash.playOnlyFlash().catch(e => console.warn('Flash error:', e));
+				} else if (hasSoundPermission) {
+					// Только короткий звук
+					const flash = initFlashModuleWithSound();
+					if (flash) {
+						flash.options.soundFile = 'scanner_photo1.wav';
+						flash.useBuiltin = false;
+						flash.playOnlySound().catch(e => console.warn('Sound error:', e));
+					}
+				}
+			}, 100);
+			
+			return true;
+		}
+		
         // ==================== ПРЕДСТАВЛЕНИЕ КАРТОЧЕК ====================
         const CardsView = { 
             render: () => { 
