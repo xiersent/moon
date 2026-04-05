@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Заразка</title>
+    <title>Планетаход</title>
     <script src="vendor/js/jquery-3.6.0.min.js"></script>
     <script src="vendor/js/ejs.min.js"></script>
     <script src="vendor/js/flash.js"></script>
@@ -115,7 +115,6 @@
         .entryItem__content{font-size:15px;line-height:1.5;color:#333;word-break:break-word;white-space:pre-wrap;}
         .entryItem__footer{margin-top:8px;font-size:11px;color:#bbb;}
         
-        /* Кнопки действий для записи дневника */
         .entryItem__actions {
             display: none;
             gap: 8px;
@@ -143,7 +142,6 @@
         .fixedNameButton{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#e0e0e0;color:#333;border:1px solid #ccc;border-radius:30px;padding:8px 20px;font-size:14px;cursor:pointer;z-index:1000;text-align:center;height:40px;white-space:nowrap;min-width:160px;transition:all 0.2s;}
         .fixedNameButton:active{transform:translateX(-50%) scale(0.96);}
         
-        /* Плавающие кнопки */
         .floatingAddButton{
             position:fixed;
             bottom:24px;
@@ -171,7 +169,6 @@
             transform: translateX(-50%) scale(1.05);
         }
         
-        /* Дополнительная кнопка (стрелка вверх) */
         .floatingUpButton {
             position: fixed;
             bottom: 90px;
@@ -190,7 +187,7 @@
             font-size: 20px;
             color: white;
             transition: all 0.2s ease;
-			background:#333;
+            background:#333;
         }
         .floatingUpButton.visible {
             display: flex;
@@ -224,22 +221,291 @@
         .modeSwitchHeader{background:#fff;border-radius:16px;padding:16px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e8e8e8;text-align:center;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:space-between;}
         .modeSwitchHeader:active{background:#f5f5f5;}
         .modeTitle{font-size:20px;font-weight:600;color:#333;letter-spacing:-0.3px;flex:1;text-align:center;}
-        .nameModal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:2000;}
-        .nameModal__button{width:100%;padding:8px 10px;background:#e0e0e0;border:1px solid #ccc;border-radius:6px;cursor:pointer;}
-        .nameModal__content{background:white;padding:16px;border-radius:12px;width:90%;max-width:400px;}
-        .nameModal__input{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:14px;margin-bottom:12px;}
-        .nameModal__title{font-size:18px;font-weight:600;margin-bottom:12px;}
+        
+        .actionsMenu {
+            position: relative;
+            margin-bottom: 20px;
+            width: 100%;
+			display: flex;
+			justify-content: center;
+        }
+        
+        .menuTriggerButton {
+            padding: 12px 16px;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+            color: #333;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .menuTriggerButton:active {
+            background: #f5f5f5;
+            transform: scale(0.98);
+        }
+        
+        .menuTriggerText {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .menuTriggerArrow {
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+        
+        .menuTriggerButton.open .menuTriggerArrow {
+            transform: rotate(180deg);
+        }
+        
+        .menuDropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            z-index: 100;
+            display: none;
+            overflow: hidden;
+            animation: dropdownFadeIn 0.2s ease;
+        }
+        
+        .menuDropdown.open {
+            display: block;
+        }
+        
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .menuItem {
+            width: 100%;
+            padding: 14px 16px;
+            background: none;
+            border: none;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #333;
+            transition: background 0.15s;
+            text-align: center;
+        }
+        
+        .menuItem:last-child {
+            border-bottom: none;
+        }
+        
+        .menuItem:active {
+            background: #f5f5f5;
+        }
+        
+        .menuItemText {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .menuItem--danger {
+            color: #d4380d;
+        }
+        
+        .menuItem--warning {
+            color: #d48806;
+        }
+        
+        @media (max-width: 600px) {
+            .menuTriggerButton {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+            .menuItem {
+                padding: 12px 14px;
+            }
+        }
+        
+        .aboutModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2100;
+            animation: fadeIn 0.2s ease;
+        }
+        
+        .aboutModal__content {
+            background: #fff;
+            border-radius: 24px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .aboutModal__header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+        
+        .aboutModal__title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .aboutModal__body {
+            padding: 20px;
+        }
+        
+        .aboutModal__sectionTitle {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .aboutModal__info {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #666;
+        }
+        
+        .aboutModal__info p {
+            margin: 8px 0;
+        }
+        
+        .aboutModal__footer {
+            padding: 16px 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+        }
+        
+        .aboutModal__close {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .nameModal{
+            position:fixed;
+            top:0;
+            left:0;
+            right:0;
+            bottom:0;
+            background:#1a1a2e;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            z-index:2000;
+        }
+        .nameModal__content{
+            background:#fff;
+            padding:24px;
+            border-radius:20px;
+            width:90%;
+            max-width:400px;
+            box-shadow:0 20px 40px rgba(0,0,0,0.3);
+        }
+        .nameModal__title{
+            font-size:20px;
+            font-weight:600;
+            margin-bottom:16px;
+            color:#333;
+            text-align:center;
+        }
+        .nameModal__input{
+            width:100%;
+            padding:12px 14px;
+            border:1px solid #ddd;
+            border-radius:10px;
+            font-size:15px;
+            margin-bottom:16px;
+            font-family:inherit;
+            text-align: center;
+        }
+        .nameModal__info{
+            background:#f5f5f5;
+            padding:14px;
+            border-radius:10px;
+            margin-bottom:20px;
+            font-size:12px;
+            line-height:1.5;
+            color:#555;
+        }
+        .nameModal__info p{
+            margin-bottom:8px;
+        }
+        .nameModal__info p:last-child{
+            margin-bottom:0;
+        }
+        .nameModal__info ul{
+            padding-left:20px;
+            margin:8px 0;
+        }
+        .nameModal__info li{
+            margin:4px 0;
+        }
+        .nameModal__button{
+            width:100%;
+            padding:12px;
+            background:#333;
+            border:none;
+            border-radius:10px;
+            color:white;
+            font-size:16px;
+            font-weight:500;
+            cursor:pointer;
+            transition:background 0.2s;
+        }
+        .nameModal__button:active{
+            background:#555;
+        }
+        
         .parentsList{display:flex;flex-direction:column;gap:6px;width:100%;}
         .plus{transform:rotate(45deg);display:inline-block;}
         .searchContainer{display:flex;flex-direction:row;gap:6px;width:100%;display:none;}
         .searchContainer.visible{display:flex;}
-		.suggestions{border: 1px solid #ddd; border-radius: 6px;}
+        .suggestions{border:1px solid #ddd;border-radius:6px;}
         .searchInput{flex:1;padding:0 8px;border:1px solid #ddd;border-radius:6px;font-size:14px;background:#fff;height:36px;}
         .suggestionItem{padding:8px 12px;cursor:pointer;font-size:13px;}
-		.suggestionItem+.suggestionItem{border-top:1px solid #f0f0f0;}
+        .suggestionItem+.suggestionItem{border-top:1px solid #f0f0f0;}
         .suggestionType{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;margin-right:8px;font-weight:500;background:#e3f2fd;color:#1976d2;}
         
-        /* Скрытие элементов через :has() */
         .suggestions {
             display: none;
         }
@@ -253,7 +519,6 @@
         .viewContainer{display:none;}
         .viewContainer.active{display:block;}
         
-        /* Дневник скрыт по умолчанию, плюсик скрыт */
         #journalView { display: none; }
         #floatingBtn { display: none; }
         #journalView.active { display: block; }
@@ -261,10 +526,13 @@
         
         @keyframes highlightPulse{0%{background:#fff3bf;}100%{background:#fff9c4;}}
         @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+        @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+        
         @media (max-width:600px){
             body{padding:12px;padding-bottom:90px;}
             .fullscreenModal__actions{flex-wrap:nowrap;}
             .fullscreenModal__datetime{flex-direction:row;}
+            .nameModal__content{padding:20px;}
         }
     </style>
 </head>
@@ -274,6 +542,35 @@
             <span class="modeArrow">←</span>
             <div class="modeTitle" id="modeTitle">Планетаход</div>
             <span class="modeArrow">→</span>
+        </div>
+
+        <div class="actionsMenu">
+            <button class="menuTriggerButton" id="menuTriggerBtn">
+                <span class="menuTriggerText">☰</span>
+            </button>
+            <div class="menuDropdown" id="menuDropdown">
+                <button class="menuItem menuItem--danger" id="menuDeleteAllDataBtn">
+                    <span class="menuItemText">Уничтожить все данные</span>
+                </button>
+                <button class="menuItem menuItem--danger" id="menuDeleteCardsDataBtn">
+                    <span class="menuItemText">Уничтожить данные карточек</span>
+                </button>
+                <button class="menuItem menuItem--danger" id="menuDeleteJournalDataBtn">
+                    <span class="menuItemText">Уничтожить данные дневника</span>
+                </button>
+                <button class="menuItem" id="menuExportDataBtn">
+                    <span class="menuItemText">Экспорт данных</span>
+                </button>
+                <button class="menuItem" id="menuImportDataBtn">
+                    <span class="menuItemText">Импорт данных</span>
+                </button>
+                <button class="menuItem menuItem--warning" id="menuRevokeAgreementBtn">
+                    <span class="menuItemText">Отказаться от использования</span>
+                </button>
+                <button class="menuItem" id="menuAboutBtn">
+                    <span class="menuItemText">О странице</span>
+                </button>
+            </div>
         </div>
 
         <div class="globalSearch">
@@ -286,7 +583,6 @@
             <div class="cardsSystem">
                 <div class="cardsSystem__controls">
                     <button class="button button--primary" id="addCardBtn">Создать карточку</button>
-                    <button class="button button--danger" id="deleteAllBtn">Уничтожить все</button>
                 </div>
                 <div class="cardsContainer" id="cardsContainer"></div>
             </div>
@@ -307,9 +603,20 @@
 
     <div class="nameModal" id="nameModal" style="display: none;">
         <div class="nameModal__content">
-            <div class="nameModal__title">Введите ваше имя</div>
-            <input type="text" class="nameModal__input" id="userNameInput" placeholder="Имя" maxlength="50">
-            <button class="nameModal__button" id="saveUserNameBtn">Сохранить</button>
+            <div class="nameModal__title">Укажите ваше имя</div>
+            <input type="text" class="nameModal__input" id="userNameInput" placeholder="Имя" maxlength="50" autocomplete="off">
+            <div class="nameModal__info">
+                <p><strong>Конфиденциальность и безопасность</strong></p>
+                <p>Указывая имя, вы подтверждаете, что ознакомлены с условиями и соглашаетесь на использование данного вида транспорта</p>
+                <ul>
+                    <li>Автор не собирает и не хранит ваши персональные данные</li>
+                    <li>Все данные сохраняются локально в вашем браузере</li>
+                    <li>В дальнейшем вы сможете отказаться от использования</li>
+                    <li>Рекомендуется указывать имя для персонализации</li>
+                    <li>Инструмент предоставляется "как есть"</li>
+                </ul>
+            </div>
+            <button class="nameModal__button" id="saveUserNameBtn">Продолжить</button>
         </div>
     </div>
 
@@ -432,6 +739,34 @@
     </script>
 
     <script>
+        // ==================== СИСТЕМА СОГЛАСИЯ ====================
+        const REQUIRED_AGREEMENT_DATE = "2026-04-05";
+        
+        const AgreementManager = {
+            isAgreementValid: function() {
+                const savedDate = localStorage.getItem('agreementDate');
+                return savedDate === REQUIRED_AGREEMENT_DATE;
+            },
+            
+            saveAgreement: function(name) {
+                if (name && name.trim()) {
+                    localStorage.setItem('userName', name.trim());
+                    localStorage.setItem('agreementDate', REQUIRED_AGREEMENT_DATE);
+                    return true;
+                }
+                return false;
+            },
+            
+            getUserName: function() {
+                return localStorage.getItem('userName') || '';
+            },
+            
+            resetAgreement: function() {
+                localStorage.removeItem('agreementDate');
+                localStorage.removeItem('userName');
+            }
+        };
+        
         // ==================== УТИЛИТЫ ДЛЯ ДАТ ====================
         const DateUtils = {
             localToISO: function(localDateStr) {
@@ -500,11 +835,9 @@
             getCurrentTime: function() { const now = new Date(); return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; },
             getEntryById: function(id) { return this.entries.find(e => e.id == id); },
             getNextDateTime: function(currentDate, currentTime) {
-                // Парсим текущую дату и время
                 const [year, month, day] = currentDate.split('-');
                 const [hour, minute] = currentTime.split(':');
                 const currentDateTime = new Date(year, month-1, day, hour, minute);
-                // Добавляем 1 минуту
                 const nextDateTime = new Date(currentDateTime.getTime() + 60000);
                 const nextDate = nextDateTime.toISOString().slice(0,10);
                 const nextTime = `${String(nextDateTime.getHours()).padStart(2,'0')}:${String(nextDateTime.getMinutes()).padStart(2,'0')}`;
@@ -522,16 +855,13 @@
                 this.bindEvents();
             },
             bindEvents: function() { 
-                // Клик по записи - показываем/скрываем кнопки
                 $('.entryItem').off('click').on('click', function(e) {
                     e.stopPropagation();
                     const $actions = $(this).find('.entryItem__actions');
-                    // Скрываем все другие кнопки
                     $('.entryItem__actions').not($actions).removeClass('visible');
                     $actions.toggleClass('visible');
                 });
                 
-                // Редактирование записи
                 $('.edit-entry').off('click').on('click', function(e) {
                     e.stopPropagation();
                     const $entry = $(this).closest('.entryItem');
@@ -540,7 +870,6 @@
                     $entry.find('.entryItem__actions').removeClass('visible');
                 });
                 
-                // Добавить после
                 $('.add-after').off('click').on('click', function(e) {
                     e.stopPropagation();
                     const $entry = $(this).closest('.entryItem');
@@ -551,7 +880,6 @@
                     $entry.find('.entryItem__actions').removeClass('visible');
                 });
                 
-                // Закрываем кнопки при клике вне
                 $(document).off('click.journalActions').on('click.journalActions', function(e) {
                     if (!$(e.target).closest('.entryItem').length) {
                         $('.entryItem__actions').removeClass('visible');
@@ -923,7 +1251,7 @@
                     }); 
                     this.cards.push({ 
                         id:id2, 
-                        title:"Пример связи", 
+                        title:"Пример", 
                         placeholder:"Карточка", 
                         content:"Эта карточка связана с Планетаходом.", 
                         parentIds:[id1], 
@@ -951,7 +1279,7 @@
                 const saved = localStorage.getItem(this.FLASH_KEY);
                 if (saved === 'granted') return true;
                 if (saved === 'denied') return false;
-                const result = confirm('⚠️ Для использования эффекта ВСПЫШКИ требуется ваше разрешение.\n\nРазрешить?');
+                const result = confirm('Для использования эффекта ВСПЫШКИ требуется ваше разрешение.\n\nРазрешить?');
                 if (result) {
                     localStorage.setItem(this.FLASH_KEY, 'granted');
                     return true;
@@ -965,7 +1293,7 @@
                 const saved = localStorage.getItem(this.SOUND_KEY);
                 if (saved === 'granted') return true;
                 if (saved === 'denied') return false;
-                const result = confirm('🔊 Для использования эффекта ДЛИННОГО ЗВУКА требуется ваше разрешение.\n\nРазрешить?');
+                const result = confirm('Для использования эффекта ДЛИННОГО ЗВУКА требуется ваше разрешение.\n\nРазрешить?');
                 if (result) {
                     localStorage.setItem(this.SOUND_KEY, 'granted');
                     return true;
@@ -1008,7 +1336,6 @@
             return flashModuleWithSound;
         }
 
-        // ПРОСТОЕ УДАЛЕНИЕ (без эффектов)
         async function deleteCardSimple(cardId, cardTitle, $cardElement) {
             if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}"?`)) return false;
             CardsModel.deleteCard(cardId);
@@ -1016,19 +1343,17 @@
             return true;
         }
         
-        // COMBO УДАЛЕНИЕ
         async function deleteCardWithCombo(cardId, cardTitle, $cardElement) {
             const hasFlashPermission = await PermissionManager.requestFlashPermission();
             const hasSoundPermission = await PermissionManager.requestSoundPermission();
             
             if (!hasFlashPermission && !hasSoundPermission) {
-                alert('❌ Вы запретили использование и вспышки, и звука. Удаление отменено.');
+                alert('Вы запретили использование и вспышки, и звука. Удаление отменено.');
                 return false;
             }
             
             if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой и звуком?`)) return false;
             
-            // 1. ДЛИННЫЙ ВСТРОЕННЫЙ ЗВУК (3 сек)
             if (hasSoundPermission) {
                 const flash = initFlashModuleWithSound();
                 if (flash) {
@@ -1043,11 +1368,9 @@
                 await new Promise(r => setTimeout(r, 3000));
             }
             
-            // 2. УДАЛЕНИЕ КАРТОЧКИ
             CardsModel.deleteCard(cardId);
             if ($cardElement) $cardElement.remove();
             
-            // 3. ВСПЫШКА + ФАЙЛОВЫЙ ЗВУК
             if (hasFlashPermission && hasSoundPermission) {
                 const flash = initFlashModuleWithSound();
                 if (flash) {
@@ -1069,6 +1392,183 @@
             
             return true;
         }
+        
+        // ==================== УПРАВЛЕНИЕ ДАННЫМИ ====================
+        const DataManager = {
+            exportData: function() {
+                const data = {
+                    version: '1.1.0',
+                    exportDate: new Date().toISOString(),
+                    cards: CardsModel.cards,
+                    journal: JournalModel.entries,
+                    agreementDate: localStorage.getItem('agreementDate'),
+                    userName: localStorage.getItem('userName')
+                };
+                
+                const dataStr = JSON.stringify(data, null, 2);
+                const blob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `planetahod_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert('Данные экспортированы');
+            },
+            
+            importData: function() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'application/json';
+                input.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        try {
+                            const imported = JSON.parse(evt.target.result);
+                            
+                            if (imported.cards && Array.isArray(imported.cards)) {
+                                CardsModel.cards = imported.cards;
+                                CardsModel.saveState();
+                            }
+                            
+                            if (imported.journal && Array.isArray(imported.journal)) {
+                                JournalModel.entries = imported.journal;
+                                JournalModel.save();
+                            }
+                            
+                            if (imported.agreementDate && imported.userName) {
+                                localStorage.setItem('agreementDate', imported.agreementDate);
+                                localStorage.setItem('userName', imported.userName);
+                            }
+                            
+                            alert('Данные импортированы. Страница будет перезагружена.');
+                            setTimeout(() => location.reload(), 1000);
+                        } catch(err) {
+                            alert('Ошибка при импорте: неверный формат файла');
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+                input.click();
+            },
+            
+            // Уничтожить ВСЕ данные (карточки + дневник)
+            destroyAllData: function() {
+                const password = prompt('ОПАСНО! Это удалит ВСЕ данные (карточки, дневник).\n\nВведите "уничтожить" для подтверждения:');
+                if (password === 'уничтожить') {
+                    CardsModel.cards = [];
+                    CardsModel.saveState();
+                    JournalModel.entries = [];
+                    JournalModel.save();
+                    CardsView.render();
+                    JournalView.render();
+                    alert('Все данные уничтожены.');
+                } else if (password !== null) {
+                    alert('Неверное слово. Уничтожение отменено.');
+                }
+            },
+            
+            // Уничтожить только данные карточек
+            destroyCardsData: function() {
+                const password = prompt('Уничтожить ВСЕ данные карточек?\n\nВведите "уничтожить" для подтверждения:');
+                if (password === 'уничтожить') {
+                    CardsModel.cards = [];
+                    CardsModel.saveState();
+                    CardsView.render();
+                    alert('Все данные карточек уничтожены.');
+                } else if (password !== null) {
+                    alert('Неверное слово. Уничтожение отменено.');
+                }
+            },
+            
+            // Уничтожить только данные дневника
+            destroyJournalData: function() {
+                const password = prompt('Уничтожить ВСЕ записи дневника?\n\nВведите "уничтожить" для подтверждения:');
+                if (password === 'уничтожить') {
+                    JournalModel.entries = [];
+                    JournalModel.save();
+                    JournalView.render();
+                    alert('Все записи дневника уничтожены.');
+                } else if (password !== null) {
+                    alert('Неверное слово. Уничтожение отменено.');
+                }
+            },
+            
+            // Отказаться от использования (полная очистка)
+            revokeAgreement: function() {
+                const password = prompt('ОТКАЗ ОТ ИСПОЛЬЗОВАНИЯ\n\nЭто удалит ВСЕ ваши данные (карточки, дневник, настройки).\n\nВведите "отказаться" для подтверждения:');
+                if (password === 'отказаться') {
+                    localStorage.clear();
+                    alert('Все данные удалены. Вы отказались от использования. Страница будет перезагружена.');
+                    setTimeout(() => location.reload(), 500);
+                } else if (password !== null) {
+                    alert('Неверное слово. Операция отменена.');
+                }
+            }
+        };
+        
+        // ==================== СИСТЕМА ВЕРСИЙ ====================
+        const VersionManager = {
+            version: '1.1.0',
+            appName: 'Компьютер',
+            
+            getLastUpdated: function() {
+                let lastModified = document.lastModified;
+                if (lastModified && lastModified !== '') {
+                    const date = new Date(lastModified);
+                    if (!isNaN(date.getTime())) {
+                        return date.toLocaleString('ru-RU');
+                    }
+                }
+                return 'неизвестно';
+            },
+            
+            showAbout: function() {
+                const lastUpdated = this.getLastUpdated();
+                
+                const modalHtml = `
+                    <div class="aboutModal" id="aboutModal">
+                        <div class="aboutModal__content">
+                            <div class="aboutModal__header">
+                                <div class="aboutModal__title">${this.appName}</div>
+                            </div>
+                            <div class="aboutModal__body">
+                                <div class="aboutModal__section">
+                                    <div class="aboutModal__sectionTitle">Последнее обновление</div>
+                                    <div class="aboutModal__info">
+                                        <p>${lastUpdated}</p>
+                                        <p style="font-size: 12px; color: #999; margin-top: 4px;">
+                                            Определено автоматически
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="aboutModal__footer">
+                                <button class="aboutModal__close" id="aboutModalCloseBtn">Понятно</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                $('body').append(modalHtml);
+                
+                $('#aboutModalCloseBtn').on('click', function() {
+                    $('#aboutModal').remove();
+                });
+                
+                $('#aboutModal').on('click', function(e) {
+                    if (e.target === this) {
+                        $(this).remove();
+                    }
+                });
+            }
+        };
         
         // ==================== ПРЕДСТАВЛЕНИЕ КАРТОЧЕК ====================
         const CardsView = { 
@@ -1127,7 +1627,6 @@
             bindEvents: () => { 
                 $(document)
                     .off('click', '#addCardBtn').on('click', '#addCardBtn', ()=>{ const newCard = CardsModel.addCard(); CardsView.render(); setTimeout(()=>CardsView.highlightCard(newCard.id),100); })
-                    .off('click', '#deleteAllBtn').on('click', '#deleteAllBtn', ()=>{ if(CardsModel.cards.length && confirm("Уничтожить все карточки?")){ CardsModel.deleteAllCards(); CardsView.render(); } })
                     
                     .off('click', '.delete-combo').on('click', '.delete-combo', async function(e) { 
                         e.preventDefault(); e.stopPropagation();
@@ -1252,61 +1751,87 @@
         
         // ==================== ИМЯ ПОЛЬЗОВАТЕЛЯ ====================
         const UserName = { 
-            key:'userName', 
-            get:()=>localStorage.getItem(UserName.key)||'', 
-            save:(name)=>{ if(name&&name.trim()){ localStorage.setItem(UserName.key,name.trim()); return true; } return false; }, 
-            has:()=>{ const n=localStorage.getItem(UserName.key); return n&&n.trim().length>0; }, 
-            scrollDirection: 'up',
-            init:()=>{ 
-                if(UserName.has()){ $('#userNameDisplay').text(UserName.get()); $('#fixedNameButton').show(); } 
-                else { $('#nameModal').show(); $('#userNameInput').focus(); } 
-                $('#saveUserNameBtn').on('click',function(){ const name=$('#userNameInput').val().trim(); if(name){ UserName.save(name); $('#nameModal').hide(); $('#userNameDisplay').text(name); $('#fixedNameButton').show(); } else alert('Введите имя'); }); 
-                $('#userNameInput').on('keypress',function(e){ if(e.which===13)$('#saveUserNameBtn').click(); }); 
-                $('#fixedNameButton').on('click', function(){ 
+            key: 'userName',
+            get: () => AgreementManager.getUserName(),
+            has: () => AgreementManager.isAgreementValid() && AgreementManager.getUserName().length > 0,
+            init: function() {
+                if (AgreementManager.isAgreementValid()) {
+                    const savedName = AgreementManager.getUserName();
+                    if (savedName) {
+                        $('#userNameDisplay').text(savedName);
+                        $('#fixedNameButton').show();
+                    } else {
+                        this.showAgreementModal();
+                    }
+                } else {
+                    this.showAgreementModal();
+                }
+                
+                $('#saveUserNameBtn').off('click').on('click', () => {
+                    const name = $('#userNameInput').val().trim();
+                    if (name) {
+                        AgreementManager.saveAgreement(name);
+                        $('#nameModal').hide();
+                        $('#userNameDisplay').text(name);
+                        $('#fixedNameButton').show();
+                    } else {
+                        alert('Пожалуйста, укажите ваше имя');
+                    }
+                });
+                
+                $('#userNameInput').off('keypress').on('keypress', function(e) {
+                    if (e.which === 13) $('#saveUserNameBtn').click();
+                });
+                
+                $('#fixedNameButton').off('click').on('click', function() { 
                     const isAtBottom = (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 50;
-                    if (isAtBottom || UserName.scrollDirection === 'down') {
+                    if (isAtBottom) {
                         window.scrollTo({ top: 0, behavior: 'auto' });
-                        UserName.scrollDirection = 'up';
                     } else {
                         window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' });
-                        UserName.scrollDirection = 'down';
                     }
-                }); 
-            } 
+                });
+            },
+            showAgreementModal: function() {
+                const savedName = AgreementManager.getUserName();
+                if (savedName) {
+                    $('#userNameInput').val(savedName);
+                } else {
+                    $('#userNameInput').val('');
+                }
+                $('#nameModal').show();
+            }
         };
         
         // ==================== ГЛАВНЫЙ КОНТРОЛЛЕР ====================
         const AppController = { 
             currentView: 'cards', 
             init: function() { 
-                UserName.init(); 
                 JournalModel.load(); 
                 CardsModel.loadState(); 
                 JournalView.render(); 
                 CardsView.render(); 
                 this.loadViewPreference(); 
                 this.bindEvents(); 
+                this.initMenu();
                 initFlashModule();
                 initFlashModuleWithSound();
+                UserName.init();
                 
-                // Логика двухкликового плюсика
                 let plusClickTimer = null;
                 
                 $('#floatingBtn').on('click', function() {
                     if (pendingPlusClick) {
-                        // Второй клик - открываем модалку
                         clearTimeout(plusClickTimer);
                         pendingPlusClick = false;
                         $('#floatingBtn').removeClass('active');
                         $('#floatingUpBtn').removeClass('visible');
                         JournalController.openAddModal();
                     } else {
-                        // Первый клик - показываем дополнительную кнопку
                         pendingPlusClick = true;
                         $('#floatingBtn').addClass('active');
                         $('#floatingUpBtn').addClass('visible');
                         
-                        // Таймаут на случай если не будет второго клика
                         plusClickTimer = setTimeout(() => {
                             pendingPlusClick = false;
                             $('#floatingBtn').removeClass('active');
@@ -1315,17 +1840,14 @@
                     }
                 });
                 
-                // Кнопка прокрутки вверх
                 $('#floatingUpBtn').on('click', function() {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
-                    // Сбрасываем состояние плюсика
                     pendingPlusClick = false;
                     $('#floatingBtn').removeClass('active');
                     $('#floatingUpBtn').removeClass('visible');
                     if (plusClickTimer) clearTimeout(plusClickTimer);
                 });
                 
-                // Активация аудио при первом касании
                 const activateAudio = () => {
                     const flash = initFlashModuleWithSound();
                     if (flash && flash.audioCtx && flash.audioCtx.state === 'suspended') {
@@ -1342,11 +1864,77 @@
                 document.addEventListener('touchstart', activateAudio);
                 document.addEventListener('click', activateAudio);
             }, 
+            
+            initMenu: function() {
+                const $menuTrigger = $('#menuTriggerBtn');
+                const $menuDropdown = $('#menuDropdown');
+                
+                $menuTrigger.off('click').on('click', function(e) {
+                    e.stopPropagation();
+                    $menuDropdown.toggleClass('open');
+                    $menuTrigger.toggleClass('open');
+                });
+                
+                $(document).off('click.menu').on('click.menu', function(e) {
+                    if (!$(e.target).closest('.actionsMenu').length) {
+                        $menuDropdown.removeClass('open');
+                        $menuTrigger.removeClass('open');
+                    }
+                });
+                
+                // Уничтожить все данные (карточки + дневник)
+                $('#menuDeleteAllDataBtn').off('click').on('click', () => {
+                    DataManager.destroyAllData();
+                    $menuDropdown.removeClass('open');
+                    $menuTrigger.removeClass('open');
+                });
+                
+                // Уничтожить данные карточек
+                $('#menuDeleteCardsDataBtn').off('click').on('click', () => {
+                    DataManager.destroyCardsData();
+                    $menuDropdown.removeClass('open');
+                    $menuTrigger.removeClass('open');
+                });
+                
+                // Уничтожить данные дневника
+                $('#menuDeleteJournalDataBtn').off('click').on('click', () => {
+                    DataManager.destroyJournalData();
+                    $menuDropdown.removeClass('open');
+                    $menuTrigger.removeClass('open');
+                });
+                
+                $('#menuExportDataBtn').off('click').on('click', () => {
+                    DataManager.exportData();
+                    $menuDropdown.removeClass('open');
+                    $menuTrigger.removeClass('open');
+                });
+                
+                $('#menuImportDataBtn').off('click').on('click', () => {
+                    DataManager.importData();
+                    $menuDropdown.removeClass('open');
+                    $menuTrigger.removeClass('open');
+                });
+                
+                // Отказаться от использования
+                $('#menuRevokeAgreementBtn').off('click').on('click', () => {
+                    DataManager.revokeAgreement();
+                    $menuDropdown.removeClass('open');
+                    $menuTrigger.removeClass('open');
+                });
+                
+                $('#menuAboutBtn').off('click').on('click', () => {
+                    VersionManager.showAbout();
+                    $menuDropdown.removeClass('open');
+                    $menuTrigger.removeClass('open');
+                });
+            },
+            
             bindEvents: function() { 
                 $('#modeSwitchHeader').on('click',()=>{ this.switchView(this.currentView==='cards'?'journal':'cards'); }); 
                 $('#globalSearchInput').on('input',(e)=>this.handleGlobalSearch(e.target.value)); 
                 $(document).on('click',(e)=>{ if(!$(e.target).closest('.globalSearch').length)$('#globalSuggestions').hide(); }); 
             }, 
+            
             switchView: function(view) { 
                 this.currentView=view; 
                 localStorage.setItem('appViewPreference',view); 
@@ -1365,6 +1953,7 @@
                     $('#fixedNameButton').show(); 
                 } 
             }, 
+            
             loadViewPreference: function() { 
                 const saved=localStorage.getItem('appViewPreference'); 
                 if(saved && (saved==='cards'||saved==='journal')) {
@@ -1373,6 +1962,7 @@
                     this.switchView('cards');
                 }
             }, 
+            
             handleGlobalSearch: function(query) { 
                 const $suggestions=$('#globalSuggestions'); 
                 if(!query.trim()){ $suggestions.hide(); return; } 
@@ -1395,6 +1985,7 @@
                     else { AppController.switchView('cards'); setTimeout(()=>CardsView.highlightCard(id),100); } 
                 }); 
             }, 
+            
             escapeHtml: function(str) { if(!str) return ''; return str.replace(/[&<>]/g,m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); } 
         };
         
