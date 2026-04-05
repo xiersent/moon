@@ -71,6 +71,7 @@
         .entryItem__actions.visible{display:flex;}
         .entryActionBtn{flex:1;padding:6px 12px;background:#e0e0e0;border:1px solid #ccc;border-radius:20px;font-size:12px;cursor:pointer;text-align:center;}
         .entryActionBtn:active{background:#ccc;}
+        .entryActionBtn--danger{border-color:#ffccc7;color:#d4380d;}
         
         /* ========== ПЛАВАЮЩИЕ КНОПКИ ========== */
         /* Кнопка планетахода (с именем) */
@@ -346,6 +347,7 @@
                         <div class="entryItem__actions">
                             <button class="entryActionBtn edit-entry">Редактировать</button>
                             <button class="entryActionBtn add-after">Добавить после</button>
+                            <button class="entryActionBtn entryActionBtn--danger delete-entry">Уничтожить</button>
                         </div>
                     </div>
                 <% }); %>
@@ -579,6 +581,18 @@
                     const $actions = $(this).find('.entryItem__actions');
                     $('.entryItem__actions').not($actions).removeClass('visible');
                     $actions.toggleClass('visible');
+                    
+                    // Плавный скролл к нижней части элемента с учетом плавающей кнопки
+                    const rect = this.getBoundingClientRect();
+                    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+                    const floatingBtnHeight = 80; // отступ для плавающей кнопки (высота кнопки + отступ)
+                    const elementBottom = rect.bottom + scrollTop;
+                    const targetScroll = elementBottom - window.innerHeight + floatingBtnHeight;
+                    
+                    window.scrollTo({
+                        top: Math.max(0, targetScroll),
+                        behavior: 'smooth'
+                    });
                 });
                 $('.edit-entry').off('click').on('click', function(e) {
                     e.stopPropagation();
@@ -594,6 +608,17 @@
                     const entryTime = $entry.data('entry-time');
                     const nextDateTime = JournalModel.getNextDateTime(entryDate, entryTime);
                     JournalController.openAddModal(nextDateTime.date, nextDateTime.time);
+                    $entry.find('.entryItem__actions').removeClass('visible');
+                });
+                $('.delete-entry').off('click').on('click', function(e) {
+                    e.stopPropagation();
+                    const $entry = $(this).closest('.entryItem');
+                    const entryId = $entry.data('entry-id');
+                    if(confirm('Уничтожить эту запись?')) {
+                        if(JournalModel.deleteEntry(entryId)) {
+                            JournalView.render();
+                        }
+                    }
                     $entry.find('.entryItem__actions').removeClass('visible');
                 });
                 $(document).off('click.journalActions').on('click.journalActions', function(e) {
@@ -943,7 +968,7 @@
                     excludeIds = excludeIds.concat(this.getAllParentIds(excludeCardId)); 
                     if(excludeChildren) excludeIds = excludeIds.concat(this.getAllChildIds(excludeCardId)); 
                 } 
-                return this.cards.filter(card => 
+                return this.cards.filter(card =>
                     card.title.toLowerCase().includes(query.toLowerCase()) && 
                     !excludeIds.includes(card.id)
                 ).map(card => ({ 
