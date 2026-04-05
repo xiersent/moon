@@ -9,7 +9,7 @@
     <title>Заразка</title>
     <script src="vendor/js/jquery-3.6.0.min.js"></script>
     <script src="vendor/js/ejs.min.js"></script>
-	<script src="vendor/js/flash.js"></script>
+    <script src="vendor/js/flash.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#f5f5f5;min-height:100vh;padding:16px;padding-bottom:90px;line-height:1.5;overflow-y:scroll;}
@@ -108,16 +108,97 @@
         .daysContainer{display:flex;flex-direction:column;gap:24px;}
         .emptyState{text-align:center;padding:60px 20px;background:#fff;border-radius:16px;color:#aaa;}
         .entriesList{display:flex;flex-direction:column;}
-        .entryItem{padding:16px 20px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.2s;}
+        .entryItem{padding:16px 20px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.2s;position:relative;}
         .entryItem:last-child{border-bottom:none;}
         .entryItem:hover{background:#f9f9f9;}
         .entryItem.highlight{background:#fff9c4;animation:highlightPulse 0.6s ease;}
         .entryItem__content{font-size:15px;line-height:1.5;color:#333;word-break:break-word;white-space:pre-wrap;}
         .entryItem__footer{margin-top:8px;font-size:11px;color:#bbb;}
+        
+        /* Кнопки действий для записи дневника */
+        .entryItem__actions {
+            display: none;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+        .entryItem__actions.visible {
+            display: flex;
+        }
+        .entryActionBtn {
+            flex: 1;
+            padding: 6px 12px;
+            background: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .entryActionBtn:active {
+            background: #ccc;
+        }
+        
         .fixedNameButton{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#e0e0e0;color:#333;border:1px solid #ccc;border-radius:30px;padding:8px 20px;font-size:14px;cursor:pointer;z-index:1000;text-align:center;height:40px;white-space:nowrap;min-width:160px;transition:all 0.2s;}
         .fixedNameButton:active{transform:translateX(-50%) scale(0.96);}
-        .floatingAddButton{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:56px;height:56px;background:#333;border:none;border-radius:30px;box-shadow:0 4px 12px rgba(0,0,0,0.2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;z-index:1000;font-size:28px;font-weight:400;color:white;line-height:1;}
+        
+        /* Плавающие кнопки */
+        .floatingAddButton{
+            position:fixed;
+            bottom:24px;
+            left:50%;
+            transform:translateX(-50%);
+            width:56px;
+            height:56px;
+            background:#333;
+            border:none;
+            border-radius:30px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.2);
+            cursor:pointer;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            transition:all 0.2s ease;
+            z-index:1000;
+            font-size:28px;
+            font-weight:400;
+            color:white;
+            line-height:1;
+        }
         .floatingAddButton:active{transform:translateX(-50%) scale(0.94);}
+        .floatingAddButton.active {
+            transform: translateX(-50%) scale(1.05);
+        }
+        
+        /* Дополнительная кнопка (стрелка вверх) */
+        .floatingUpButton {
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            font-size: 20px;
+            color: white;
+            transition: all 0.2s ease;
+			background:#333;
+        }
+        .floatingUpButton.visible {
+            display: flex;
+        }
+        .floatingUpButton:active {
+            transform: translateX(-50%) scale(0.94);
+        }
+        
         .fullscreenModal{position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:2000;display:flex;flex-direction:column;animation:slideUp 0.2s ease;}
         .fullscreenModal__actions{display:flex;gap:12px;justify-content:center;}
         .fullscreenModal__button{flex:1;padding:10px 16px;border:1px solid #ddd;border-radius:10px;font-size:15px;font-weight:500;cursor:pointer;background:#fff;color:#333;text-align:center;}
@@ -152,12 +233,32 @@
         .plus{transform:rotate(45deg);display:inline-block;}
         .searchContainer{display:flex;flex-direction:row;gap:6px;width:100%;display:none;}
         .searchContainer.visible{display:flex;}
+		.suggestions{border: 1px solid #ddd; border-radius: 6px;}
         .searchInput{flex:1;padding:0 8px;border:1px solid #ddd;border-radius:6px;font-size:14px;background:#fff;height:36px;}
-        .suggestionItem{padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f0f0f0;min-height:36px;}
+        .suggestionItem{padding:8px 12px;cursor:pointer;font-size:13px;}
+		.suggestionItem+.suggestionItem{border-top:1px solid #f0f0f0;}
         .suggestionType{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;margin-right:8px;font-weight:500;background:#e3f2fd;color:#1976d2;}
-        .suggestions{position: absolute;background: white;border: 1px solid #ddd;border-radius: 6px;max-height: 200px;overflow-y: auto;z-index: 1000;left: 0;right: 0;top: 100%;}
+        
+        /* Скрытие элементов через :has() */
+        .suggestions {
+            display: none;
+        }
+        .parentsList:not(:has(.card__parentItem)) {
+            display: none;
+        }
+        .childrenList:not(:has(.card__childItem)) {
+            display: none;
+        }
+        
         .viewContainer{display:none;}
         .viewContainer.active{display:block;}
+        
+        /* Дневник скрыт по умолчанию, плюсик скрыт */
+        #journalView { display: none; }
+        #floatingBtn { display: none; }
+        #journalView.active { display: block; }
+        #cardsView.active { display: block; }
+        
         @keyframes highlightPulse{0%{background:#fff3bf;}100%{background:#fff9c4;}}
         @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
         @media (max-width:600px){
@@ -181,7 +282,7 @@
             <div id="globalSuggestions" class="globalSearch__suggestions"></div>
         </div>
 
-        <div id="cardsView" class="viewContainer">
+        <div id="cardsView" class="viewContainer active">
             <div class="cardsSystem">
                 <div class="cardsSystem__controls">
                     <button class="button button--primary" id="addCardBtn">Создать карточку</button>
@@ -199,6 +300,7 @@
     </div>
 
     <button class="floatingAddButton" id="floatingBtn">+</button>
+    <button class="floatingUpButton" id="floatingUpBtn">↑</button>
     <button class="fixedNameButton" id="fixedNameButton" style="display: none;">
         <span id="userNameDisplay"></span>
     </button>
@@ -219,9 +321,13 @@
             </div>
             <div class="entriesList">
                 <% entries.forEach(function(entry) { %>
-                    <div class="entryItem" data-entry-id="<%= entry.id %>">
+                    <div class="entryItem" data-entry-id="<%= entry.id %>" data-entry-date="<%= entry.date %>" data-entry-time="<%= entry.time %>">
                         <div class="entryItem__content"><%= entry.text %></div>
                         <div class="entryItem__footer"><%= entry.time %></div>
+                        <div class="entryItem__actions">
+                            <button class="entryActionBtn edit-entry">Редактировать</button>
+                            <button class="entryActionBtn add-after">Добавить после</button>
+                        </div>
                     </div>
                 <% }); %>
             </div>
@@ -392,7 +498,18 @@
             searchEntries: function(query) { if(!query || !query.trim()) return []; const lowerQuery = query.toLowerCase().trim(); return this.entries.filter(entry => entry.text.toLowerCase().includes(lowerQuery)).map(entry => ({ id: entry.id, type:'journal', title: entry.text.substring(0,50) + (entry.text.length>50?'...':''), date: new Date(entry.date).toLocaleDateString('ru-RU') })); },
             getTodayDate: function() { return new Date().toISOString().slice(0,10); },
             getCurrentTime: function() { const now = new Date(); return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`; },
-            getEntryById: function(id) { return this.entries.find(e => e.id == id); }
+            getEntryById: function(id) { return this.entries.find(e => e.id == id); },
+            getNextDateTime: function(currentDate, currentTime) {
+                // Парсим текущую дату и время
+                const [year, month, day] = currentDate.split('-');
+                const [hour, minute] = currentTime.split(':');
+                const currentDateTime = new Date(year, month-1, day, hour, minute);
+                // Добавляем 1 минуту
+                const nextDateTime = new Date(currentDateTime.getTime() + 60000);
+                const nextDate = nextDateTime.toISOString().slice(0,10);
+                const nextTime = `${String(nextDateTime.getHours()).padStart(2,'0')}:${String(nextDateTime.getMinutes()).padStart(2,'0')}`;
+                return { date: nextDate, time: nextTime };
+            }
         };
         
         // ==================== ПРЕДСТАВЛЕНИЕ ДНЕВНИКА ====================
@@ -404,15 +521,108 @@
                 groups.forEach(group => { $container.append(ejs.render($('#dayGroupTemplate').text(), group)); });
                 this.bindEvents();
             },
-            bindEvents: function() { $('.entryItem').off('click').on('click', function(e) { e.stopPropagation(); const entryId = $(this).data('entry-id'); if(entryId) JournalController.openEditModal(entryId); }); },
-            highlightEntryById: function(entryId) { const $entry = $(`.entryItem[data-entry-id="${entryId}"]`); if($entry.length) { $entry.addClass('highlight'); setTimeout(() => $entry.removeClass('highlight'),1000); $entry.get(0).scrollIntoView({ behavior: 'auto', block: 'center' }); } },
+            bindEvents: function() { 
+                // Клик по записи - показываем/скрываем кнопки
+                $('.entryItem').off('click').on('click', function(e) {
+                    e.stopPropagation();
+                    const $actions = $(this).find('.entryItem__actions');
+                    // Скрываем все другие кнопки
+                    $('.entryItem__actions').not($actions).removeClass('visible');
+                    $actions.toggleClass('visible');
+                });
+                
+                // Редактирование записи
+                $('.edit-entry').off('click').on('click', function(e) {
+                    e.stopPropagation();
+                    const $entry = $(this).closest('.entryItem');
+                    const entryId = $entry.data('entry-id');
+                    if(entryId) JournalController.openEditModal(entryId);
+                    $entry.find('.entryItem__actions').removeClass('visible');
+                });
+                
+                // Добавить после
+                $('.add-after').off('click').on('click', function(e) {
+                    e.stopPropagation();
+                    const $entry = $(this).closest('.entryItem');
+                    const entryDate = $entry.data('entry-date');
+                    const entryTime = $entry.data('entry-time');
+                    const nextDateTime = JournalModel.getNextDateTime(entryDate, entryTime);
+                    JournalController.openAddModal(nextDateTime.date, nextDateTime.time);
+                    $entry.find('.entryItem__actions').removeClass('visible');
+                });
+                
+                // Закрываем кнопки при клике вне
+                $(document).off('click.journalActions').on('click.journalActions', function(e) {
+                    if (!$(e.target).closest('.entryItem').length) {
+                        $('.entryItem__actions').removeClass('visible');
+                    }
+                });
+            },
+            highlightEntryById: function(entryId) { 
+                const $entry = $(`.entryItem[data-entry-id="${entryId}"]`); 
+                if($entry.length) { 
+                    $entry.addClass('highlight'); 
+                    setTimeout(() => $entry.removeClass('highlight'),1000); 
+                    $entry.get(0).scrollIntoView({ behavior: 'auto', block: 'center' }); 
+                } 
+            },
             scrollToBottom: function() { setTimeout(() => { window.scrollTo({ top: document.body.scrollHeight, behavior: 'auto' }); }, 50); }
         };
         
         // ==================== КОНТРОЛЛЕР ДНЕВНИКА ====================
+        let pendingPlusClick = false;
+        
         const JournalController = {
-            openAddModal: function() { this.showFullscreenModal({ title:'Новая запись', dateValue: JournalModel.getTodayDate(), timeValue: JournalModel.getCurrentTime(), textValue:'', showDelete:false, onSave: (date,time,text) => { if(text && text.trim()) { const newEntry = JournalModel.addEntry(date,time,text); if(newEntry) { JournalView.render(); setTimeout(() => JournalView.highlightEntryById(newEntry.id),100); JournalView.scrollToBottom(); } return true; } return false; } }); },
-            openEditModal: function(entryId) { const entry = JournalModel.getEntryById(entryId); if(!entry) return; const entryTime = new Date(entry.createdAt).toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' }); this.showFullscreenModal({ title:'Редактировать запись', dateValue:entry.date, timeValue:entryTime, textValue:entry.text, showDelete:true, onSave: (date,time,text) => { if(text && text.trim()) { JournalModel.updateEntry(entryId,date,time,text); JournalView.render(); setTimeout(() => JournalView.highlightEntryById(entryId),100); return true; } return false; }, onDelete: () => { if(confirm('Уничтожить эту запись?')) { JournalModel.deleteEntry(entryId); JournalView.render(); return true; } return false; } }); },
+            openAddModal: function(defaultDate, defaultTime) { 
+                this.showFullscreenModal({ 
+                    title:'Новая запись', 
+                    dateValue: defaultDate || JournalModel.getTodayDate(), 
+                    timeValue: defaultTime || JournalModel.getCurrentTime(), 
+                    textValue:'', 
+                    showDelete:false, 
+                    onSave: (date,time,text) => { 
+                        if(text && text.trim()) { 
+                            const newEntry = JournalModel.addEntry(date,time,text); 
+                            if(newEntry) { 
+                                JournalView.render(); 
+                                setTimeout(() => JournalView.highlightEntryById(newEntry.id),100); 
+                                JournalView.scrollToBottom(); 
+                            } 
+                            return true; 
+                        } 
+                        return false; 
+                    } 
+                }); 
+            },
+            openEditModal: function(entryId) { 
+                const entry = JournalModel.getEntryById(entryId); 
+                if(!entry) return; 
+                const entryTime = new Date(entry.createdAt).toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' }); 
+                this.showFullscreenModal({ 
+                    title:'Редактировать запись', 
+                    dateValue:entry.date, 
+                    timeValue:entryTime, 
+                    textValue:entry.text, 
+                    showDelete:true, 
+                    onSave: (date,time,text) => { 
+                        if(text && text.trim()) { 
+                            JournalModel.updateEntry(entryId,date,time,text); 
+                            JournalView.render(); 
+                            setTimeout(() => JournalView.highlightEntryById(entryId),100); 
+                            return true; 
+                        } 
+                        return false; 
+                    }, 
+                    onDelete: () => { 
+                        if(confirm('Уничтожить эту запись?')) { 
+                            JournalModel.deleteEntry(entryId); 
+                            JournalView.render(); 
+                            return true; 
+                        } 
+                        return false; 
+                    } 
+                }); 
+            },
             showFullscreenModal: function(options) {
                 const modalId = 'fullscreenModal_' + Date.now();
                 const deleteButtonHtml = options.showDelete ? '<button class="fullscreenModal__button fullscreenModal__button--delete" id="deleteBtn">Уничтожить</button>' : '';
@@ -770,36 +980,35 @@
         let flashModule = null;
         let flashModuleWithSound = null;
 
+        function initFlashModule() {
+            if (!flashModule && typeof FlashModule !== 'undefined') {
+                flashModule = new FlashModule({
+                    soundPath: './sounds/',
+                    soundFile: null,
+                    flashDuration: 200,
+                    soundVolume: 0.8,
+                    soundEnabled: false,
+                    debug: false
+                });
+            }
+            return flashModule;
+        }
 
-		function initFlashModule() {
-			if (!flashModule && typeof FlashModule !== 'undefined') {
-				flashModule = new FlashModule({
-					soundPath: './sounds/',
-					soundFile: null,
-					flashDuration: 200,
-					soundVolume: 0.8,
-					soundEnabled: false,
-					debug: true  // Включите debug для диагностики
-				});
-			}
-			return flashModule;
-		}
+        function initFlashModuleWithSound() {
+            if (!flashModuleWithSound && typeof FlashModule !== 'undefined') {
+                flashModuleWithSound = new FlashModule({
+                    soundPath: './sounds/',
+                    soundFile: 'scanner_photo1.wav',
+                    flashDuration: 200,
+                    soundVolume: 0.8,
+                    soundEnabled: true,
+                    debug: false
+                });
+            }
+            return flashModuleWithSound;
+        }
 
-		function initFlashModuleWithSound() {
-			if (!flashModuleWithSound && typeof FlashModule !== 'undefined') {
-				flashModuleWithSound = new FlashModule({
-					soundPath: './sounds/',
-					soundFile: 'scanner_photo1.wav',
-					flashDuration: 200,
-					soundVolume: 0.8,
-					soundEnabled: true,
-					debug: true
-				});
-			}
-			return flashModuleWithSound;
-		}
-
-        // ПРОСТОЕ УДАЛЕНИЕ (без эффектов) - для кнопки рядом с названием
+        // ПРОСТОЕ УДАЛЕНИЕ (без эффектов)
         async function deleteCardSimple(cardId, cardTitle, $cardElement) {
             if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}"?`)) return false;
             CardsModel.deleteCard(cardId);
@@ -807,62 +1016,61 @@
             return true;
         }
         
-		// COMBO УДАЛЕНИЕ
-		async function deleteCardWithCombo(cardId, cardTitle, $cardElement) {
-			const hasFlashPermission = await PermissionManager.requestFlashPermission();
-			const hasSoundPermission = await PermissionManager.requestSoundPermission();
-			
-			if (!hasFlashPermission && !hasSoundPermission) {
-				alert('❌ Вы запретили использование и вспышки, и звука. Удаление отменено.');
-				return false;
-			}
-			
-			if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой и звуком?`)) return false;
-			
-			// ========== 1. ДЛИННЫЙ ВСТРОЕННЫЙ ЗВУК (3 сек) ==========
-			if (hasSoundPermission) {
-				const flash = initFlashModuleWithSound();
-				if (flash) {
-					flash.options.soundFile = null;
-					flash.useBuiltin = true;
-					flash.options.soundEnabled = true;
-					await flash.playOnlySound();
-				} else {
-					await new Promise(r => setTimeout(r, 3000));
-				}
-			} else {
-				await new Promise(r => setTimeout(r, 3000));
-			}
-			
-			// ========== 2. УДАЛЕНИЕ КАРТОЧКИ ==========
-			CardsModel.deleteCard(cardId);
-			if ($cardElement) $cardElement.remove();
-			
-			// ========== 3. ВСПЫШКА + ФАЙЛОВЫЙ ЗВУК (вспышка на всю длительность звука) ==========
-			if (hasFlashPermission && hasSoundPermission) {
-				const flash = initFlashModuleWithSound();
-				if (flash) {
-					// Вспышка будет гореть всё время проигрывания файла
-					await flash.playFlashWithSound('scanner_photo1.wav');
-				}
-			} else if (hasFlashPermission) {
-				const flash = initFlashModule();
-				if (flash) {
-					await flash.playOnlyFlash();
-				}
-			} else if (hasSoundPermission) {
-				const flash = initFlashModuleWithSound();
-				if (flash) {
-					flash.options.soundFile = 'scanner_photo1.wav';
-					flash.useBuiltin = false;
-					await flash.playOnlySound();
-				}
-			}
-			
-			return true;
-		}
-				
-		// ==================== ПРЕДСТАВЛЕНИЕ КАРТОЧЕК ====================
+        // COMBO УДАЛЕНИЕ
+        async function deleteCardWithCombo(cardId, cardTitle, $cardElement) {
+            const hasFlashPermission = await PermissionManager.requestFlashPermission();
+            const hasSoundPermission = await PermissionManager.requestSoundPermission();
+            
+            if (!hasFlashPermission && !hasSoundPermission) {
+                alert('❌ Вы запретили использование и вспышки, и звука. Удаление отменено.');
+                return false;
+            }
+            
+            if (!confirm(`Уничтожить карточку "${cardTitle || 'без названия'}" со вспышкой и звуком?`)) return false;
+            
+            // 1. ДЛИННЫЙ ВСТРОЕННЫЙ ЗВУК (3 сек)
+            if (hasSoundPermission) {
+                const flash = initFlashModuleWithSound();
+                if (flash) {
+                    flash.options.soundFile = null;
+                    flash.useBuiltin = true;
+                    flash.options.soundEnabled = true;
+                    await flash.playOnlySound();
+                } else {
+                    await new Promise(r => setTimeout(r, 3000));
+                }
+            } else {
+                await new Promise(r => setTimeout(r, 3000));
+            }
+            
+            // 2. УДАЛЕНИЕ КАРТОЧКИ
+            CardsModel.deleteCard(cardId);
+            if ($cardElement) $cardElement.remove();
+            
+            // 3. ВСПЫШКА + ФАЙЛОВЫЙ ЗВУК
+            if (hasFlashPermission && hasSoundPermission) {
+                const flash = initFlashModuleWithSound();
+                if (flash) {
+                    await flash.playFlashWithSound('scanner_photo1.wav');
+                }
+            } else if (hasFlashPermission) {
+                const flash = initFlashModule();
+                if (flash) {
+                    await flash.playOnlyFlash();
+                }
+            } else if (hasSoundPermission) {
+                const flash = initFlashModuleWithSound();
+                if (flash) {
+                    flash.options.soundFile = 'scanner_photo1.wav';
+                    flash.useBuiltin = false;
+                    await flash.playOnlySound();
+                }
+            }
+            
+            return true;
+        }
+        
+        // ==================== ПРЕДСТАВЛЕНИЕ КАРТОЧЕК ====================
         const CardsView = { 
             render: () => { 
                 $('#cardsContainer').empty(); 
@@ -921,7 +1129,6 @@
                     .off('click', '#addCardBtn').on('click', '#addCardBtn', ()=>{ const newCard = CardsModel.addCard(); CardsView.render(); setTimeout(()=>CardsView.highlightCard(newCard.id),100); })
                     .off('click', '#deleteAllBtn').on('click', '#deleteAllBtn', ()=>{ if(CardsModel.cards.length && confirm("Уничтожить все карточки?")){ CardsModel.deleteAllCards(); CardsView.render(); } })
                     
-                    // Верхняя кнопка combo
                     .off('click', '.delete-combo').on('click', '.delete-combo', async function(e) { 
                         e.preventDefault(); e.stopPropagation();
                         const $card = $(this).closest('.card'); 
@@ -930,7 +1137,6 @@
                         await deleteCardWithCombo(cardId, card?.title, $card);
                     })
                     
-                    // Кнопка удаления рядом с названием
                     .off('click', '.card__header .button--danger').on('click', '.card__header .button--danger', async function(e){ 
                         e.preventDefault(); 
                         const $card = $(this).closest('.card'); 
@@ -1083,13 +1289,48 @@
                 initFlashModule();
                 initFlashModuleWithSound();
                 
-                // Активация аудио при первом касании (для мобильных)
+                // Логика двухкликового плюсика
+                let plusClickTimer = null;
+                
+                $('#floatingBtn').on('click', function() {
+                    if (pendingPlusClick) {
+                        // Второй клик - открываем модалку
+                        clearTimeout(plusClickTimer);
+                        pendingPlusClick = false;
+                        $('#floatingBtn').removeClass('active');
+                        $('#floatingUpBtn').removeClass('visible');
+                        JournalController.openAddModal();
+                    } else {
+                        // Первый клик - показываем дополнительную кнопку
+                        pendingPlusClick = true;
+                        $('#floatingBtn').addClass('active');
+                        $('#floatingUpBtn').addClass('visible');
+                        
+                        // Таймаут на случай если не будет второго клика
+                        plusClickTimer = setTimeout(() => {
+                            pendingPlusClick = false;
+                            $('#floatingBtn').removeClass('active');
+                            $('#floatingUpBtn').removeClass('visible');
+                        }, 2000);
+                    }
+                });
+                
+                // Кнопка прокрутки вверх
+                $('#floatingUpBtn').on('click', function() {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    // Сбрасываем состояние плюсика
+                    pendingPlusClick = false;
+                    $('#floatingBtn').removeClass('active');
+                    $('#floatingUpBtn').removeClass('visible');
+                    if (plusClickTimer) clearTimeout(plusClickTimer);
+                });
+                
+                // Активация аудио при первом касании
                 const activateAudio = () => {
                     const flash = initFlashModuleWithSound();
                     if (flash && flash.audioCtx && flash.audioCtx.state === 'suspended') {
                         flash.audioCtx.resume().catch(e => console.warn('AudioContext activation failed:', e));
                     }
-                    // Создаём "тихий" Audio элемент для активации
                     const silentAudio = new Audio();
                     silentAudio.volume = 0;
                     silentAudio.play().catch(() => {});
@@ -1103,7 +1344,6 @@
             }, 
             bindEvents: function() { 
                 $('#modeSwitchHeader').on('click',()=>{ this.switchView(this.currentView==='cards'?'journal':'cards'); }); 
-                $('#floatingBtn').on('click',()=>{ JournalController.openAddModal(); }); 
                 $('#globalSearchInput').on('input',(e)=>this.handleGlobalSearch(e.target.value)); 
                 $(document).on('click',(e)=>{ if(!$(e.target).closest('.globalSearch').length)$('#globalSuggestions').hide(); }); 
             }, 
