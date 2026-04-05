@@ -561,7 +561,7 @@
                 <button class="menuItem" id="menuExportDataBtn">
                     <span class="menuItemText">Экспорт данных</span>
                 </button>
-                <button class="menuItem" id="menuImportDataBtn">
+                <button class="menuItem" id="menuImportDataBtn" style="display: none;">
                     <span class="menuItemText">Импорт данных</span>
                 </button>
                 <button class="menuItem menuItem--warning" id="menuRevokeAgreementBtn">
@@ -1910,6 +1910,7 @@
                 });
                 
                 $('#menuImportDataBtn').off('click').on('click', () => {
+					return false;
                     DataManager.importData();
                     $menuDropdown.removeClass('open');
                     $menuTrigger.removeClass('open');
